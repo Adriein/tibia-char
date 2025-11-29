@@ -17,4 +17,4 @@ services:
     volumes:
       - tibia_char_database_data:/var/lib/postgresql/data:rw
 volumes:
-  tibia_mkt_database_data:
+  tibia_char_database_data:
