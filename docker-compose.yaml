@@ -1,0 +1,20 @@
+services:
+  tibia_char_database:
+    container_name: tibia_char_database
+    image: postgres:15-alpine
+    user: ${DATABASE_USER}
+    environment:
+      POSTGRES_USER: ${DATABASE_USER}
+      POSTGRES_DB: ${DATABASE_NAME}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready" ]
+      interval: 3s
+      timeout: 3s
+      retries: 10
+    volumes:
+      - tibia_char_database_data:/var/lib/postgresql/data:rw
+volumes:
+  tibia_mkt_database_data:
