@@ -12,6 +12,7 @@ import (
 	"github.com/rotisserie/eris"
 
 	"github.com/adriein/tibia-char/internal/health"
+	"github.com/adriein/tibia-char/internal/scrap"
 	"github.com/adriein/tibia-char/pkg/constants"
 	"github.com/adriein/tibia-char/pkg/middleware"
 )
@@ -68,4 +69,14 @@ func (t *TibiaChar) routeSetup() {
 	//HEALTH CHECK
 	t.router.GET("/ping", health.NewController().Get())
 
+	//SCRAPPER
+	scrapController := t.getScrapController()
+
+	t.router.GET("/scrap", scrapController.Get())
+}
+
+func (t *TibiaChar) getScrapController() *scrap.Controller {
+	service := scrap.NewService()
+
+	return scrap.NewController(service)
 }
