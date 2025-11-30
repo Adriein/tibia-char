@@ -2,6 +2,7 @@ package scrap
 
 import (
 	"fmt"
+	"net/url"
 	"strconv"
 	"strings"
 
@@ -16,13 +17,42 @@ func NewService() *Service {
 }
 
 func (s *Service) ScrapBazaar(world string) error {
-	totalActiveAuctions, err := s.getTotalCurrentAuctions()
+	set := make(map[int]string)
 
-	if err != nil {
-		fmt.Println("error")
+	currentPage := 0
+
+	for {
+		links, err := s.scrapPage(currentPage)
+
+		if err != nil {
+			return err
+		}
+
+		for _, link := range links {
+			parsedLink, err := url.Parse(link)
+
+			if err != nil {
+				return eris.New(fmt.Sprintf("Error converting link to url: %s", err.Error()))
+			}
+
+			auctionIdStr := parsedLink.Query().Get("auctionid")
+
+			auctionId, err := strconv.Atoi(auctionIdStr)
+
+			if err != nil {
+				return eris.New(fmt.Sprintf("Error converting to integer: %s", err.Error()))
+			}
+
+			set.Get()
+		}
+
 	}
 
-	fmt.Println(totalActiveAuctions)
+	return nil
+}
+
+func (s *Service) scrapPage(page int) ([]string, error) {
+	var result []string
 
 	c := colly.NewCollector(
 		colly.AllowedDomains("www.tibia.com"),
@@ -32,13 +62,13 @@ func (s *Service) ScrapBazaar(world string) error {
 		e.ForEach("a[href]", func(_ int, e *colly.HTMLElement) {
 			charDetailLink := e.Attr("href")
 
-			fmt.Println(charDetailLink)
+			result = append(result, charDetailLink)
 		})
 	})
 
-	c.Visit("https://www.tibia.com/charactertrade/?subtopic=currentcharactertrades&currentpage=0")
+	c.Visit(fmt.Sprintf("https://www.tibia.com/charactertrade/?subtopic=currentcharactertrades&currentpage=%d", page))
 
-	return nil
+	return result, nil
 }
 
 func (s *Service) getTotalCurrentAuctions() (int, error) {
