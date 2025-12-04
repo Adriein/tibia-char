@@ -14,5 +14,15 @@
       "env": {},
       "args": []
     },
+    {
+      "name": "scrap-cron",
+      "type": "go",
+      "request": "launch",
+      "mode": "debug",
+      "program": "${workspaceFolder}/api/cmd/scrap/main.go",
+      "cwd": "${workspaceFolder}/api",
+      "env": {},
+      "args": []
+    }
   ]
 }

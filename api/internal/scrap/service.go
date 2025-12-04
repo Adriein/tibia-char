@@ -16,10 +16,10 @@ func NewService() *Service {
 	return &Service{}
 }
 
-func (s *Service) ScrapBazaar(world string) error {
+func (s *Service) ScrapBazaar() error {
 	set := make(BazaarAuctionLinkSet)
 
-	for currentPage := 0; ; currentPage++ {
+	for currentPage := 1; ; currentPage++ {
 		links, err := s.scrapPage(currentPage)
 
 		if err != nil {

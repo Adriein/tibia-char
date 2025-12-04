@@ -18,7 +18,7 @@ func NewController(service *Service) *Controller {
 
 func (c *Controller) Get() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		c.service.ScrapBazaar("")
+		c.service.ScrapBazaar()
 
 		ctx.JSON(http.StatusOK, gin.H{"ok": true, "data": "pong"})
 	}
