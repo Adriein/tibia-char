@@ -17,22 +17,22 @@ func NewService() *Service {
 }
 
 func (s *Service) ScrapBazaar(world string) error {
-	set := make(map[int]string)
+	set := make(BazaarAuctionLinkSet)
 
-	currentPage := 0
-
-	for {
+	for currentPage := 0; ; currentPage++ {
 		links, err := s.scrapPage(currentPage)
 
 		if err != nil {
 			return err
 		}
 
+		newLinksAdded := 0
+
 		for _, link := range links {
 			parsedLink, err := url.Parse(link)
 
 			if err != nil {
-				return eris.New(fmt.Sprintf("Error converting link to url: %s", err.Error()))
+				return eris.New(fmt.Sprintf("Error converting link %s to url: %s", parsedLink, err.Error()))
 			}
 
 			auctionIdStr := parsedLink.Query().Get("auctionid")
@@ -40,15 +40,21 @@ func (s *Service) ScrapBazaar(world string) error {
 			auctionId, err := strconv.Atoi(auctionIdStr)
 
 			if err != nil {
-				return eris.New(fmt.Sprintf("Error converting to integer: %s", err.Error()))
+				return eris.New(fmt.Sprintf("Error converting auction ID '%s' to int: %s", auctionIdStr, err.Error()))
 			}
 
-			set.Get()
+			if set.Has(auctionId) {
+				if newLinksAdded == 0 {
+					return nil
+				}
+
+				continue
+			}
+
+			set.Set(auctionId, link)
+			newLinksAdded++
 		}
-
 	}
-
-	return nil
 }
 
 func (s *Service) scrapPage(page int) ([]string, error) {
