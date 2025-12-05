@@ -17,8 +17,8 @@ type TibiaApiWorlds struct {
 	} `json:"worlds"`
 }
 
-func NewTibiaApi() TibiaApi {
-	return TibiaApi{}
+func NewTibiaApi() *TibiaApi {
+	return &TibiaApi{}
 }
 
 func (t *TibiaApi) GetWorlds() ([]string, error) {
