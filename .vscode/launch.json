@@ -19,7 +19,7 @@
       "type": "go",
       "request": "launch",
       "mode": "debug",
-      "program": "${workspaceFolder}/api/cmd/scrap/main.go",
+      "program": "${workspaceFolder}/api/cmd/cron/scrapper/main.go",
       "cwd": "${workspaceFolder}/api",
       "env": {},
       "args": []

@@ -20,7 +20,7 @@ func (s *Service) ScrapBazaar() error {
 	set := make(BazaarAuctionLinkSet)
 
 	for currentPage := 1; ; currentPage++ {
-		links, err := s.scrapPage(currentPage)
+		links, err := s.scrapPage("Secura", currentPage)
 
 		if err != nil {
 			return err
@@ -57,7 +57,7 @@ func (s *Service) ScrapBazaar() error {
 	}
 }
 
-func (s *Service) scrapPage(page int) ([]string, error) {
+func (s *Service) scrapPage(world string, page int) ([]string, error) {
 	var result []string
 
 	c := colly.NewCollector(
@@ -72,7 +72,7 @@ func (s *Service) scrapPage(page int) ([]string, error) {
 		})
 	})
 
-	c.Visit(fmt.Sprintf("https://www.tibia.com/charactertrade/?subtopic=currentcharactertrades&currentpage=%d", page))
+	c.Visit(fmt.Sprintf("https://www.tibia.com/charactertrade/?subtopic=currentcharactertrades&filter_world=%s&currentpage=%d", world, page))
 
 	return result, nil
 }
