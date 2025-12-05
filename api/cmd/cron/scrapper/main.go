@@ -33,5 +33,9 @@ func main() {
 
 	cron := scrap.NewService()
 
-	cron.ScrapBazaar()
+	err := cron.ScrapBazaar()
+
+	if err != nil {
+		log.Fatal(err.Error())
+	}
 }
