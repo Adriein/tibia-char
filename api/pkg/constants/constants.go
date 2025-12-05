@@ -47,3 +47,7 @@ const (
 const (
 	IncomingTimeFormat = "20060102150405"
 )
+
+const (
+	TibiaOfficialWebsite = "www.tibia.com"
+)

@@ -2,11 +2,13 @@ package scrap
 
 import (
 	"fmt"
+	"log"
 	"net/url"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/adriein/tibia-char/pkg/constants"
 	"github.com/adriein/tibia-char/pkg/vendor"
 	"github.com/gocolly/colly/v2"
 	"github.com/gocolly/colly/v2/debug"
@@ -28,8 +30,13 @@ func (s *Service) ScrapBazaar() error {
 		return err
 	}
 
+	currentAuctions, err := s.getTotalCurrentAuctions()
+
+	if err != nil {
+		return err
+	}
+
 	for _, world := range worlds {
-	PageLoop:
 		for currentPage := 1; ; currentPage++ {
 			links, err := s.scrapPage(world, currentPage)
 
@@ -44,33 +51,27 @@ func (s *Service) ScrapBazaar() error {
 			newLinksAdded := 0
 
 			for _, link := range links {
-				parsedLink, err := url.Parse(link)
+				auctionId, err := s.extractAutctionId(link)
 
 				if err != nil {
-					return eris.New(fmt.Sprintf("Error converting link %s to url: %s", parsedLink, err.Error()))
-				}
-
-				auctionIdStr := parsedLink.Query().Get("auctionid")
-
-				auctionId, err := strconv.Atoi(auctionIdStr)
-
-				if err != nil {
-					return eris.New(fmt.Sprintf("Error converting auction ID '%s' to int: %s", auctionIdStr, err.Error()))
+					return err
 				}
 
 				if set.Has(auctionId) {
-					if newLinksAdded == 0 {
-						break PageLoop
-					}
-
 					continue
 				}
 
 				set.Set(auctionId, link)
 				newLinksAdded++
 			}
+
+			if newLinksAdded == 0 {
+				break
+			}
 		}
 	}
+
+	log.Default().Printf("Current auctions %d - Scrapped Auctions %d", currentAuctions, len(set))
 
 	return nil
 }
@@ -79,12 +80,12 @@ func (s *Service) scrapPage(world string, page int) ([]string, error) {
 	var result []string
 
 	c := colly.NewCollector(
-		colly.AllowedDomains("www.tibia.com"),
+		colly.AllowedDomains(constants.TibiaOfficialWebsite),
 		colly.Debugger(&debug.LogDebugger{}),
 	)
 
 	c.Limit(&colly.LimitRule{
-		DomainGlob:  "www.tibia.com",
+		DomainGlob:  constants.TibiaOfficialWebsite,
 		RandomDelay: 5 * time.Second,
 	})
 
@@ -106,7 +107,7 @@ func (s *Service) getTotalCurrentAuctions() (int, error) {
 	var totalCurrentAuctions int = 0
 
 	c := colly.NewCollector(
-		colly.AllowedDomains("www.tibia.com"),
+		colly.AllowedDomains(constants.TibiaOfficialWebsite),
 	)
 
 	c.OnHTML("td[class=PageNavigation]", func(e *colly.HTMLElement) {
@@ -115,7 +116,7 @@ func (s *Service) getTotalCurrentAuctions() (int, error) {
 		parts := strings.Split(htmlExtractedText, ": ")
 
 		if len(parts) < 2 {
-			err := eris.New(fmt.Sprintf("String format is unexpected: %s", htmlExtractedText))
+			err := eris.Errorf("String format is unexpected: %s", htmlExtractedText)
 			errors = append(errors, err)
 
 			return
@@ -128,7 +129,7 @@ func (s *Service) getTotalCurrentAuctions() (int, error) {
 		resultInt, err := strconv.Atoi(cleanStr)
 
 		if err != nil {
-			err := eris.New(fmt.Sprintf("Error converting to integer: %s", err.Error()))
+			err := eris.Errorf("Error converting to integer: %s", err.Error())
 			errors = append(errors, err)
 
 			return
@@ -146,8 +147,26 @@ func (s *Service) getTotalCurrentAuctions() (int, error) {
 			b.WriteString(fmt.Sprintln(err.Error()))
 		}
 
-		return totalCurrentAuctions, eris.New(fmt.Sprintf("Error getting total current auctions: %s", b.String()))
+		return totalCurrentAuctions, eris.Errorf("Error getting total current auctions: %s", b.String())
 	}
 
 	return totalCurrentAuctions, nil
+}
+
+func (s *Service) extractAutctionId(link string) (int, error) {
+	parsedLink, err := url.Parse(link)
+
+	if err != nil {
+		return 0, eris.New(fmt.Sprintf("Error converting link %s to url: %s", parsedLink, err.Error()))
+	}
+
+	auctionIdStr := parsedLink.Query().Get("auctionid")
+
+	auctionId, err := strconv.Atoi(auctionIdStr)
+
+	if err != nil {
+		return 0, eris.New(fmt.Sprintf("Error converting auction ID '%s' to int: %s", auctionIdStr, err.Error()))
+	}
+
+	return auctionId, nil
 }
