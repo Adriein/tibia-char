@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/adriein/tibia-char/pkg/constants"
-	"github.com/adriein/tibia-char/pkg/vendor"
 	"github.com/gocolly/colly/v2"
 	"github.com/gocolly/colly/v2/debug"
 	"github.com/rotisserie/eris"
@@ -133,11 +132,13 @@ func (s *Service) extractAutctionId(link string) (int, error) {
 func (s *Service) getCurrentAuctionLinks() (BazaarAuctionLinkSet, error) {
 	set := make(BazaarAuctionLinkSet)
 
-	worlds, err := vendor.NewTibiaApi().GetWorlds()
+	/*worlds, err := vendor.NewTibiaApi().GetWorlds()
 
 	if err != nil {
 		return set, err
-	}
+	}*/
+
+	worlds := []string{"Secura"}
 
 	currentAuctions, err := s.getTotalCurrentAuctions()
 
@@ -262,7 +263,7 @@ func (s *Service) extractLevel(auctionHeader string) (int, error) {
 
 	levelStringParts := strings.Split(levelStringHeader, ":")
 
-	return strconv.Atoi(levelStringParts[1])
+	return strconv.Atoi(strings.TrimSpace(levelStringParts[1]))
 }
 
 func (s *Service) extractVocation(auctionHeader string) string {
@@ -272,11 +273,11 @@ func (s *Service) extractVocation(auctionHeader string) string {
 
 	levelStringParts := strings.Split(levelStringHeader, ":")
 
-	return levelStringParts[1]
+	return strings.TrimSpace(levelStringParts[1])
 }
 
 func (s *Service) extractGender(auctionHeader string) string {
 	headerParts := strings.Split(auctionHeader, "|")
 
-	return headerParts[2]
+	return strings.TrimSpace(headerParts[2])
 }
