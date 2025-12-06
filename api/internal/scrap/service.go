@@ -22,7 +22,11 @@ func NewService() *Service {
 }
 
 func (s *Service) ScrapBazaar() error {
-	_, err := s.getCurrentAuctionLinks()
+	auctionLinkSet, err := s.getCurrentAuctionLinks()
+
+	for auctionId, link := range auctionLinkSet {
+		s.getCharAuctionDetails(auctionId, link)
+	}
 
 	if err != nil {
 		return err
@@ -181,7 +185,9 @@ func (s *Service) getCurrentAuctionLinks() (BazaarAuctionLinkSet, error) {
 	return set, nil
 }
 
-func (s *Service) getCharAuctionDetails(auctionId int, link string) (BazaarCharAuctionDetail, error) {
+func (s *Service) getCharAuctionDetails(auctionId int, link string) error {
+	var errors []error
+
 	c := colly.NewCollector(
 		colly.AllowedDomains(constants.TibiaOfficialWebsite),
 		colly.Debugger(&debug.LogDebugger{}),
@@ -197,14 +203,80 @@ func (s *Service) getCharAuctionDetails(auctionId int, link string) (BazaarCharA
 	set := NewBazaarAuctionDetailSet()
 
 	c.OnHTML("div[class=AuctionHeader]", func(e *colly.HTMLElement) {
-		e.ForEach("a[href]", func(_ int, e *colly.HTMLElement) {
-			charDetailLink := e.Attr("href")
+		charName := e.ChildText("div[class=AuctionCharacterName]")
 
-			result = append(result, charDetailLink)
-		})
+		world := e.ChildText("a[href]")
+
+		auctionHeader := e.Text
+
+		level, err := s.extractLevel(auctionHeader)
+
+		if err != nil {
+			errors = append(errors, eris.Errorf("Error extracting character level: %s", err.Error()))
+
+			return
+		}
+
+		vocation := s.extractVocation(auctionHeader)
+
+		gender := s.extractGender(auctionHeader)
+
+		charDetails, ok := set.Get(auctionId)
+
+		if !ok {
+			charDetails := BazaarCharAuctionDetail{
+				AuctionDetails: AuctionDetails{
+					Name:     charName,
+					World:    world,
+					Level:    level,
+					Vocation: vocation,
+					Gender:   gender,
+				},
+			}
+
+			set.Set(auctionId, charDetails)
+
+			return
+		}
+
+		charDetails.AuctionDetails.Name = charName
+		charDetails.AuctionDetails.World = world
+		charDetails.AuctionDetails.Level = level
+		charDetails.AuctionDetails.Vocation = vocation
+		charDetails.AuctionDetails.Gender = gender
+
+		set.Set(auctionId, charDetails)
 	})
 
 	c.Visit(link)
 
 	c.Wait()
+
+	return nil
+}
+
+func (s *Service) extractLevel(auctionHeader string) (int, error) {
+	headerParts := strings.Split(auctionHeader, "|")
+
+	levelStringHeader := headerParts[0]
+
+	levelStringParts := strings.Split(levelStringHeader, ":")
+
+	return strconv.Atoi(levelStringParts[1])
+}
+
+func (s *Service) extractVocation(auctionHeader string) string {
+	headerParts := strings.Split(auctionHeader, "|")
+
+	levelStringHeader := headerParts[1]
+
+	levelStringParts := strings.Split(levelStringHeader, ":")
+
+	return levelStringParts[1]
+}
+
+func (s *Service) extractGender(auctionHeader string) string {
+	headerParts := strings.Split(auctionHeader, "|")
+
+	return headerParts[2]
 }
