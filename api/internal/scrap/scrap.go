@@ -1,6 +1,9 @@
 package scrap
 
-import "time"
+import (
+	"sync"
+	"time"
+)
 
 type BazaarAuctionLinkSet map[int]string
 
@@ -21,6 +24,47 @@ func (set BazaarAuctionLinkSet) Del(key int) {
 func (set BazaarAuctionLinkSet) Has(key int) bool {
 	_, ok := set[key]
 
+	return ok
+}
+
+type BazaarAuctionDetailSet struct {
+	mu   sync.RWMutex
+	data map[int]BazaarCharAuctionDetail
+}
+
+func NewBazaarAuctionDetailSet() *BazaarAuctionDetailSet {
+	return &BazaarAuctionDetailSet{
+		data: make(map[int]BazaarCharAuctionDetail),
+	}
+}
+
+func (set *BazaarAuctionDetailSet) Get(key int) (BazaarCharAuctionDetail, bool) {
+	set.mu.RLock()
+	defer set.mu.RUnlock()
+
+	value, ok := set.data[key]
+	return value, ok
+}
+
+func (set *BazaarAuctionDetailSet) Set(key int, value BazaarCharAuctionDetail) {
+	set.mu.Lock()
+	defer set.mu.Unlock()
+
+	set.data[key] = value
+}
+
+func (set *BazaarAuctionDetailSet) Del(key int) {
+	set.mu.Lock()
+	defer set.mu.Unlock()
+
+	delete(set.data, key)
+}
+
+func (set *BazaarAuctionDetailSet) Has(key int) bool {
+	set.mu.RLock()
+	defer set.mu.RUnlock()
+
+	_, ok := set.data[key]
 	return ok
 }
 

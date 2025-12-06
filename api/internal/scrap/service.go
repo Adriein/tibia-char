@@ -22,61 +22,16 @@ func NewService() *Service {
 }
 
 func (s *Service) ScrapBazaar() error {
-	set := make(BazaarAuctionLinkSet)
-
-	worlds, err := vendor.NewTibiaApi().GetWorlds()
+	_, err := s.getCurrentAuctionLinks()
 
 	if err != nil {
 		return err
 	}
-
-	currentAuctions, err := s.getTotalCurrentAuctions()
-
-	if err != nil {
-		return err
-	}
-
-	for _, world := range worlds {
-		for currentPage := 1; ; currentPage++ {
-			links, err := s.scrapPage(world, currentPage)
-
-			if err != nil {
-				return err
-			}
-
-			if len(links) == 0 {
-				break
-			}
-
-			newLinksAdded := 0
-
-			for _, link := range links {
-				auctionId, err := s.extractAutctionId(link)
-
-				if err != nil {
-					return err
-				}
-
-				if set.Has(auctionId) {
-					continue
-				}
-
-				set.Set(auctionId, link)
-				newLinksAdded++
-			}
-
-			if newLinksAdded == 0 {
-				break
-			}
-		}
-	}
-
-	log.Default().Printf("Current auctions %d - Scrapped Auctions %d", currentAuctions, len(set))
 
 	return nil
 }
 
-func (s *Service) scrapPage(world string, page int) ([]string, error) {
+func (s *Service) scrapAuctionListPage(world string, page int) ([]string, error) {
 	var result []string
 
 	c := colly.NewCollector(
@@ -169,4 +124,87 @@ func (s *Service) extractAutctionId(link string) (int, error) {
 	}
 
 	return auctionId, nil
+}
+
+func (s *Service) getCurrentAuctionLinks() (BazaarAuctionLinkSet, error) {
+	set := make(BazaarAuctionLinkSet)
+
+	worlds, err := vendor.NewTibiaApi().GetWorlds()
+
+	if err != nil {
+		return set, err
+	}
+
+	currentAuctions, err := s.getTotalCurrentAuctions()
+
+	if err != nil {
+		return set, err
+	}
+
+	for _, world := range worlds {
+		for currentPage := 1; ; currentPage++ {
+			links, err := s.scrapAuctionListPage(world, currentPage)
+
+			if err != nil {
+				return set, err
+			}
+
+			if len(links) == 0 {
+				break
+			}
+
+			newLinksAdded := 0
+
+			for _, link := range links {
+				auctionId, err := s.extractAutctionId(link)
+
+				if err != nil {
+					return set, err
+				}
+
+				if set.Has(auctionId) {
+					continue
+				}
+
+				set.Set(auctionId, link)
+				newLinksAdded++
+			}
+
+			if newLinksAdded == 0 {
+				break
+			}
+		}
+	}
+
+	log.Default().Printf("Current auctions %d - Scrapped Auctions %d", currentAuctions, len(set))
+
+	return set, nil
+}
+
+func (s *Service) getCharAuctionDetails(auctionId int, link string) (BazaarCharAuctionDetail, error) {
+	c := colly.NewCollector(
+		colly.AllowedDomains(constants.TibiaOfficialWebsite),
+		colly.Debugger(&debug.LogDebugger{}),
+		colly.Async(true),
+	)
+
+	c.Limit(&colly.LimitRule{
+		DomainGlob:  constants.TibiaOfficialWebsite,
+		Parallelism: 5,
+		RandomDelay: 5 * time.Second,
+	})
+
+	set := NewBazaarAuctionDetailSet()
+
+	c.OnHTML("div[class=AuctionHeader]", func(e *colly.HTMLElement) {
+		e.ForEach("a[href]", func(_ int, e *colly.HTMLElement) {
+			charDetailLink := e.Attr("href")
+
+			result = append(result, charDetailLink)
+		})
+	})
+
+	c.Visit(link)
+
+	c.Wait()
 }
