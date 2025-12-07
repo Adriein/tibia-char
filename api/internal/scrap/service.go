@@ -255,6 +255,7 @@ func (s *Service) getCharAuctionDetails(auctionId int, link string) error {
 		var auctionStart string
 		var auctionEnd string
 		var actualBid int
+		var specialFeatures []string
 
 		e.ForEach("div", func(_ int, ch *colly.HTMLElement) {
 			classes := strings.Split(ch.Attr("class"), " ")
@@ -319,8 +320,12 @@ func (s *Service) getCharAuctionDetails(auctionId int, link string) error {
 						actualBid = bid
 					}
 				})
-			}
 
+			case "SpecialCharacterFeatures":
+				ch.ForEach("div", func(_ int, spcfCh *colly.HTMLElement) {
+					specialFeatures = append(specialFeatures, spcfCh.Text)
+				})
+			}
 		})
 
 		charDetails, ok := set.Get(auctionId)
