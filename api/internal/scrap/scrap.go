@@ -73,18 +73,20 @@ type ImgDisplay struct {
 	Name string
 }
 
-type AuctionDetails struct {
-	Name       string
-	Level      int
-	Vocation   string
-	Gender     string
-	World      string
-	Highlights []string
+type AuctionHeader struct {
+	Img             string
+	Name            string
+	Level           int
+	Vocation        string
+	Gender          string
+	World           string
+	SpecialItems    []ImgDisplay
+	SpecialFeatures []string
 }
 
 type BazaarCharAuctionDetail struct {
-	AuctionDetails AuctionDetails
-	General        struct {
+	AuctionHeader AuctionHeader
+	General       struct {
 		Mounts               int
 		Outfits              int
 		CreationDate         time.Time

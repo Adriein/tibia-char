@@ -226,7 +226,7 @@ func (s *Service) getCharAuctionDetails(auctionId int, link string) error {
 
 		if !ok {
 			charDetails := BazaarCharAuctionDetail{
-				AuctionDetails: AuctionDetails{
+				AuctionHeader: AuctionHeader{
 					Name:     charName,
 					World:    world,
 					Level:    level,
@@ -240,11 +240,52 @@ func (s *Service) getCharAuctionDetails(auctionId int, link string) error {
 			return
 		}
 
-		charDetails.AuctionDetails.Name = charName
-		charDetails.AuctionDetails.World = world
-		charDetails.AuctionDetails.Level = level
-		charDetails.AuctionDetails.Vocation = vocation
-		charDetails.AuctionDetails.Gender = gender
+		charDetails.AuctionHeader.Name = charName
+		charDetails.AuctionHeader.World = world
+		charDetails.AuctionHeader.Level = level
+		charDetails.AuctionHeader.Vocation = vocation
+		charDetails.AuctionHeader.Gender = gender
+
+		set.Set(auctionId, charDetails)
+	})
+
+	c.OnHTML("div[class=AuctionBody]", func(e *colly.HTMLElement) {
+		var displayImg string
+		var specialItems []ImgDisplay
+
+		e.ForEach("div", func(_ int, ch *colly.HTMLElement) {
+			classes := strings.Split(ch.Attr("class"), " ")
+
+			section := classes[len(classes)-1]
+
+			switch section {
+			case "AuctionOutfit":
+				displayImg = ch.ChildAttr("img[class=AuctionOutfitImage]", "src")
+			case "AuctionItemsViewBox":
+				ch.ForEach("div[title]", func(_ int, ivbCh *colly.HTMLElement) {
+					imgTitle := ivbCh.Attr("title")
+					imgLink := ivbCh.ChildAttr("img", "src")
+
+					specialItems = append(specialItems, ImgDisplay{Name: imgTitle, Link: imgLink})
+				})
+			}
+		})
+
+		charDetails, ok := set.Get(auctionId)
+
+		if !ok {
+			charDetails := BazaarCharAuctionDetail{
+				AuctionHeader: AuctionHeader{
+					Img: displayImg,
+				},
+			}
+
+			set.Set(auctionId, charDetails)
+
+			return
+		}
+
+		charDetails.AuctionHeader.Img = displayImg
 
 		set.Set(auctionId, charDetails)
 	})
