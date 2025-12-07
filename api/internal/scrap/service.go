@@ -138,7 +138,7 @@ func (s *Service) getCurrentAuctionLinks() (BazaarAuctionLinkSet, error) {
 		return set, err
 	}*/
 
-	worlds := []string{"Secura"}
+	worlds := []string{"Calmera"}
 
 	currentAuctions, err := s.getTotalCurrentAuctions()
 
@@ -254,6 +254,7 @@ func (s *Service) getCharAuctionDetails(auctionId int, link string) error {
 		var specialItems []ImgDisplay
 		var auctionStart string
 		var auctionEnd string
+		var actualBid int
 
 		e.ForEach("div", func(_ int, ch *colly.HTMLElement) {
 			classes := strings.Split(ch.Attr("class"), " ")
@@ -301,6 +302,21 @@ func (s *Service) getCharAuctionDetails(auctionId int, link string) error {
 						}
 
 						auctionEnd = dateTimeUTC
+
+					case "ShortAuctionDataBidRow":
+						selector := sadCh.DOM.Children()
+
+						rawBid := selector.Find("b").Text()
+
+						bid, err := strconv.Atoi(rawBid)
+
+						if err != nil {
+							errors = append(errors, eris.Errorf("Error converting bid to int: %s", err.Error()))
+
+							break
+						}
+
+						actualBid = bid
 					}
 				})
 			}
@@ -316,6 +332,7 @@ func (s *Service) getCharAuctionDetails(auctionId int, link string) error {
 					SpecialItems: specialItems,
 					AuctionStart: auctionStart,
 					AuctionEnd:   auctionEnd,
+					Bid:          actualBid,
 				},
 			}
 
@@ -328,6 +345,7 @@ func (s *Service) getCharAuctionDetails(auctionId int, link string) error {
 		charDetails.AuctionHeader.SpecialItems = specialItems
 		charDetails.AuctionHeader.AuctionStart = auctionStart
 		charDetails.AuctionHeader.AuctionEnd = auctionEnd
+		charDetails.AuctionHeader.Bid = actualBid
 
 		set.Set(auctionId, charDetails)
 	})
