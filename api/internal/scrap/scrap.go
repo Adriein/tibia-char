@@ -82,6 +82,9 @@ type AuctionHeader struct {
 	World           string
 	SpecialItems    []ImgDisplay
 	SpecialFeatures []string
+	Bid             int
+	AuctionStart    string
+	AuctionEnd      string
 }
 
 type BazaarCharAuctionDetail struct {

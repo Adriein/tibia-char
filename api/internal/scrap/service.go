@@ -252,6 +252,8 @@ func (s *Service) getCharAuctionDetails(auctionId int, link string) error {
 	c.OnHTML("div[class=AuctionBody]", func(e *colly.HTMLElement) {
 		var displayImg string
 		var specialItems []ImgDisplay
+		var auctionStart string
+		var auctionEnd string
 
 		e.ForEach("div", func(_ int, ch *colly.HTMLElement) {
 			classes := strings.Split(ch.Attr("class"), " ")
@@ -261,6 +263,7 @@ func (s *Service) getCharAuctionDetails(auctionId int, link string) error {
 			switch section {
 			case "AuctionOutfit":
 				displayImg = ch.ChildAttr("img[class=AuctionOutfitImage]", "src")
+
 			case "AuctionItemsViewBox":
 				ch.ForEach("div[title]", func(_ int, ivbCh *colly.HTMLElement) {
 					imgTitle := ivbCh.Attr("title")
@@ -268,7 +271,40 @@ func (s *Service) getCharAuctionDetails(auctionId int, link string) error {
 
 					specialItems = append(specialItems, ImgDisplay{Name: imgTitle, Link: imgLink})
 				})
+
+			case "ShortAuctionData":
+				ch.ForEach("div", func(_ int, sadCh *colly.HTMLElement) {
+					section := sadCh.Attr("class")
+
+					switch section {
+					case "ShortAuctionDataValue":
+						rawDate := sadCh.Text
+
+						normDate := strings.ReplaceAll(rawDate, "\u00a0", " ")
+
+						dateCET, err := time.Parse("Jan 02 2006, 15:04 MST", normDate)
+
+						if err != nil {
+							errors = append(errors, eris.Errorf("Error parsing auction date: %s", err.Error()))
+
+							return
+						}
+
+						dateUTC := dateCET.In(time.UTC)
+
+						dateTimeUTC := dateUTC.Format(time.DateTime)
+
+						if len(auctionStart) == 0 {
+							auctionStart = dateTimeUTC
+
+							break
+						}
+
+						auctionEnd = dateTimeUTC
+					}
+				})
 			}
+
 		})
 
 		charDetails, ok := set.Get(auctionId)
@@ -276,7 +312,10 @@ func (s *Service) getCharAuctionDetails(auctionId int, link string) error {
 		if !ok {
 			charDetails := BazaarCharAuctionDetail{
 				AuctionHeader: AuctionHeader{
-					Img: displayImg,
+					Img:          displayImg,
+					SpecialItems: specialItems,
+					AuctionStart: auctionStart,
+					AuctionEnd:   auctionEnd,
 				},
 			}
 
@@ -286,6 +325,9 @@ func (s *Service) getCharAuctionDetails(auctionId int, link string) error {
 		}
 
 		charDetails.AuctionHeader.Img = displayImg
+		charDetails.AuctionHeader.SpecialItems = specialItems
+		charDetails.AuctionHeader.AuctionStart = auctionStart
+		charDetails.AuctionHeader.AuctionEnd = auctionEnd
 
 		set.Set(auctionId, charDetails)
 	})
