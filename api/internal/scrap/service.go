@@ -39,12 +39,11 @@ func (s *Service) ScrapBazaar() error {
 
 	c.Limit(&colly.LimitRule{
 		DomainGlob: constants.TibiaOfficialWebsite,
-		// RandomDelay: 5 * time.Second,
 	})
 
 	var wg sync.WaitGroup
 
-	const maxConcurrency = 30
+	const maxConcurrency = 200
 	maxWorkers := make(chan struct{}, maxConcurrency)
 
 	results := NewBazaarAuctionDetailMap()
