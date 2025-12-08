@@ -65,7 +65,7 @@ func (s *Service) ScrapBazaar() error {
 			details, err := s.getCharAuctionDetails(c, url)
 
 			if err != nil {
-				fmt.Printf("Error fetching details for auction %d: %v\n", id, err)
+				s.logger.Printf("Error fetching details for auction %d: %v\n", id, err)
 				return
 			}
 
