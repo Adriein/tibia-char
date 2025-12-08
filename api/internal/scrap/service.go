@@ -43,7 +43,7 @@ func (s *Service) ScrapBazaar() error {
 	results := make(BazaarAuctionDetailSet)
 
 	for auctionId, link := range auctionLinkSet {
-		details, err := s.getCharAuctionDetails(c, auctionId, link)
+		details, err := s.getCharAuctionDetails(c, link)
 
 		if err != nil {
 			return err
@@ -209,7 +209,7 @@ func (s *Service) getCurrentAuctionLinks() (BazaarAuctionLinkSet, error) {
 	return set, nil
 }
 
-func (s *Service) getCharAuctionDetails(c *colly.Collector, auctionId int, link string) (*BazaarCharAuctionDetail, error) {
+func (s *Service) getCharAuctionDetails(c *colly.Collector, link string) (BazaarCharAuctionDetail, error) {
 	var errors []error
 	var charDetails BazaarCharAuctionDetail
 
@@ -291,7 +291,7 @@ func (s *Service) getCharAuctionDetails(c *colly.Collector, auctionId int, link 
 							case "ShortAuctionDataBidRow":
 								selector := sAuctionDataCh.DOM.Children()
 
-								rawBid := selector.Find("b").Text()
+								rawBid := strings.ReplaceAll(selector.Find("b").Text(), ",", "")
 
 								bid, err := strconv.Atoi(rawBid)
 
@@ -302,6 +302,8 @@ func (s *Service) getCharAuctionDetails(c *colly.Collector, auctionId int, link 
 								}
 
 								header.Bid = bid
+
+								return false
 							}
 
 							return true
@@ -327,10 +329,10 @@ func (s *Service) getCharAuctionDetails(c *colly.Collector, auctionId int, link 
 
 	if len(errors) != 0 {
 		//TODO: define what to do with those errors array
-		return nil, eris.Errorf("%d Errors happened on Character Detail extraction", len(errors))
+		return BazaarCharAuctionDetail{}, eris.Errorf("%d Errors happened on Character Detail extraction", len(errors))
 	}
 
-	return &charDetails, nil
+	return charDetails, nil
 }
 
 func (s *Service) extractLevel(auctionHeader string) (int, error) {
