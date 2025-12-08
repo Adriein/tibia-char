@@ -201,10 +201,9 @@ func (s *Service) getCurrentAuctionLinks() (BazaarAuctionLinkSet, error) {
 	return set, nil
 }
 
-func (s *Service) getCharAuctionDetails(c *colly.Collector, auctionId int, link string) error {
+func (s *Service) getCharAuctionDetails(c *colly.Collector, auctionId int, link string) (*BazaarCharAuctionDetail, error) {
 	var errors []error
-
-	set := make(BazaarAuctionDetailSet)
+	var charDetails BazaarCharAuctionDetail
 
 	c.OnHTML("div[class=Auction]", func(e *colly.HTMLElement) {
 		var header AuctionHeader
@@ -313,26 +312,12 @@ func (s *Service) getCharAuctionDetails(c *colly.Collector, auctionId int, link 
 			return true
 		})
 
-		charDetails, ok := set.Get(auctionId)
-
-		if !ok {
-			charDetails := BazaarCharAuctionDetail{
-				AuctionHeader: header,
-			}
-
-			set.Set(auctionId, charDetails)
-
-			return
-		}
-
 		charDetails.AuctionHeader = header
-
-		set.Set(auctionId, charDetails)
 	})
 
 	c.Visit(link)
 
-	return nil
+	return &charDetails, nil
 }
 
 func (s *Service) extractLevel(auctionHeader string) (int, error) {
