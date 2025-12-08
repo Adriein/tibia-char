@@ -10,17 +10,24 @@ import (
 
 	"github.com/adriein/tibia-char/pkg/constants"
 	"github.com/gocolly/colly/v2"
-	"github.com/gocolly/colly/v2/debug"
 	"github.com/rotisserie/eris"
 )
 
-type Service struct{}
+type Service struct {
+	logger *log.Logger
+}
 
-func NewService() *Service {
-	return &Service{}
+func NewService(logger *log.Logger) *Service {
+	return &Service{
+		logger: logger,
+	}
 }
 
 func (s *Service) ScrapBazaar() error {
+	s.logger.Println("Start Scrap Bazaar")
+
+	now := time.Now()
+
 	auctionLinkSet, err := s.getCurrentAuctionLinks()
 
 	for auctionId, link := range auctionLinkSet {
@@ -31,21 +38,13 @@ func (s *Service) ScrapBazaar() error {
 		return err
 	}
 
+	s.logger.Printf("Finished Scrapping in %s", time.Since(now))
+
 	return nil
 }
 
-func (s *Service) scrapAuctionListPage(world string, page int) ([]string, error) {
+func (s *Service) scrapAuctionListPage(c *colly.Collector, world string, page int) ([]string, error) {
 	var result []string
-
-	c := colly.NewCollector(
-		colly.AllowedDomains(constants.TibiaOfficialWebsite),
-		colly.Debugger(&debug.LogDebugger{}),
-	)
-
-	c.Limit(&colly.LimitRule{
-		DomainGlob:  constants.TibiaOfficialWebsite,
-		RandomDelay: 5 * time.Second,
-	})
 
 	c.OnHTML("div[class=AuctionLinks]", func(e *colly.HTMLElement) {
 		e.ForEach("a[href]", func(_ int, e *colly.HTMLElement) {
@@ -60,13 +59,9 @@ func (s *Service) scrapAuctionListPage(world string, page int) ([]string, error)
 	return result, nil
 }
 
-func (s *Service) getTotalCurrentAuctions() (int, error) {
+func (s *Service) getTotalCurrentAuctions(c *colly.Collector) (int, error) {
 	var errors []error
 	var totalCurrentAuctions int = 0
-
-	c := colly.NewCollector(
-		colly.AllowedDomains(constants.TibiaOfficialWebsite),
-	)
 
 	c.OnHTML("td[class=PageNavigation]", func(e *colly.HTMLElement) {
 		htmlExtractedText := e.Text
@@ -132,6 +127,16 @@ func (s *Service) extractAutctionId(link string) (int, error) {
 func (s *Service) getCurrentAuctionLinks() (BazaarAuctionLinkSet, error) {
 	set := make(BazaarAuctionLinkSet)
 
+	c := colly.NewCollector(
+		colly.AllowedDomains(constants.TibiaOfficialWebsite),
+		colly.Debugger(&TibiaCharCollyLogDebugger{Prefix: "[CollectAuctionLinks] "}),
+	)
+
+	c.Limit(&colly.LimitRule{
+		DomainGlob:  constants.TibiaOfficialWebsite,
+		RandomDelay: 5 * time.Second,
+	})
+
 	/*worlds, err := vendor.NewTibiaApi().GetWorlds()
 
 	if err != nil {
@@ -140,7 +145,7 @@ func (s *Service) getCurrentAuctionLinks() (BazaarAuctionLinkSet, error) {
 
 	worlds := []string{"Calmera"}
 
-	currentAuctions, err := s.getTotalCurrentAuctions()
+	currentAuctions, err := s.getTotalCurrentAuctions(c)
 
 	if err != nil {
 		return set, err
@@ -148,7 +153,7 @@ func (s *Service) getCurrentAuctionLinks() (BazaarAuctionLinkSet, error) {
 
 	for _, world := range worlds {
 		for currentPage := 1; ; currentPage++ {
-			links, err := s.scrapAuctionListPage(world, currentPage)
+			links, err := s.scrapAuctionListPage(c, world, currentPage)
 
 			if err != nil {
 				return set, err
@@ -191,154 +196,128 @@ func (s *Service) getCharAuctionDetails(auctionId int, link string) error {
 
 	c := colly.NewCollector(
 		colly.AllowedDomains(constants.TibiaOfficialWebsite),
-		colly.Debugger(&debug.LogDebugger{}),
-		colly.Async(true),
+		colly.Debugger(&TibiaCharCollyLogDebugger{Prefix: "[CollectAuctionDetails] "}),
 	)
 
 	c.Limit(&colly.LimitRule{
 		DomainGlob:  constants.TibiaOfficialWebsite,
-		Parallelism: 5,
 		RandomDelay: 5 * time.Second,
 	})
 
 	set := NewBazaarAuctionDetailSet()
 
-	c.OnHTML("div[class=AuctionHeader]", func(e *colly.HTMLElement) {
-		charName := e.ChildText("div[class=AuctionCharacterName]")
+	c.OnHTML("div[class=Auction]", func(e *colly.HTMLElement) {
+		var header AuctionHeader
 
-		world := e.ChildText("a[href]")
+		e.ForEachWithBreak("div[class]", func(_ int, ch *colly.HTMLElement) bool {
+			class := ch.Attr("class")
 
-		auctionHeader := e.Text
+			switch class {
+			case "AuctionHeader":
+				header.Name = e.ChildText("div[class=AuctionCharacterName]")
 
-		level, err := s.extractLevel(auctionHeader)
+				header.World = e.ChildText("a[href]")
 
-		if err != nil {
-			errors = append(errors, eris.Errorf("Error extracting character level: %s", err.Error()))
+				auctionHeader := e.Text
 
-			return
-		}
+				level, err := s.extractLevel(auctionHeader)
 
-		vocation := s.extractVocation(auctionHeader)
+				header.Level = level
 
-		gender := s.extractGender(auctionHeader)
+				if err != nil {
+					errors = append(errors, eris.Errorf("Error extracting character level: %s", err.Error()))
 
-		charDetails, ok := set.Get(auctionId)
+					return false
+				}
 
-		if !ok {
-			charDetails := BazaarCharAuctionDetail{
-				AuctionHeader: AuctionHeader{
-					Name:     charName,
-					World:    world,
-					Level:    level,
-					Vocation: vocation,
-					Gender:   gender,
-				},
-			}
+				header.Vocation = s.extractVocation(auctionHeader)
 
-			set.Set(auctionId, charDetails)
+				header.Gender = s.extractGender(auctionHeader)
+			case "AuctionBody":
+				e.ForEachWithBreak("div", func(_ int, ch *colly.HTMLElement) bool {
+					classes := strings.Split(ch.Attr("class"), " ")
 
-			return
-		}
-
-		charDetails.AuctionHeader.Name = charName
-		charDetails.AuctionHeader.World = world
-		charDetails.AuctionHeader.Level = level
-		charDetails.AuctionHeader.Vocation = vocation
-		charDetails.AuctionHeader.Gender = gender
-
-		set.Set(auctionId, charDetails)
-	})
-
-	c.OnHTML("div[class=AuctionBody]", func(e *colly.HTMLElement) {
-		var displayImg string
-		var specialItems []ImgDisplay
-		var auctionStart string
-		var auctionEnd string
-		var actualBid int
-		var specialFeatures []string
-
-		e.ForEach("div", func(_ int, ch *colly.HTMLElement) {
-			classes := strings.Split(ch.Attr("class"), " ")
-
-			section := classes[len(classes)-1]
-
-			switch section {
-			case "AuctionOutfit":
-				displayImg = ch.ChildAttr("img[class=AuctionOutfitImage]", "src")
-
-			case "AuctionItemsViewBox":
-				ch.ForEach("div[title]", func(_ int, ivbCh *colly.HTMLElement) {
-					imgTitle := ivbCh.Attr("title")
-					imgLink := ivbCh.ChildAttr("img", "src")
-
-					specialItems = append(specialItems, ImgDisplay{Name: imgTitle, Link: imgLink})
-				})
-
-			case "ShortAuctionData":
-				ch.ForEach("div", func(_ int, sadCh *colly.HTMLElement) {
-					section := sadCh.Attr("class")
+					section := classes[len(classes)-1]
 
 					switch section {
-					case "ShortAuctionDataValue":
-						rawDate := sadCh.Text
+					case "AuctionOutfit":
+						header.Img = ch.ChildAttr("img[class=AuctionOutfitImage]", "src")
 
-						normDate := strings.ReplaceAll(rawDate, "\u00a0", " ")
+					case "AuctionItemsViewBox":
+						ch.ForEach("div[title]", func(_ int, itemViewBoxCh *colly.HTMLElement) {
+							imgTitle := itemViewBoxCh.Attr("title")
+							imgLink := itemViewBoxCh.ChildAttr("img", "src")
 
-						dateCET, err := time.Parse("Jan 02 2006, 15:04 MST", normDate)
+							header.SpecialItems = append(header.SpecialItems, ImgDisplay{Name: imgTitle, Link: imgLink})
+						})
 
-						if err != nil {
-							errors = append(errors, eris.Errorf("Error parsing auction date: %s", err.Error()))
+					case "ShortAuctionData":
+						ch.ForEachWithBreak("div", func(_ int, sAuctionDataCh *colly.HTMLElement) bool {
+							section := sAuctionDataCh.Attr("class")
 
-							return
-						}
+							switch section {
+							case "ShortAuctionDataValue":
+								rawDate := sAuctionDataCh.Text
 
-						dateUTC := dateCET.In(time.UTC)
+								normDate := strings.ReplaceAll(rawDate, "\u00a0", " ")
 
-						dateTimeUTC := dateUTC.Format(time.DateTime)
+								dateCET, err := time.Parse("Jan 02 2006, 15:04 MST", normDate)
 
-						if len(auctionStart) == 0 {
-							auctionStart = dateTimeUTC
+								if err != nil {
+									errors = append(errors, eris.Errorf("Error parsing auction date: %s", err.Error()))
 
-							break
-						}
+									return false
+								}
 
-						auctionEnd = dateTimeUTC
+								dateUTC := dateCET.In(time.UTC)
 
-					case "ShortAuctionDataBidRow":
-						selector := sadCh.DOM.Children()
+								dateTimeUTC := dateUTC.Format(time.DateTime)
 
-						rawBid := selector.Find("b").Text()
+								if len(header.AuctionStart) == 0 {
+									header.AuctionStart = dateTimeUTC
 
-						bid, err := strconv.Atoi(rawBid)
+									break
+								}
 
-						if err != nil {
-							errors = append(errors, eris.Errorf("Error converting bid to int: %s", err.Error()))
+								header.AuctionEnd = dateTimeUTC
 
-							break
-						}
+							case "ShortAuctionDataBidRow":
+								selector := sAuctionDataCh.DOM.Children()
 
-						actualBid = bid
+								rawBid := selector.Find("b").Text()
+
+								bid, err := strconv.Atoi(rawBid)
+
+								if err != nil {
+									errors = append(errors, eris.Errorf("Error converting bid to int: %s", err.Error()))
+
+									return false
+								}
+
+								header.Bid = bid
+							}
+
+							return true
+						})
+
+					case "SpecialCharacterFeatures":
+						ch.ForEach("div", func(_ int, spcfCh *colly.HTMLElement) {
+							header.SpecialFeatures = append(header.SpecialFeatures, spcfCh.Text)
+						})
 					}
-				})
 
-			case "SpecialCharacterFeatures":
-				ch.ForEach("div", func(_ int, spcfCh *colly.HTMLElement) {
-					specialFeatures = append(specialFeatures, spcfCh.Text)
+					return true
 				})
 			}
+
+			return true
 		})
 
 		charDetails, ok := set.Get(auctionId)
 
 		if !ok {
 			charDetails := BazaarCharAuctionDetail{
-				AuctionHeader: AuctionHeader{
-					Img:          displayImg,
-					SpecialItems: specialItems,
-					AuctionStart: auctionStart,
-					AuctionEnd:   auctionEnd,
-					Bid:          actualBid,
-				},
+				AuctionHeader: header,
 			}
 
 			set.Set(auctionId, charDetails)
@@ -346,18 +325,12 @@ func (s *Service) getCharAuctionDetails(auctionId int, link string) error {
 			return
 		}
 
-		charDetails.AuctionHeader.Img = displayImg
-		charDetails.AuctionHeader.SpecialItems = specialItems
-		charDetails.AuctionHeader.AuctionStart = auctionStart
-		charDetails.AuctionHeader.AuctionEnd = auctionEnd
-		charDetails.AuctionHeader.Bid = actualBid
+		charDetails.AuctionHeader = header
 
 		set.Set(auctionId, charDetails)
 	})
 
 	c.Visit(link)
-
-	c.Wait()
 
 	return nil
 }
