@@ -40,8 +40,16 @@ func (s *Service) ScrapBazaar() error {
 		RandomDelay: 5 * time.Second,
 	})
 
+	results := make(BazaarAuctionDetailSet)
+
 	for auctionId, link := range auctionLinkSet {
-		s.getCharAuctionDetails(c, auctionId, link)
+		details, err := s.getCharAuctionDetails(c, auctionId, link)
+
+		if err != nil {
+			return err
+		}
+
+		results.Set(auctionId, details)
 	}
 
 	if err != nil {
@@ -316,6 +324,11 @@ func (s *Service) getCharAuctionDetails(c *colly.Collector, auctionId int, link 
 	})
 
 	c.Visit(link)
+
+	if len(errors) != 0 {
+		//TODO: define what to do with those errors array
+		return nil, eris.Errorf("%d Errors happened on Character Detail extraction", len(errors))
+	}
 
 	return &charDetails, nil
 }

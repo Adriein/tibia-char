@@ -26,14 +26,14 @@ func (set BazaarAuctionLinkSet) Has(key int) bool {
 	return ok
 }
 
-type BazaarAuctionDetailSet map[int]BazaarCharAuctionDetail
+type BazaarAuctionDetailSet map[int]*BazaarCharAuctionDetail
 
-func (set BazaarAuctionDetailSet) Get(key int) (BazaarCharAuctionDetail, bool) {
+func (set BazaarAuctionDetailSet) Get(key int) (*BazaarCharAuctionDetail, bool) {
 	value, ok := set[key]
 	return value, ok
 }
 
-func (set BazaarAuctionDetailSet) Set(key int, value BazaarCharAuctionDetail) {
+func (set BazaarAuctionDetailSet) Set(key int, value *BazaarCharAuctionDetail) {
 	set[key] = value
 }
 
