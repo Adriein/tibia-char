@@ -30,8 +30,18 @@ func (s *Service) ScrapBazaar() error {
 
 	auctionLinkSet, err := s.getCurrentAuctionLinks()
 
+	c := colly.NewCollector(
+		colly.AllowedDomains(constants.TibiaOfficialWebsite),
+		colly.Debugger(&TibiaCharCollyLogDebugger{Prefix: "[CollectAuctionDetails] "}),
+	)
+
+	c.Limit(&colly.LimitRule{
+		DomainGlob:  constants.TibiaOfficialWebsite,
+		RandomDelay: 5 * time.Second,
+	})
+
 	for auctionId, link := range auctionLinkSet {
-		s.getCharAuctionDetails(auctionId, link)
+		s.getCharAuctionDetails(c, auctionId, link)
 	}
 
 	if err != nil {
@@ -191,20 +201,10 @@ func (s *Service) getCurrentAuctionLinks() (BazaarAuctionLinkSet, error) {
 	return set, nil
 }
 
-func (s *Service) getCharAuctionDetails(auctionId int, link string) error {
+func (s *Service) getCharAuctionDetails(c *colly.Collector, auctionId int, link string) error {
 	var errors []error
 
-	c := colly.NewCollector(
-		colly.AllowedDomains(constants.TibiaOfficialWebsite),
-		colly.Debugger(&TibiaCharCollyLogDebugger{Prefix: "[CollectAuctionDetails] "}),
-	)
-
-	c.Limit(&colly.LimitRule{
-		DomainGlob:  constants.TibiaOfficialWebsite,
-		RandomDelay: 5 * time.Second,
-	})
-
-	set := NewBazaarAuctionDetailSet()
+	set := make(BazaarAuctionDetailSet)
 
 	c.OnHTML("div[class=Auction]", func(e *colly.HTMLElement) {
 		var header AuctionHeader
