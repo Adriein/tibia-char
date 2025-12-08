@@ -49,9 +49,9 @@ func (s *Service) ScrapBazaar() error {
 	results := NewBazaarAuctionDetailMap()
 
 	for auctionId, link := range auctionLinkSet {
-		rDelay := time.Duration(500+rand.Intn(1000)) * time.Millisecond
+		randDelay := time.Duration(1+rand.Intn(2)) * time.Second
 
-		time.Sleep(rDelay)
+		time.Sleep(randDelay)
 
 		maxWorkers <- struct{}{}
 
