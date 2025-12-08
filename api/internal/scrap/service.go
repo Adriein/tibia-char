@@ -40,7 +40,7 @@ func (s *Service) ScrapBazaar() error {
 		RandomDelay: 5 * time.Second,
 	})
 
-	results := make(BazaarAuctionDetailSet)
+	results := NewBazaarAuctionDetailMap()
 
 	for auctionId, link := range auctionLinkSet {
 		details, err := s.getCharAuctionDetails(c, link)
