@@ -3,9 +3,11 @@ package scrap
 import (
 	"fmt"
 	"log"
+	"math/rand"
 	"net/url"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/adriein/tibia-char/pkg/constants"
@@ -36,21 +38,44 @@ func (s *Service) ScrapBazaar() error {
 	)
 
 	c.Limit(&colly.LimitRule{
-		DomainGlob:  constants.TibiaOfficialWebsite,
-		RandomDelay: 5 * time.Second,
+		DomainGlob: constants.TibiaOfficialWebsite,
+		// RandomDelay: 5 * time.Second,
 	})
+
+	var wg sync.WaitGroup
+
+	const maxConcurrency = 30
+	maxWorkers := make(chan struct{}, maxConcurrency)
 
 	results := NewBazaarAuctionDetailMap()
 
 	for auctionId, link := range auctionLinkSet {
-		details, err := s.getCharAuctionDetails(c, link)
+		rDelay := time.Duration(500+rand.Intn(1000)) * time.Millisecond
 
-		if err != nil {
-			return err
-		}
+		time.Sleep(rDelay)
 
-		results.Set(auctionId, details)
+		maxWorkers <- struct{}{}
+
+		wg.Add(1)
+
+		go func(id int, url string) {
+			defer wg.Done()
+
+			defer func() { <-maxWorkers }()
+
+			details, err := s.getCharAuctionDetails(c, url)
+
+			if err != nil {
+				fmt.Printf("Error fetching details for auction %d: %v\n", id, err)
+				return
+			}
+
+			results.Set(id, details)
+
+		}(auctionId, link)
 	}
+
+	wg.Wait()
 
 	if err != nil {
 		return err
@@ -212,6 +237,10 @@ func (s *Service) getCurrentAuctionLinks() (BazaarAuctionLinkSet, error) {
 func (s *Service) getCharAuctionDetails(c *colly.Collector, link string) (BazaarCharAuctionDetail, error) {
 	var errors []error
 	var charDetails BazaarCharAuctionDetail
+
+	c.OnError(func(r *colly.Response, err error) {
+		errors = append(errors, eris.Errorf("Url: %s failed with status code: %d", r.Request.URL, r.StatusCode))
+	})
 
 	c.OnHTML("div[class=Auction]", func(e *colly.HTMLElement) {
 		var header AuctionHeader
