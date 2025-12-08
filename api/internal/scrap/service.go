@@ -228,7 +228,7 @@ func (s *Service) getCurrentAuctionLinks() (BazaarAuctionLinkSet, error) {
 		}
 	}
 
-	log.Default().Printf("Current auctions %d - Scrapped Auctions %d", currentAuctions, len(set))
+	s.logger.Printf("Current auctions %d - Scrapped Auctions %d", currentAuctions, len(set))
 
 	return set, nil
 }
