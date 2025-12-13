@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/adriein/tibia-char/pkg/constants"
+	"github.com/adriein/tibia-char/pkg/helper/array"
 	"github.com/gocolly/colly/v2"
 	"github.com/rotisserie/eris"
 )
@@ -32,6 +33,10 @@ func (s *Service) ScrapBazaar() error {
 
 	auctionLinkSet, err := s.getCurrentAuctionLinks()
 
+	if err != nil {
+		return err
+	}
+
 	c := colly.NewCollector(
 		colly.AllowedDomains(constants.TibiaOfficialWebsite),
 		colly.Debugger(&TibiaCharCollyLogDebugger{Prefix: "[CollectAuctionDetails] "}),
@@ -41,43 +46,53 @@ func (s *Service) ScrapBazaar() error {
 		DomainGlob: constants.TibiaOfficialWebsite,
 	})
 
+	const MaxConcurrency = 5
+
+	links := array.Chunk(auctionLinkSet.Values(), MaxConcurrency)
+
 	var wg sync.WaitGroup
 
-	const maxConcurrency = 200
-	maxWorkers := make(chan struct{}, maxConcurrency)
+	maxWorkers := make(chan struct{}, MaxConcurrency)
 
 	results := NewBazaarAuctionDetailMap()
 
-	for auctionId, link := range auctionLinkSet {
-		randDelay := time.Duration(1+rand.Intn(2)) * time.Second
+	for i, chunk := range links {
+		if i != 0 {
+			randDelay := time.Duration(1+rand.Intn(5)) * time.Second
 
-		time.Sleep(randDelay)
+			time.Sleep(randDelay)
+		}
 
-		maxWorkers <- struct{}{}
+		for _, link := range chunk {
+			maxWorkers <- struct{}{}
 
-		wg.Add(1)
+			wg.Add(1)
 
-		go func(id int, url string) {
-			defer wg.Done()
+			go func(url string) {
+				defer wg.Done()
 
-			defer func() { <-maxWorkers }()
+				defer func() { <-maxWorkers }()
 
-			details, err := s.getCharAuctionDetails(c, url)
+				auctionId, err := s.extractAutctionId(url)
 
-			if err != nil {
-				s.logger.Printf("Error fetching details for auction %d: %v\n", id, err)
-				return
-			}
+				if err != nil {
+					s.logger.Printf("Error extracting auctionId from link: %s\n", err.Error())
+					return
+				}
 
-			results.Set(id, details)
+				details, err := s.getCharAuctionDetails(c, url)
 
-		}(auctionId, link)
-	}
+				if err != nil {
+					s.logger.Printf("Error fetching details for auction %d: %v\n", auctionId, err)
+					return
+				}
 
-	wg.Wait()
+				results.Set(auctionId, details)
 
-	if err != nil {
-		return err
+			}(link)
+		}
+
+		wg.Wait()
 	}
 
 	s.logger.Printf("Finished Scrapping in %s", time.Since(now))

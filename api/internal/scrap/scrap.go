@@ -27,6 +27,16 @@ func (set BazaarAuctionLinkSet) Has(key int) bool {
 	return ok
 }
 
+func (set BazaarAuctionLinkSet) Values() []string {
+	values := make([]string, 0, len(set))
+
+	for _, v := range set {
+		values = append(values, v)
+	}
+
+	return values
+}
+
 type BazaarAuctionDetailMap struct {
 	mu   sync.RWMutex
 	data map[int]BazaarCharAuctionDetail
