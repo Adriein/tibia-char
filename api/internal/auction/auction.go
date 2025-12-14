@@ -247,7 +247,6 @@ func (a *Auctions) extractAutctionId(link string) (int, error) {
 
 type Auction struct {
 	Id               int
-	TibiaAuctionId   int
 	TibiaAuctionLink string
 	Img              string
 	FeaturedItems    []ImgDisplay
@@ -268,7 +267,7 @@ type Auction struct {
 func (a *Auction) ScrapAuction(vr VocationRepository, gr GenderRepository, wr WorldRepository, c *colly.Collector, auctionId int, link string) []error {
 	var errorList []error
 
-	a.TibiaAuctionId = auctionId
+	a.Id = auctionId
 
 	c.OnError(func(r *colly.Response, err error) {
 		errorList = append(errorList, eris.Errorf("Url: %s failed with status code: %d", r.Request.URL, r.StatusCode))

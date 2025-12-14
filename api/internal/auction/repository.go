@@ -137,7 +137,7 @@ func (r *PgAuctionRepository) Save(auction *Auction) error {
 	var b strings.Builder
 
 	b.WriteString("INSERT INTO tc_auction (")
-	b.WriteString("ta_tibia_auction_id, ta_tibia_auction_link, ta_img, ta_char_name, ta_char_level, ta_char_vocation, ta_char_gender, ta_char_world, ")
+	b.WriteString("ta_id, ta_tibia_auction_link, ta_img, ta_char_name, ta_char_level, ta_char_vocation, ta_char_gender, ta_char_world, ")
 	b.WriteString("ta_current_bid, ta_auction_start, ta_auction_end, ta_is_active, ta_date_add, ta_date_upd")
 	b.WriteString(") VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)")
 
@@ -145,7 +145,7 @@ func (r *PgAuctionRepository) Save(auction *Auction) error {
 
 	_, err := r.connection.Exec(
 		query,
-		auction.TibiaAuctionId,
+		auction.Id,
 		auction.TibiaAuctionLink,
 		auction.Img,
 		auction.CharName,

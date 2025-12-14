@@ -1,10 +1,10 @@
 CREATE TABLE IF NOT EXISTS tc_world (
-    tw_id SERIAL PRIMARY KEY,
+    tw_id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     tw_name VARCHAR UNIQUE NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS tc_vocation (
-    tv_id SERIAL PRIMARY KEY,
+    tv_id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     tv_name VARCHAR UNIQUE NOT NULL
 );
 
@@ -15,8 +15,7 @@ CREATE TABLE IF NOT EXISTS tc_gender (
 
 
 CREATE TABLE IF NOT EXISTS tc_auction (
-    ta_id SERIAL PRIMARY KEY,
-    ta_tibia_auction_id INT UNIQUE NOT NULL,
+    ta_id INT UNIQUE NOT NULL PRIMARY KEY,
     ta_tibia_auction_link VARCHAR NOT NULL,
     ta_img VARCHAR NOT NULL,
     ta_char_name VARCHAR NOT NULL,
@@ -55,7 +54,7 @@ CREATE INDEX idx_ta_fk_gender ON tc_auction (ta_char_gender);
 CREATE INDEX idx_ta_fk_world ON tc_auction (ta_char_world);
 
 CREATE TABLE IF NOT EXISTS tc_bid_history (
-    tbh_id BIGSERIAL PRIMARY KEY,
+    tbh_id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     tbh_auction_id INT NOT NULL,
     tbh_bid INT NOT NULL,
     tbh_date_add TIMESTAMP WITHOUT TIME ZONE NOT NULL,
