@@ -131,7 +131,7 @@ func NewPgWorldRepository(c *sql.DB) *PgWorldRepository {
 }
 
 func (wr *PgWorldRepository) GetByName(world string) (*World, error) {
-	statement, err := wr.connection.Prepare("SELECT * FROM tc_world WHERE tg_name = $1;")
+	statement, err := wr.connection.Prepare("SELECT * FROM tc_world WHERE tw_name = $1;")
 
 	if err != nil {
 		return nil, eris.New(err.Error())
