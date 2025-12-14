@@ -24,7 +24,7 @@ func NewPgVocationRepository(c *sql.DB) *PgVocationReository {
 }
 
 func (vr *PgVocationReository) GetByName(vocation string) (*Vocation, error) {
-	statement, err := vr.connection.Prepare("SELECT * FROM tc_vocation WHERE name = $1;")
+	statement, err := vr.connection.Prepare("SELECT * FROM tc_vocation WHERE tv_name = $1;")
 
 	if err != nil {
 		return nil, eris.New(err.Error())
@@ -76,7 +76,7 @@ func NewPgGenderRepository(c *sql.DB) *PgGenderRepository {
 }
 
 func (gr *PgGenderRepository) GetByName(gender string) (*Gender, error) {
-	statement, err := gr.connection.Prepare("SELECT * FROM tc_gender WHERE name = $1;")
+	statement, err := gr.connection.Prepare("SELECT * FROM tc_gender WHERE tg_name = $1;")
 
 	if err != nil {
 		return nil, eris.New(err.Error())
@@ -131,7 +131,7 @@ func NewPgWorldRepository(c *sql.DB) *PgWorldRepository {
 }
 
 func (wr *PgWorldRepository) GetByName(world string) (*World, error) {
-	statement, err := wr.connection.Prepare("SELECT * FROM tc_world WHERE name = $1;")
+	statement, err := wr.connection.Prepare("SELECT * FROM tc_world WHERE tg_name = $1;")
 
 	if err != nil {
 		return nil, eris.New(err.Error())
