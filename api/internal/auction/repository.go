@@ -49,6 +49,10 @@ func (vr *PgVocationReository) GetByName(vocation string) (*Vocation, error) {
 func (vr *PgVocationReository) Save(vocation string) error {
 	statement, err := vr.connection.Prepare("INSERT INTO tc_vocation (tv_name) VALUES ($1)")
 
+	if err != nil {
+		return eris.New(err.Error())
+	}
+
 	_, err = statement.Exec(statement, vocation)
 
 	if err != nil {
@@ -100,6 +104,10 @@ func (gr *PgGenderRepository) GetByName(gender string) (*Gender, error) {
 func (gr *PgGenderRepository) Save(gender string) error {
 	statement, err := gr.connection.Prepare("INSERT INTO tc_gender (tg_name) VALUES ($1)")
 
+	if err != nil {
+		return eris.New(err.Error())
+	}
+
 	_, err = statement.Exec(statement, gender)
 
 	if err != nil {
@@ -150,6 +158,10 @@ func (wr *PgWorldRepository) GetByName(world string) (*World, error) {
 
 func (wr *PgWorldRepository) Save(world string) error {
 	statement, err := wr.connection.Prepare("INSERT INTO tc_world (tw_name) VALUES ($1)")
+
+	if err != nil {
+		return eris.New(err.Error())
+	}
 
 	_, err = statement.Exec(statement, world)
 
