@@ -1,6 +1,7 @@
 package auction
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"math/rand"
@@ -11,6 +12,7 @@ import (
 	"time"
 
 	"github.com/adriein/tibia-char/pkg/helper/array"
+	"github.com/adriein/tibia-char/pkg/tcerrors"
 	"github.com/gocolly/colly/v2"
 	"github.com/rotisserie/eris"
 )
@@ -260,10 +262,10 @@ type Auction struct {
 }
 
 func (a *Auction) ScrapAuction(vr VocationRepository, gr GenderRepository, wr WorldRepository, c *colly.Collector, link string) error {
-	var errors []error
+	var errorList []error
 
 	c.OnError(func(r *colly.Response, err error) {
-		errors = append(errors, eris.Errorf("Url: %s failed with status code: %d", r.Request.URL, r.StatusCode))
+		errorList = append(errorList, eris.Errorf("Url: %s failed with status code: %d", r.Request.URL, r.StatusCode))
 	})
 
 	c.OnHTML("div[class=Auction]", func(e *colly.HTMLElement) {
@@ -276,10 +278,19 @@ func (a *Auction) ScrapAuction(vr VocationRepository, gr GenderRepository, wr Wo
 
 				world, err := wr.GetByName(e.ChildText("a[href]"))
 
-				if err != nil {
-					errors = append(errors, err)
+				if errors.Is(err, tcerrors.NotFoundError) {
+					wr.Save(e.ChildText("a[href]"))
 
-					return false
+					world, err := wr.GetByName(e.ChildText("a[href]"))
+
+					if err != nil {
+						errorList = append(errorList, err)
+
+						return false
+					}
+
+					a.CharWorld = world
+					break
 				}
 
 				a.CharWorld = world
@@ -288,30 +299,48 @@ func (a *Auction) ScrapAuction(vr VocationRepository, gr GenderRepository, wr Wo
 
 				level, err := a.extractLevel(auctionHeader)
 
-				a.CharLevel = level
-
 				if err != nil {
-					errors = append(errors, eris.Errorf("Error extracting character level: %s", err.Error()))
+					errorList = append(errorList, eris.Errorf("Error extracting character level: %s", err.Error()))
 
 					return false
 				}
 
+				a.CharLevel = level
+
 				vocation, err := vr.GetByName(a.extractVocation(auctionHeader))
 
-				if err != nil {
-					errors = append(errors, err)
+				if errors.Is(err, tcerrors.NotFoundError) {
+					vr.Save(a.extractVocation(auctionHeader))
 
-					return false
+					vocation, err := vr.GetByName(a.extractVocation(auctionHeader))
+
+					if err != nil {
+						errorList = append(errorList, err)
+
+						return false
+					}
+
+					a.CharVocation = vocation
+					break
 				}
 
 				a.CharVocation = vocation
 
 				gender, err := gr.GetByName(a.extractGender(auctionHeader))
 
-				if err != nil {
-					errors = append(errors, err)
+				if errors.Is(err, tcerrors.NotFoundError) {
+					gr.Save(a.extractGender(auctionHeader))
 
-					return false
+					gender, err := gr.GetByName(a.extractGender(auctionHeader))
+
+					if err != nil {
+						errorList = append(errorList, err)
+
+						return false
+					}
+
+					a.CharGender = gender
+					break
 				}
 
 				a.CharGender = gender
@@ -346,7 +375,7 @@ func (a *Auction) ScrapAuction(vr VocationRepository, gr GenderRepository, wr Wo
 								dateCET, err := time.Parse("Jan 02 2006, 15:04 MST", normDate)
 
 								if err != nil {
-									errors = append(errors, eris.Errorf("Error parsing auction date: %s", err.Error()))
+									errorList = append(errorList, eris.Errorf("Error parsing auction date: %s", err.Error()))
 
 									return false
 								}
@@ -369,7 +398,7 @@ func (a *Auction) ScrapAuction(vr VocationRepository, gr GenderRepository, wr Wo
 								bid, err := strconv.Atoi(rawBid)
 
 								if err != nil {
-									errors = append(errors, eris.Errorf("Error converting bid to int: %s", err.Error()))
+									errorList = append(errorList, eris.Errorf("Error converting bid to int: %s", err.Error()))
 
 									return false
 								}
@@ -398,9 +427,9 @@ func (a *Auction) ScrapAuction(vr VocationRepository, gr GenderRepository, wr Wo
 
 	c.Visit(link)
 
-	if len(errors) != 0 {
+	if len(errorList) != 0 {
 		//TODO: define what to do with those errors array
-		return eris.Errorf("%d Errors happened on Character Detail extraction", len(errors))
+		return eris.Errorf("%d Errors happened on Character Detail extraction", len(errorList))
 	}
 
 	return nil

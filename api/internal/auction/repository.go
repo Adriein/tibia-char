@@ -6,24 +6,25 @@ import (
 	"strings"
 	"time"
 
-	tcerrors "github.com/adriein/tibia-char/pkg/errors"
+	"github.com/adriein/tibia-char/pkg/tcerrors"
 	"github.com/rotisserie/eris"
 )
 
 type VocationRepository interface {
 	GetByName(vocation string) (*Vocation, error)
+	Save(vocation string) error
 }
 
 type PgVocationReository struct {
 	connection *sql.DB
 }
 
-func (r *PgVocationReository) NewPgVocationRepository(c *sql.DB) *PgVocationReository {
+func NewPgVocationRepository(c *sql.DB) *PgVocationReository {
 	return &PgVocationReository{connection: c}
 }
 
-func (v *PgVocationReository) GetByName(vocation string) (*Vocation, error) {
-	statement, err := v.connection.Prepare("SELECT * FROM tc_vocation WHERE name = $1;")
+func (vr *PgVocationReository) GetByName(vocation string) (*Vocation, error) {
+	statement, err := vr.connection.Prepare("SELECT * FROM tc_vocation WHERE name = $1;")
 
 	if err != nil {
 		return nil, eris.New(err.Error())
@@ -34,10 +35,7 @@ func (v *PgVocationReository) GetByName(vocation string) (*Vocation, error) {
 		name string
 	)
 
-	if scanErr := statement.QueryRow(vocation).Scan(
-		&id,
-		&name,
-	); scanErr != nil {
+	if scanErr := statement.QueryRow(vocation).Scan(&id, &name); scanErr != nil {
 		if errors.Is(scanErr, sql.ErrNoRows) {
 			return nil, eris.Wrapf(tcerrors.NotFoundError, "Vocation %s not found", vocation)
 		}
@@ -48,20 +46,33 @@ func (v *PgVocationReository) GetByName(vocation string) (*Vocation, error) {
 	return &Vocation{Id: id, Name: name}, nil
 }
 
+func (vr *PgVocationReository) Save(vocation string) error {
+	statement, err := vr.connection.Prepare("INSERT INTO tc_vocation (tv_name) VALUES ($1)")
+
+	_, err = statement.Exec(statement, vocation)
+
+	if err != nil {
+		return eris.New(err.Error())
+	}
+
+	return nil
+}
+
 type GenderRepository interface {
 	GetByName(gender string) (*Gender, error)
+	Save(gender string) error
 }
 
 type PgGenderRepository struct {
 	connection *sql.DB
 }
 
-func (r *PgGenderRepository) NewPgGenderRepository(c *sql.DB) *PgGenderRepository {
+func NewPgGenderRepository(c *sql.DB) *PgGenderRepository {
 	return &PgGenderRepository{connection: c}
 }
 
-func (v *PgGenderRepository) GetByName(gender string) (*Gender, error) {
-	statement, err := v.connection.Prepare("SELECT * FROM tc_gender WHERE name = $1;")
+func (gr *PgGenderRepository) GetByName(gender string) (*Gender, error) {
+	statement, err := gr.connection.Prepare("SELECT * FROM tc_gender WHERE name = $1;")
 
 	if err != nil {
 		return nil, eris.New(err.Error())
@@ -86,20 +97,33 @@ func (v *PgGenderRepository) GetByName(gender string) (*Gender, error) {
 	return &Gender{Id: id, Name: name}, nil
 }
 
+func (gr *PgGenderRepository) Save(gender string) error {
+	statement, err := gr.connection.Prepare("INSERT INTO tc_gender (tg_name) VALUES ($1)")
+
+	_, err = statement.Exec(statement, gender)
+
+	if err != nil {
+		return eris.New(err.Error())
+	}
+
+	return nil
+}
+
 type WorldRepository interface {
 	GetByName(world string) (*World, error)
+	Save(world string) error
 }
 
 type PgWorldRepository struct {
 	connection *sql.DB
 }
 
-func (r *PgGenderRepository) NewPgWorldRepository(c *sql.DB) *PgWorldRepository {
+func NewPgWorldRepository(c *sql.DB) *PgWorldRepository {
 	return &PgWorldRepository{connection: c}
 }
 
-func (v *PgWorldRepository) GetByName(world string) (*World, error) {
-	statement, err := v.connection.Prepare("SELECT * FROM tc_world WHERE name = $1;")
+func (wr *PgWorldRepository) GetByName(world string) (*World, error) {
+	statement, err := wr.connection.Prepare("SELECT * FROM tc_world WHERE name = $1;")
 
 	if err != nil {
 		return nil, eris.New(err.Error())
@@ -122,6 +146,18 @@ func (v *PgWorldRepository) GetByName(world string) (*World, error) {
 	}
 
 	return &World{Id: id, Name: name}, nil
+}
+
+func (wr *PgWorldRepository) Save(world string) error {
+	statement, err := wr.connection.Prepare("INSERT INTO tc_world (tw_name) VALUES ($1)")
+
+	_, err = statement.Exec(statement, world)
+
+	if err != nil {
+		return eris.New(err.Error())
+	}
+
+	return nil
 }
 
 type AuctionRepository interface {
