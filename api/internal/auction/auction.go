@@ -272,6 +272,8 @@ func (a *Auction) ScrapAuction(vr VocationRepository, gr GenderRepository, wr Wo
 		errorList = append(errorList, eris.Errorf("Url: %s failed with status code: %d", r.Request.URL, r.StatusCode))
 	})
 
+	a.TibiaAuctionLink = link
+
 	c.OnHTML("div[class=Auction]", func(e *colly.HTMLElement) {
 		e.ForEachWithBreak("div[class]", func(_ int, ch *colly.HTMLElement) bool {
 			class := ch.Attr("class")
