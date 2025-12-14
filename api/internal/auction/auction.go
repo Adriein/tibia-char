@@ -15,11 +15,26 @@ import (
 	"github.com/rotisserie/eris"
 )
 
+type Vocation struct {
+	Id   string
+	Name string
+}
+
+type Gender struct {
+	Id   string
+	Name string
+}
+
+type World struct {
+	Id   string
+	Name string
+}
+
 type Auctions struct {
 	Data []Auction
 }
 
-func (a *Auctions) Scrap(r *AuctionRepository, ls *CollyScrapper, ds *CollyScrapper, logger *log.Logger) error {
+func (a *Auctions) Scrap(ar AuctionRepository, vr VocationRepository, gr GenderRepository, wr WorldRepository, ls *CollyScrapper, ds *CollyScrapper, logger *log.Logger) error {
 	currentAuctions, err := a.getTotalCurrentAuctions(ls)
 
 	if err != nil {
@@ -71,13 +86,15 @@ func (a *Auctions) Scrap(r *AuctionRepository, ls *CollyScrapper, ds *CollyScrap
 
 				auction := Auction{}
 
-				err = auction.ScrapAuction(c, url)
+				err = auction.ScrapAuction(vr, gr, wr, c, url)
 
 				if err != nil {
 					logger.Printf("Error fetching details for auction %d: %v\n", auctionId, err)
 
 					return
 				}
+
+				ar.Save(&auction)
 
 			}(link)
 		}
@@ -231,9 +248,9 @@ type Auction struct {
 	Featured         []string
 	CharName         string
 	CharLevel        int
-	CharVocation     string
-	CharGender       string
-	CharWorld        string
+	CharVocation     *Vocation
+	CharGender       *Gender
+	CharWorld        *World
 	Bid              int
 	AuctionStart     time.Time
 	AuctionEnd       time.Time
@@ -242,7 +259,7 @@ type Auction struct {
 	DateUpd          time.Time
 }
 
-func (a *Auction) ScrapAuction(c *colly.Collector, link string) error {
+func (a *Auction) ScrapAuction(vr VocationRepository, gr GenderRepository, wr WorldRepository, c *colly.Collector, link string) error {
 	var errors []error
 
 	c.OnError(func(r *colly.Response, err error) {
@@ -257,7 +274,15 @@ func (a *Auction) ScrapAuction(c *colly.Collector, link string) error {
 			case "AuctionHeader":
 				a.CharName = e.ChildText("div[class=AuctionCharacterName]")
 
-				a.CharWorld = e.ChildText("a[href]")
+				world, err := wr.GetByName(e.ChildText("a[href]"))
+
+				if err != nil {
+					errors = append(errors, err)
+
+					return false
+				}
+
+				a.CharWorld = world
 
 				auctionHeader := e.Text
 
@@ -271,9 +296,25 @@ func (a *Auction) ScrapAuction(c *colly.Collector, link string) error {
 					return false
 				}
 
-				a.CharVocation = a.extractVocation(auctionHeader)
+				vocation, err := vr.GetByName(a.extractVocation(auctionHeader))
 
-				a.CharGender = a.extractGender(auctionHeader)
+				if err != nil {
+					errors = append(errors, err)
+
+					return false
+				}
+
+				a.CharVocation = vocation
+
+				gender, err := gr.GetByName(a.extractGender(auctionHeader))
+
+				if err != nil {
+					errors = append(errors, err)
+
+					return false
+				}
+
+				a.CharGender = gender
 			case "AuctionBody":
 				e.ForEachWithBreak("div", func(_ int, ch *colly.HTMLElement) bool {
 					classes := strings.Split(ch.Attr("class"), " ")
