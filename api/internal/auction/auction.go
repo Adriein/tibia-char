@@ -1,7 +1,6 @@
 package auction
 
 import (
-	"errors"
 	"fmt"
 	"log"
 	"math/rand"
@@ -12,7 +11,6 @@ import (
 	"time"
 
 	"github.com/adriein/tibia-char/pkg/helper/array"
-	"github.com/adriein/tibia-char/pkg/tcerrors"
 	"github.com/gocolly/colly/v2"
 	"github.com/rotisserie/eris"
 )
@@ -88,7 +86,7 @@ func (a *Auctions) Scrap(ar AuctionRepository, vr VocationRepository, gr GenderR
 
 				auction := Auction{}
 
-				errors := auction.ScrapAuction(vr, gr, wr, c, url)
+				errors := auction.ScrapAuction(vr, gr, wr, c, auctionId, url)
 
 				if len(errors) != 0 {
 					logger.Printf("Error fetching details for auction %d\n", auctionId)
@@ -100,7 +98,9 @@ func (a *Auctions) Scrap(ar AuctionRepository, vr VocationRepository, gr GenderR
 					return
 				}
 
-				ar.Save(&auction)
+				if err := ar.Save(&auction); err != nil {
+					logger.Printf("Error fetching details for auction %d: %v\n", auctionId, err)
+				}
 
 			}(link)
 		}
@@ -265,8 +265,10 @@ type Auction struct {
 	DateUpd          time.Time
 }
 
-func (a *Auction) ScrapAuction(vr VocationRepository, gr GenderRepository, wr WorldRepository, c *colly.Collector, link string) []error {
+func (a *Auction) ScrapAuction(vr VocationRepository, gr GenderRepository, wr WorldRepository, c *colly.Collector, auctionId int, link string) []error {
 	var errorList []error
+
+	a.TibiaAuctionId = auctionId
 
 	c.OnError(func(r *colly.Response, err error) {
 		errorList = append(errorList, eris.Errorf("Url: %s failed with status code: %d", r.Request.URL, r.StatusCode))
@@ -282,22 +284,7 @@ func (a *Auction) ScrapAuction(vr VocationRepository, gr GenderRepository, wr Wo
 			case "AuctionHeader":
 				a.CharName = e.ChildText("div[class=AuctionCharacterName]")
 
-				world, err := wr.GetByName(e.ChildText("a[href]"))
-
-				if errors.Is(err, tcerrors.NotFoundError) {
-					wr.Save(e.ChildText("a[href]"))
-
-					world, err := wr.GetByName(e.ChildText("a[href]"))
-
-					if err != nil {
-						errorList = append(errorList, err)
-
-						return false
-					}
-
-					a.CharWorld = world
-					break
-				}
+				world, err := wr.GetOrCreate(e.ChildText("a[href]"))
 
 				if err != nil {
 					errorList = append(errorList, err)
@@ -319,22 +306,7 @@ func (a *Auction) ScrapAuction(vr VocationRepository, gr GenderRepository, wr Wo
 
 				a.CharLevel = level
 
-				vocation, err := vr.GetByName(a.extractVocation(auctionHeader))
-
-				if errors.Is(err, tcerrors.NotFoundError) {
-					vr.Save(a.extractVocation(auctionHeader))
-
-					vocation, err := vr.GetByName(a.extractVocation(auctionHeader))
-
-					if err != nil {
-						errorList = append(errorList, err)
-
-						return false
-					}
-
-					a.CharVocation = vocation
-					break
-				}
+				vocation, err := vr.GetOrCreate(a.extractVocation(auctionHeader))
 
 				if err != nil {
 					errorList = append(errorList, err)
@@ -344,22 +316,7 @@ func (a *Auction) ScrapAuction(vr VocationRepository, gr GenderRepository, wr Wo
 
 				a.CharVocation = vocation
 
-				gender, err := gr.GetByName(a.extractGender(auctionHeader))
-
-				if errors.Is(err, tcerrors.NotFoundError) {
-					gr.Save(a.extractGender(auctionHeader))
-
-					gender, err := gr.GetByName(a.extractGender(auctionHeader))
-
-					if err != nil {
-						errorList = append(errorList, err)
-
-						return false
-					}
-
-					a.CharGender = gender
-					break
-				}
+				gender, err := gr.GetOrCreate(a.extractGender(auctionHeader))
 
 				if err != nil {
 					errorList = append(errorList, err)
@@ -368,6 +325,7 @@ func (a *Auction) ScrapAuction(vr VocationRepository, gr GenderRepository, wr Wo
 				}
 
 				a.CharGender = gender
+
 			case "AuctionBody":
 				e.ForEachWithBreak("div", func(_ int, ch *colly.HTMLElement) bool {
 					classes := strings.Split(ch.Attr("class"), " ")

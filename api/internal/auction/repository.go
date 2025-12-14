@@ -2,17 +2,14 @@ package auction
 
 import (
 	"database/sql"
-	"errors"
 	"strings"
 	"time"
 
-	"github.com/adriein/tibia-char/pkg/tcerrors"
 	"github.com/rotisserie/eris"
 )
 
 type VocationRepository interface {
-	GetByName(vocation string) (*Vocation, error)
-	Save(vocation string) error
+	GetOrCreate(vocation string) (*Vocation, error)
 }
 
 type PgVocationReository struct {
@@ -23,48 +20,33 @@ func NewPgVocationRepository(c *sql.DB) *PgVocationReository {
 	return &PgVocationReository{connection: c}
 }
 
-func (vr *PgVocationReository) GetByName(vocation string) (*Vocation, error) {
-	statement, err := vr.connection.Prepare("SELECT * FROM tc_vocation WHERE tv_name = $1;")
+func (vr *PgVocationReository) GetOrCreate(vocation string) (*Vocation, error) {
+	query := `
+		WITH ins AS (
+			INSERT INTO tc_vocation (tv_name)
+			VALUES ($1)
+			ON CONFLICT (tv_name) DO NOTHING
+			RETURNING tv_id, tv_name
+		)
+		SELECT tv_id, tv_name FROM ins
+		UNION ALL
+		SELECT tv_id, tv_name FROM tc_vocation WHERE tv_name = $1
+		LIMIT 1;
+	`
+
+	var dto Vocation
+
+	err := vr.connection.QueryRow(query, vocation).Scan(&dto.Id, &dto.Name)
 
 	if err != nil {
 		return nil, eris.New(err.Error())
 	}
 
-	var (
-		id   string
-		name string
-	)
-
-	if scanErr := statement.QueryRow(vocation).Scan(&id, &name); scanErr != nil {
-		if errors.Is(scanErr, sql.ErrNoRows) {
-			return nil, eris.Wrapf(tcerrors.NotFoundError, "Vocation %s not found", vocation)
-		}
-
-		return nil, eris.New(scanErr.Error())
-	}
-
-	return &Vocation{Id: id, Name: name}, nil
-}
-
-func (vr *PgVocationReository) Save(vocation string) error {
-	var b strings.Builder
-
-	b.WriteString("INSERT INTO tc_vocation (tv_name) VALUES ($1)")
-
-	query := b.String()
-
-	_, err := vr.connection.Exec(query, vocation)
-
-	if err != nil {
-		return eris.New(err.Error())
-	}
-
-	return nil
+	return &dto, nil
 }
 
 type GenderRepository interface {
-	GetByName(gender string) (*Gender, error)
-	Save(gender string) error
+	GetOrCreate(gender string) (*Gender, error)
 }
 
 type PgGenderRepository struct {
@@ -75,51 +57,33 @@ func NewPgGenderRepository(c *sql.DB) *PgGenderRepository {
 	return &PgGenderRepository{connection: c}
 }
 
-func (gr *PgGenderRepository) GetByName(gender string) (*Gender, error) {
-	statement, err := gr.connection.Prepare("SELECT * FROM tc_gender WHERE tg_name = $1;")
+func (gr *PgGenderRepository) GetOrCreate(gender string) (*Gender, error) {
+	query := `
+		WITH ins AS (
+			INSERT INTO tc_gender (tg_name)
+			VALUES ($1)
+			ON CONFLICT (tg_name) DO NOTHING
+			RETURNING tg_id, tg_name
+		)
+		SELECT tg_id, tg_name FROM ins
+		UNION ALL
+		SELECT tg_id, tg_name FROM tc_gender WHERE tg_name = $1
+		LIMIT 1;
+	`
+
+	var dto Gender
+
+	err := gr.connection.QueryRow(query, gender).Scan(&dto.Id, &dto.Name)
 
 	if err != nil {
 		return nil, eris.New(err.Error())
 	}
 
-	var (
-		id   string
-		name string
-	)
-
-	if scanErr := statement.QueryRow(gender).Scan(
-		&id,
-		&name,
-	); scanErr != nil {
-		if errors.Is(scanErr, sql.ErrNoRows) {
-			return nil, eris.Wrapf(tcerrors.NotFoundError, "Gender %s not found", gender)
-		}
-
-		return nil, eris.New(scanErr.Error())
-	}
-
-	return &Gender{Id: id, Name: name}, nil
-}
-
-func (gr *PgGenderRepository) Save(gender string) error {
-	var b strings.Builder
-
-	b.WriteString("INSERT INTO tc_gender (tg_name) VALUES ($1)")
-
-	query := b.String()
-
-	_, err := gr.connection.Exec(query, gender)
-
-	if err != nil {
-		return eris.New(err.Error())
-	}
-
-	return nil
+	return &dto, nil
 }
 
 type WorldRepository interface {
-	GetByName(world string) (*World, error)
-	Save(world string) error
+	GetOrCreate(world string) (*World, error)
 }
 
 type PgWorldRepository struct {
@@ -130,46 +94,29 @@ func NewPgWorldRepository(c *sql.DB) *PgWorldRepository {
 	return &PgWorldRepository{connection: c}
 }
 
-func (wr *PgWorldRepository) GetByName(world string) (*World, error) {
-	statement, err := wr.connection.Prepare("SELECT * FROM tc_world WHERE tw_name = $1;")
+func (wr *PgWorldRepository) GetOrCreate(world string) (*World, error) {
+	query := `
+		WITH ins AS (
+			INSERT INTO tc_world (tw_name)
+			VALUES ($1)
+			ON CONFLICT (tw_name) DO NOTHING
+			RETURNING tw_id, tw_name
+		)
+		SELECT tw_id, tw_name FROM ins
+		UNION ALL
+		SELECT tw_id, tw_name FROM tc_world WHERE tw_name = $1
+		LIMIT 1;
+	`
+
+	var dto World
+
+	err := wr.connection.QueryRow(query, world).Scan(&dto.Id, &dto.Name)
 
 	if err != nil {
 		return nil, eris.New(err.Error())
 	}
 
-	var (
-		id   string
-		name string
-	)
-
-	if scanErr := statement.QueryRow(world).Scan(
-		&id,
-		&name,
-	); scanErr != nil {
-		if errors.Is(scanErr, sql.ErrNoRows) {
-			return nil, eris.Wrapf(tcerrors.NotFoundError, "World %s not found", world)
-		}
-
-		return nil, eris.New(scanErr.Error())
-	}
-
-	return &World{Id: id, Name: name}, nil
-}
-
-func (wr *PgWorldRepository) Save(world string) error {
-	var b strings.Builder
-
-	b.WriteString("INSERT INTO tc_world (tw_name) VALUES ($1)")
-
-	query := b.String()
-
-	_, err := wr.connection.Exec(query, world)
-
-	if err != nil {
-		return eris.New(err.Error())
-	}
-
-	return nil
+	return &dto, nil
 }
 
 type AuctionRepository interface {
@@ -199,6 +146,7 @@ func (r *PgAuctionRepository) Save(auction *Auction) error {
 	_, err := r.connection.Exec(
 		query,
 		auction.TibiaAuctionId,
+		auction.TibiaAuctionLink,
 		auction.Img,
 		auction.CharName,
 		auction.CharLevel,

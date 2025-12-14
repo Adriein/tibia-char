@@ -15,7 +15,7 @@ CREATE TABLE IF NOT EXISTS tc_gender (
 
 
 CREATE TABLE IF NOT EXISTS tc_auction (
-    ta_id INT PRIMARY KEY,
+    ta_id SERIAL PRIMARY KEY,
     ta_tibia_auction_id INT UNIQUE NOT NULL,
     ta_tibia_auction_link VARCHAR NOT NULL,
     ta_img VARCHAR NOT NULL,
