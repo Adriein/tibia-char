@@ -1,6 +1,8 @@
 package internal
 
 import (
+	"database/sql"
+	"fmt"
 	"log"
 	"os"
 
@@ -9,7 +11,9 @@ import (
 	"github.com/joho/godotenv"
 )
 
-type App struct{}
+type App struct {
+	Databse *sql.DB
+}
 
 func NewApp() *App {
 	if os.Getenv(constants.Env) != constants.Production {
@@ -32,5 +36,24 @@ func NewApp() *App {
 		log.Fatal(envCheckerErr.Error())
 	}
 
-	return &App{}
+	return &App{
+		Databse: initDatabase(),
+	}
+}
+
+func initDatabase() *sql.DB {
+	databaseDsn := fmt.Sprintf(
+		"postgresql://%s:%s@localhost:5432/%s?sslmode=disable",
+		os.Getenv(constants.DatabaseUser),
+		os.Getenv(constants.DatabasePassword),
+		os.Getenv(constants.DatabaseName),
+	)
+
+	database, dbConnErr := sql.Open("postgres", databaseDsn)
+
+	if dbConnErr != nil {
+		log.Fatal(dbConnErr.Error())
+	}
+
+	return database
 }
