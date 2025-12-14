@@ -88,10 +88,14 @@ func (a *Auctions) Scrap(ar AuctionRepository, vr VocationRepository, gr GenderR
 
 				auction := Auction{}
 
-				err = auction.ScrapAuction(vr, gr, wr, c, url)
+				errors := auction.ScrapAuction(vr, gr, wr, c, url)
 
-				if err != nil {
-					logger.Printf("Error fetching details for auction %d: %v\n", auctionId, err)
+				if len(errors) != 0 {
+					logger.Printf("Error fetching details for auction %d\n", auctionId)
+
+					for _, scrapErr := range errors {
+						logger.Printf("Error ocurred in auction %d: %v\n", auctionId, scrapErr)
+					}
 
 					return
 				}
@@ -261,7 +265,7 @@ type Auction struct {
 	DateUpd          time.Time
 }
 
-func (a *Auction) ScrapAuction(vr VocationRepository, gr GenderRepository, wr WorldRepository, c *colly.Collector, link string) error {
+func (a *Auction) ScrapAuction(vr VocationRepository, gr GenderRepository, wr WorldRepository, c *colly.Collector, link string) []error {
 	var errorList []error
 
 	c.OnError(func(r *colly.Response, err error) {
@@ -291,6 +295,12 @@ func (a *Auction) ScrapAuction(vr VocationRepository, gr GenderRepository, wr Wo
 
 					a.CharWorld = world
 					break
+				}
+
+				if err != nil {
+					errorList = append(errorList, err)
+
+					return false
 				}
 
 				a.CharWorld = world
@@ -324,6 +334,12 @@ func (a *Auction) ScrapAuction(vr VocationRepository, gr GenderRepository, wr Wo
 					break
 				}
 
+				if err != nil {
+					errorList = append(errorList, err)
+
+					return false
+				}
+
 				a.CharVocation = vocation
 
 				gender, err := gr.GetByName(a.extractGender(auctionHeader))
@@ -341,6 +357,12 @@ func (a *Auction) ScrapAuction(vr VocationRepository, gr GenderRepository, wr Wo
 
 					a.CharGender = gender
 					break
+				}
+
+				if err != nil {
+					errorList = append(errorList, err)
+
+					return false
 				}
 
 				a.CharGender = gender
@@ -428,8 +450,7 @@ func (a *Auction) ScrapAuction(vr VocationRepository, gr GenderRepository, wr Wo
 	c.Visit(link)
 
 	if len(errorList) != 0 {
-		//TODO: define what to do with those errors array
-		return eris.Errorf("%d Errors happened on Character Detail extraction", len(errorList))
+		return errorList
 	}
 
 	return nil
