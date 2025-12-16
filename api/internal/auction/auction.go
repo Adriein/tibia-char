@@ -15,6 +15,22 @@ import (
 	"github.com/rotisserie/eris"
 )
 
+type AuctionDTO struct {
+	AuctionId        int
+	Link             string
+	ImgUrl           string
+	FeaturedItems    []ImgDisplay
+	Featured         []string
+	CharName         string
+	CharLevel        int
+	CharVocation     string
+	CharGender       string
+	CharWorld        string
+	Bid              int
+	AuctionStartTime time.Time
+	AuctionEndTime   time.Time
+}
+
 type Vocation struct {
 	Id   string
 	Name string
@@ -111,8 +127,8 @@ func (a *Auctions) Scrap(ar AuctionRepository, vr VocationRepository, gr GenderR
 	return nil
 }
 
-func (a *Auctions) getCurrentAuctionLinks(ls *CollyScrapper) (BazaarAuctionLinkSet, error) {
-	set := make(BazaarAuctionLinkSet)
+func (a *Auctions) getCurrentAuctionLinks(ls *CollyScrapper) (AuctionLinkSet, error) {
+	set := make(AuctionLinkSet)
 
 	c := ls.Collector
 
@@ -441,29 +457,29 @@ func (a *Auction) extractGender(auctionHeader string) string {
 	return strings.TrimSpace(headerParts[2])
 }
 
-type BazaarAuctionLinkSet map[int]string
+type AuctionLinkSet map[int]string
 
-func (set BazaarAuctionLinkSet) Get(key int) (string, bool) {
+func (set AuctionLinkSet) Get(key int) (string, bool) {
 	value, ok := set[key]
 
 	return value, ok
 }
 
-func (set BazaarAuctionLinkSet) Set(key int, value string) {
+func (set AuctionLinkSet) Set(key int, value string) {
 	set[key] = value
 }
 
-func (set BazaarAuctionLinkSet) Del(key int) {
+func (set AuctionLinkSet) Del(key int) {
 	delete(set, key)
 }
 
-func (set BazaarAuctionLinkSet) Has(key int) bool {
+func (set AuctionLinkSet) Has(key int) bool {
 	_, ok := set[key]
 
 	return ok
 }
 
-func (set BazaarAuctionLinkSet) Values() []string {
+func (set AuctionLinkSet) Values() []string {
 	values := make([]string, 0, len(set))
 
 	for _, v := range set {
