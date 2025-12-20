@@ -28,3 +28,33 @@ func Chunk[T any](s []T, chunkSize int) [][]T {
 
 	return result
 }
+
+// KeyValue represents a key-value pair from a map
+type KeyValue[K comparable, V any] struct {
+	Key   K
+	Value V
+}
+
+// ChunkMap converts a map into chunks of KeyValue pairs
+func ChunkMap[K comparable, V any](m map[K]V, chunkSize int) [][]KeyValue[K, V] {
+	if chunkSize <= 0 || len(m) == 0 {
+		return [][]KeyValue[K, V]{}
+	}
+
+	numChunks := (len(m) + chunkSize - 1) / chunkSize
+	result := make([][]KeyValue[K, V], 0, numChunks)
+	currentChunk := make([]KeyValue[K, V], 0, chunkSize)
+
+	i := 0
+	for k, v := range m {
+		currentChunk = append(currentChunk, KeyValue[K, V]{Key: k, Value: v})
+		i++
+
+		if i%chunkSize == 0 || i == len(m) {
+			result = append(result, currentChunk)
+			currentChunk = make([]KeyValue[K, V], 0, chunkSize)
+		}
+	}
+
+	return result
+}

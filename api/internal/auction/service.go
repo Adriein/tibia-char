@@ -50,7 +50,7 @@ func (s *Service) ScrapBazaar() error {
 
 	const MaxConcurrency = 5
 
-	links := array.Chunk(auctionLinkSet.Values(), MaxConcurrency)
+	links := array.ChunkMap(auctionLinkSet, MaxConcurrency)
 
 	var wg sync.WaitGroup
 
@@ -63,17 +63,20 @@ func (s *Service) ScrapBazaar() error {
 			time.Sleep(randDelay)
 		}
 
-		for auctionId, link := range chunk {
+		for _, kv := range chunk {
 			maxWorkers <- struct{}{}
 
 			wg.Add(1)
 
-			go func(url string) {
+			id := kv.Key
+			link := kv.Value
+
+			go func(auctionId int, linkURL string) {
 				defer wg.Done()
 
 				defer func() { <-maxWorkers }()
 
-				dto, err := s.auctionParser.Parse(auctionId, link)
+				dto, err := s.auctionParser.Parse(auctionId, linkURL)
 
 				if err != nil {
 					s.logger.Printf("Parsing of auction id: %d failed with: %s\n", auctionId, err.Error())
@@ -89,7 +92,7 @@ func (s *Service) ScrapBazaar() error {
 					s.logger.Printf("Error saving auction: %d: %s\n", auctionId, err.Error())
 				}
 
-			}(link)
+			}(id, link)
 		}
 
 		wg.Wait()
