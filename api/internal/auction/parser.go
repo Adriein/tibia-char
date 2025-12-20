@@ -198,7 +198,7 @@ func NewAuctionHtmlParser(c *colly.Collector) *AuctionHtmlParser {
 func (p *AuctionHtmlParser) Parse(auctionId int, link string) (*AuctionDTO, error) {
 	dto := AuctionDTO{
 		AuctionId: auctionId,
-		Link:      link,
+		Link:      fmt.Sprintf("https://www.tibia.com/charactertrade/?subtopic=currentcharactertrades&page=details&auctionid=%d", auctionId),
 	}
 
 	var parseErrors []error

@@ -24,11 +24,11 @@ CREATE TABLE IF NOT EXISTS tc_auction (
     ta_char_gender SMALLINT NOT NULL,
     ta_char_world INT NOT NULL,
     ta_current_bid INT NOT NULL,
-    ta_auction_start TIMESTAMP WITHOUT TIME ZONE NOT NULL,
-    ta_auction_end TIMESTAMP WITHOUT TIME ZONE NOT NULL,
+    ta_auction_start TIMESTAMP(0) WITHOUT TIME ZONE NOT NULL,
+    ta_auction_end TIMESTAMP(0) WITHOUT TIME ZONE NOT NULL,
     ta_is_active BOOLEAN NOT NULL,
-    ta_date_add TIMESTAMP WITHOUT TIME ZONE NOT NULL,
-    ta_date_upd TIMESTAMP WITHOUT TIME ZONE NOT NULL,
+    ta_date_add TIMESTAMP(0) WITHOUT TIME ZONE NOT NULL,
+    ta_date_upd TIMESTAMP(0) WITHOUT TIME ZONE NOT NULL,
 
     CONSTRAINT fk_vocation_auction
         FOREIGN KEY (ta_char_vocation)
@@ -57,7 +57,7 @@ CREATE TABLE IF NOT EXISTS tc_bid_history (
     tbh_id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     tbh_auction_id INT NOT NULL,
     tbh_bid INT NOT NULL,
-    tbh_date_add TIMESTAMP WITHOUT TIME ZONE NOT NULL,
+    tbh_date_add TIMESTAMP(0) WITHOUT TIME ZONE NOT NULL,
 
     CONSTRAINT fk_bid_auction
         FOREIGN KEY (tbh_auction_id)
