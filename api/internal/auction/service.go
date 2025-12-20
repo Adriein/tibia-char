@@ -2,27 +2,30 @@ package auction
 
 import (
 	"log"
+	"math/rand"
+	"sync"
 	"time"
 
-	"github.com/adriein/tibia-char/pkg/constants"
-	"github.com/gocolly/colly/v2"
+	"github.com/adriein/tibia-char/pkg/helper/array"
 )
 
 type Service struct {
-	logger             *log.Logger
-	auctionRepository  AuctionRepository
-	vocationRepository VocationRepository
-	genderRepository   GenderRepository
-	worldRepository    WorldRepository
+	linkParser        *AuctionListHtmlParser
+	auctionParser     *AuctionHtmlParser
+	auctionRepository AuctionRepository
+	worldRepository   WorldRepository
+	mapper            *Mapper
+	logger            *log.Logger
 }
 
-func NewService(logger *log.Logger, ar AuctionRepository, vr VocationRepository, gr GenderRepository, wr WorldRepository) *Service {
+func NewService(lp *AuctionListHtmlParser, ap *AuctionHtmlParser, ar AuctionRepository, wr WorldRepository, m *Mapper, logger *log.Logger) *Service {
 	return &Service{
-		logger:             logger,
-		auctionRepository:  ar,
-		vocationRepository: vr,
-		genderRepository:   gr,
-		worldRepository:    wr,
+		linkParser:        lp,
+		auctionParser:     ap,
+		auctionRepository: ar,
+		worldRepository:   wr,
+		mapper:            m,
+		logger:            logger,
 	}
 }
 
@@ -31,22 +34,66 @@ func (s *Service) ScrapBazaar() error {
 
 	now := time.Now()
 
-	linkScrapper := NewScrapper("CollectAuctionLinks")
+	currentAuctions, err := s.linkParser.GetTotalCurrentAuctions()
 
-	linkScrapper.Collector.Limit(&colly.LimitRule{
-		DomainGlob:  constants.TibiaOfficialWebsite,
-		RandomDelay: 5 * time.Second,
-	})
+	if err != nil {
+		return err
+	}
 
-	detailScrapper := NewScrapper("CollectAuctionDetails")
+	auctionLinkSet, err := s.linkParser.GetLinks()
 
-	detailScrapper.Collector.Limit(&colly.LimitRule{
-		DomainGlob: constants.TibiaOfficialWebsite,
-	})
+	s.logger.Printf("Current auctions %d - Scrapped Auctions %d", currentAuctions, len(auctionLinkSet))
 
-	auctions := Auctions{}
+	if err != nil {
+		return err
+	}
 
-	auctions.Scrap(s.auctionRepository, s.vocationRepository, s.genderRepository, s.worldRepository, linkScrapper, detailScrapper, s.logger)
+	const MaxConcurrency = 5
+
+	links := array.Chunk(auctionLinkSet.Values(), MaxConcurrency)
+
+	var wg sync.WaitGroup
+
+	maxWorkers := make(chan struct{}, MaxConcurrency)
+
+	for i, chunk := range links {
+		if i != 0 {
+			randDelay := time.Duration(1+rand.Intn(5)) * time.Second
+
+			time.Sleep(randDelay)
+		}
+
+		for auctionId, link := range chunk {
+			maxWorkers <- struct{}{}
+
+			wg.Add(1)
+
+			go func(url string) {
+				defer wg.Done()
+
+				defer func() { <-maxWorkers }()
+
+				dto, err := s.auctionParser.Parse(auctionId, link)
+
+				if err != nil {
+					s.logger.Printf("Parsing of auction id: %d failed with: %s\n", auctionId, err.Error())
+				}
+
+				auction, err := s.mapper.ToDomain(dto)
+
+				if err != nil {
+					s.logger.Printf("Error mapping auction dto to auction for auction id: %d: %v\n", auctionId, err)
+				}
+
+				if err := s.auctionRepository.Save(auction); err != nil {
+					s.logger.Printf("Error saving auction: %d: %s\n", auctionId, err.Error())
+				}
+
+			}(link)
+		}
+
+		wg.Wait()
+	}
 
 	s.logger.Printf("Finished Scrapping in %s", time.Since(now))
 

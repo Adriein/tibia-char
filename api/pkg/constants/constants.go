@@ -46,6 +46,16 @@ const (
 	VocationMonk     = 5
 )
 
+const (
+	Male     = "male"
+	Female   = "female"
+	Knight   = "knight"
+	Paladin  = "paladin"
+	Sorcerer = "sorcerer"
+	Druid    = "druid"
+	Monk     = "monk"
+)
+
 // Errors
 
 const (

@@ -1,17 +1,10 @@
 package auction
 
 import (
-	"fmt"
-	"log"
-	"math/rand"
-	"net/url"
-	"strconv"
 	"strings"
-	"sync"
 	"time"
 
-	"github.com/adriein/tibia-char/pkg/helper/array"
-	"github.com/gocolly/colly/v2"
+	"github.com/adriein/tibia-char/pkg/constants"
 	"github.com/rotisserie/eris"
 )
 
@@ -32,235 +25,52 @@ type AuctionDTO struct {
 }
 
 type Vocation struct {
-	Id   string
+	Id   int
 	Name string
+}
+
+var vocationMap = map[string]*Vocation{
+	constants.Knight:   &Vocation{Id: constants.VocationKnight, Name: constants.Knight},
+	constants.Paladin:  &Vocation{Id: constants.VocationPaladin, Name: constants.Paladin},
+	constants.Sorcerer: &Vocation{Id: constants.VocationSorcerer, Name: constants.Sorcerer},
+	constants.Druid:    &Vocation{Id: constants.VocationDruid, Name: constants.Druid},
+	constants.Monk:     &Vocation{Id: constants.VocationMonk, Name: constants.Monk},
+}
+
+var genderMap = map[string]*Gender{
+	constants.Male:   &Gender{Id: constants.GenderMale, Name: constants.Male},
+	constants.Female: &Gender{Id: constants.GenderFemale, Name: constants.Female},
+}
+
+func NewVocationFromName(name string) (*Vocation, error) {
+	lowerCaseVocation := strings.ToLower(name)
+
+	if vocation, ok := vocationMap[lowerCaseVocation]; ok {
+		return vocation, nil
+	}
+
+	return nil, eris.Errorf("Vocation %s not registered", name)
 }
 
 type Gender struct {
-	Id   string
+	Id   int
 	Name string
+}
+
+func NewGenderFromName(name string) (*Gender, error) {
+	lowerCaseGender := strings.ToLower(name)
+
+	if gender, ok := genderMap[lowerCaseGender]; ok {
+		return gender, nil
+	}
+
+	return nil, eris.Errorf("Gender %s not registered", name)
 }
 
 type World struct {
-	Id   string
+	Id   int
 	Name string
 }
-
-type Auctions struct {
-	Data []Auction
-}
-
-func (a *Auctions) Scrap(ar AuctionRepository, vr VocationRepository, gr GenderRepository, wr WorldRepository, ls *CollyScrapper, ds *CollyScrapper, logger *log.Logger) error {
-	currentAuctions, err := a.getTotalCurrentAuctions(ls)
-
-	if err != nil {
-		return err
-	}
-
-	auctionLinkSet, err := a.getCurrentAuctionLinks(ls)
-
-	logger.Printf("Current auctions %d - Scrapped Auctions %d", currentAuctions, len(auctionLinkSet))
-
-	if err != nil {
-		return err
-	}
-
-	c := ds.Collector
-
-	const MaxConcurrency = 5
-
-	links := array.Chunk(auctionLinkSet.Values(), MaxConcurrency)
-
-	var wg sync.WaitGroup
-
-	maxWorkers := make(chan struct{}, MaxConcurrency)
-
-	for i, chunk := range links {
-		if i != 0 {
-			randDelay := time.Duration(1+rand.Intn(5)) * time.Second
-
-			time.Sleep(randDelay)
-		}
-
-		for _, link := range chunk {
-			maxWorkers <- struct{}{}
-
-			wg.Add(1)
-
-			go func(url string) {
-				defer wg.Done()
-
-				defer func() { <-maxWorkers }()
-
-				auctionId, err := a.extractAutctionId(url)
-
-				if err != nil {
-					logger.Printf("Error extracting auctionId from link: %s\n", err.Error())
-
-					return
-				}
-
-				auction := Auction{}
-
-				errors := auction.ScrapAuction(vr, gr, wr, c, auctionId, url)
-
-				if len(errors) != 0 {
-					logger.Printf("Error fetching details for auction %d\n", auctionId)
-
-					for _, scrapErr := range errors {
-						logger.Printf("Error ocurred in auction %d: %v\n", auctionId, scrapErr)
-					}
-
-					return
-				}
-
-				if err := ar.Save(&auction); err != nil {
-					logger.Printf("Error fetching details for auction %d: %v\n", auctionId, err)
-				}
-
-			}(link)
-		}
-
-		wg.Wait()
-	}
-
-	return nil
-}
-
-func (a *Auctions) getCurrentAuctionLinks(ls *CollyScrapper) (AuctionLinkSet, error) {
-	set := make(AuctionLinkSet)
-
-	c := ls.Collector
-
-	/*worlds, err := vendor.NewTibiaApi().GetWorlds()
-
-	if err != nil {
-		return set, err
-	}*/
-
-	worlds := []string{"Calmera"}
-
-	for _, world := range worlds {
-		for currentPage := 1; ; currentPage++ {
-			links, err := a.scrapAuctionListPage(c, world, currentPage)
-
-			if err != nil {
-				return set, err
-			}
-
-			if len(links) == 0 {
-				break
-			}
-
-			newLinksAdded := 0
-
-			for _, link := range links {
-				auctionId, err := a.extractAutctionId(link)
-
-				if err != nil {
-					return set, err
-				}
-
-				if set.Has(auctionId) {
-					continue
-				}
-
-				set.Set(auctionId, link)
-				newLinksAdded++
-			}
-
-			if newLinksAdded == 0 {
-				break
-			}
-		}
-	}
-
-	return set, nil
-}
-
-func (a *Auctions) scrapAuctionListPage(c *colly.Collector, world string, page int) ([]string, error) {
-	var result []string
-
-	c.OnHTML("div[class=AuctionLinks]", func(e *colly.HTMLElement) {
-		e.ForEach("a[href]", func(_ int, e *colly.HTMLElement) {
-			charDetailLink := e.Attr("href")
-
-			result = append(result, charDetailLink)
-		})
-	})
-
-	c.Visit(fmt.Sprintf("https://www.tibia.com/charactertrade/?subtopic=currentcharactertrades&filter_world=%s&currentpage=%d", world, page))
-
-	return result, nil
-}
-
-func (a *Auctions) getTotalCurrentAuctions(ls *CollyScrapper) (int, error) {
-	var errors []error
-	var totalCurrentAuctions int = 0
-
-	c := ls.Collector
-
-	c.OnHTML("td[class=PageNavigation]", func(e *colly.HTMLElement) {
-		htmlExtractedText := e.Text
-
-		parts := strings.Split(htmlExtractedText, ": ")
-
-		if len(parts) < 2 {
-			err := eris.Errorf("String format is unexpected: %s", htmlExtractedText)
-			errors = append(errors, err)
-
-			return
-		}
-
-		numberStr := parts[1]
-
-		cleanStr := strings.ReplaceAll(numberStr, ",", "")
-
-		resultInt, err := strconv.Atoi(cleanStr)
-
-		if err != nil {
-			err := eris.Errorf("Error converting to integer: %s", err.Error())
-			errors = append(errors, err)
-
-			return
-		}
-
-		totalCurrentAuctions = resultInt
-	})
-
-	c.Visit("https://www.tibia.com/charactertrade/?subtopic=currentcharactertrades")
-
-	if len(errors) > 0 {
-		var b strings.Builder
-
-		for _, err := range errors {
-			b.WriteString(fmt.Sprintln(err.Error()))
-		}
-
-		return totalCurrentAuctions, eris.Errorf("Error getting total current auctions: %s", b.String())
-	}
-
-	return totalCurrentAuctions, nil
-}
-
-func (a *Auctions) extractAutctionId(link string) (int, error) {
-	parsedLink, err := url.Parse(link)
-
-	if err != nil {
-		return 0, eris.New(fmt.Sprintf("Error converting link %s to url: %s", parsedLink, err.Error()))
-	}
-
-	auctionIdStr := parsedLink.Query().Get("auctionid")
-
-	auctionId, err := strconv.Atoi(auctionIdStr)
-
-	if err != nil {
-		return 0, eris.New(fmt.Sprintf("Error converting auction ID '%s' to int: %s", auctionIdStr, err.Error()))
-	}
-
-	return auctionId, nil
-}
-
 type Auction struct {
 	Id               int
 	TibiaAuctionLink string
@@ -278,183 +88,6 @@ type Auction struct {
 	IsActive         bool
 	DateAdd          time.Time
 	DateUpd          time.Time
-}
-
-func (a *Auction) ScrapAuction(vr VocationRepository, gr GenderRepository, wr WorldRepository, c *colly.Collector, auctionId int, link string) []error {
-	var errorList []error
-
-	a.Id = auctionId
-
-	c.OnError(func(r *colly.Response, err error) {
-		errorList = append(errorList, eris.Errorf("Url: %s failed with status code: %d", r.Request.URL, r.StatusCode))
-	})
-
-	a.TibiaAuctionLink = link
-
-	c.OnHTML("div[class=Auction]", func(e *colly.HTMLElement) {
-		e.ForEachWithBreak("div[class]", func(_ int, ch *colly.HTMLElement) bool {
-			class := ch.Attr("class")
-
-			switch class {
-			case "AuctionHeader":
-				a.CharName = e.ChildText("div[class=AuctionCharacterName]")
-
-				world, err := wr.GetOrCreate(e.ChildText("a[href]"))
-
-				if err != nil {
-					errorList = append(errorList, err)
-
-					return false
-				}
-
-				a.CharWorld = world
-
-				auctionHeader := e.Text
-
-				level, err := a.extractLevel(auctionHeader)
-
-				if err != nil {
-					errorList = append(errorList, eris.Errorf("Error extracting character level: %s", err.Error()))
-
-					return false
-				}
-
-				a.CharLevel = level
-
-				vocation, err := vr.GetOrCreate(a.extractVocation(auctionHeader))
-
-				if err != nil {
-					errorList = append(errorList, err)
-
-					return false
-				}
-
-				a.CharVocation = vocation
-
-				gender, err := gr.GetOrCreate(a.extractGender(auctionHeader))
-
-				if err != nil {
-					errorList = append(errorList, err)
-
-					return false
-				}
-
-				a.CharGender = gender
-
-			case "AuctionBody":
-				e.ForEachWithBreak("div", func(_ int, ch *colly.HTMLElement) bool {
-					classes := strings.Split(ch.Attr("class"), " ")
-
-					section := classes[len(classes)-1]
-
-					switch section {
-					case "AuctionOutfit":
-						a.Img = ch.ChildAttr("img[class=AuctionOutfitImage]", "src")
-
-					case "AuctionItemsViewBox":
-						ch.ForEach("div[title]", func(_ int, itemViewBoxCh *colly.HTMLElement) {
-							imgTitle := itemViewBoxCh.Attr("title")
-							imgLink := itemViewBoxCh.ChildAttr("img", "src")
-
-							a.FeaturedItems = append(a.FeaturedItems, ImgDisplay{Name: imgTitle, Link: imgLink})
-						})
-
-					case "ShortAuctionData":
-						ch.ForEachWithBreak("div", func(_ int, sAuctionDataCh *colly.HTMLElement) bool {
-							section := sAuctionDataCh.Attr("class")
-
-							switch section {
-							case "ShortAuctionDataValue":
-								rawDate := sAuctionDataCh.Text
-
-								normDate := strings.ReplaceAll(rawDate, "\u00a0", " ")
-
-								dateCET, err := time.Parse("Jan 02 2006, 15:04 MST", normDate)
-
-								if err != nil {
-									errorList = append(errorList, eris.Errorf("Error parsing auction date: %s", err.Error()))
-
-									return false
-								}
-
-								dateUTC := dateCET.In(time.UTC)
-
-								if a.AuctionStart.IsZero() {
-									a.AuctionStart = dateUTC
-
-									break
-								}
-
-								a.AuctionEnd = dateUTC
-
-							case "ShortAuctionDataBidRow":
-								selector := sAuctionDataCh.DOM.Children()
-
-								rawBid := strings.ReplaceAll(selector.Find("b").Text(), ",", "")
-
-								bid, err := strconv.Atoi(rawBid)
-
-								if err != nil {
-									errorList = append(errorList, eris.Errorf("Error converting bid to int: %s", err.Error()))
-
-									return false
-								}
-
-								a.Bid = bid
-
-								return false
-							}
-
-							return true
-						})
-
-					case "SpecialCharacterFeatures":
-						ch.ForEach("div", func(_ int, spcfCh *colly.HTMLElement) {
-							a.Featured = append(a.Featured, spcfCh.Text)
-						})
-					}
-
-					return true
-				})
-			}
-
-			return true
-		})
-	})
-
-	c.Visit(link)
-
-	if len(errorList) != 0 {
-		return errorList
-	}
-
-	return nil
-}
-
-func (a *Auction) extractLevel(auctionHeader string) (int, error) {
-	headerParts := strings.Split(auctionHeader, "|")
-
-	levelStringHeader := headerParts[0]
-
-	levelStringParts := strings.Split(levelStringHeader, ":")
-
-	return strconv.Atoi(strings.TrimSpace(levelStringParts[1]))
-}
-
-func (a *Auction) extractVocation(auctionHeader string) string {
-	headerParts := strings.Split(auctionHeader, "|")
-
-	levelStringHeader := headerParts[1]
-
-	levelStringParts := strings.Split(levelStringHeader, ":")
-
-	return strings.TrimSpace(levelStringParts[1])
-}
-
-func (a *Auction) extractGender(auctionHeader string) string {
-	headerParts := strings.Split(auctionHeader, "|")
-
-	return strings.TrimSpace(headerParts[2])
 }
 
 type AuctionLinkSet map[int]string

@@ -20,13 +20,14 @@ const (
 type AuctionListHtmlParser struct {
 	worldRepository WorldRepository
 	tibiaAPI        *vendor.TibiaApi
+	collector       *colly.Collector
 }
 
-func NewAuctionListHtmlParser(api *vendor.TibiaApi, wr WorldRepository) *AuctionListHtmlParser {
-	return &AuctionListHtmlParser{tibiaAPI: api, worldRepository: wr}
+func NewAuctionListHtmlParser(api *vendor.TibiaApi, wr WorldRepository, c *colly.Collector) *AuctionListHtmlParser {
+	return &AuctionListHtmlParser{tibiaAPI: api, worldRepository: wr, collector: c}
 }
 
-func (p *AuctionListHtmlParser) GetLinks(c *colly.Collector) (AuctionLinkSet, error) {
+func (p *AuctionListHtmlParser) GetLinks() (AuctionLinkSet, error) {
 	set := make(AuctionLinkSet)
 
 	worlds, err := p.tibiaAPI.GetWorlds()
@@ -42,7 +43,7 @@ func (p *AuctionListHtmlParser) GetLinks(c *colly.Collector) (AuctionLinkSet, er
 			return set, err
 		}
 
-		if err := p.scrapeWorld(c, world, set); err != nil {
+		if err := p.scrapeWorld(world, set); err != nil {
 			return set, eris.Wrapf(err, "Failed to scrape world %s", world)
 		}
 	}
@@ -50,11 +51,11 @@ func (p *AuctionListHtmlParser) GetLinks(c *colly.Collector) (AuctionLinkSet, er
 	return set, nil
 }
 
-func (p *AuctionListHtmlParser) GetTotalCurrentAuctions(c *colly.Collector) (int, error) {
+func (p *AuctionListHtmlParser) GetTotalCurrentAuctions() (int, error) {
 	var errors []error
 	var totalCurrentAuctions int = 0
 
-	c.OnHTML("td[class=PageNavigation]", func(e *colly.HTMLElement) {
+	p.collector.OnHTML("td[class=PageNavigation]", func(e *colly.HTMLElement) {
 		htmlExtractedText := e.Text
 
 		parts := strings.Split(htmlExtractedText, ": ")
@@ -82,7 +83,7 @@ func (p *AuctionListHtmlParser) GetTotalCurrentAuctions(c *colly.Collector) (int
 		totalCurrentAuctions = resultInt
 	})
 
-	c.Visit(BaseAuctionListURL)
+	p.collector.Visit(BaseAuctionListURL)
 
 	if len(errors) > 0 {
 		var b strings.Builder
@@ -97,9 +98,9 @@ func (p *AuctionListHtmlParser) GetTotalCurrentAuctions(c *colly.Collector) (int
 	return totalCurrentAuctions, nil
 }
 
-func (p *AuctionListHtmlParser) scrapeWorld(c *colly.Collector, world string, set AuctionLinkSet) error {
+func (p *AuctionListHtmlParser) scrapeWorld(world string, set AuctionLinkSet) error {
 	for page := 1; ; page++ {
-		links, err := p.scrapeAuctionListPage(c, world, page)
+		links, err := p.scrapeAuctionListPage(world, page)
 
 		if err != nil {
 			return eris.Wrapf(err, "Failed to scrape page %d", page)
@@ -135,11 +136,11 @@ func (p *AuctionListHtmlParser) scrapeWorld(c *colly.Collector, world string, se
 	return nil
 }
 
-func (p *AuctionListHtmlParser) scrapeAuctionListPage(c *colly.Collector, world string, page int) ([]string, error) {
+func (p *AuctionListHtmlParser) scrapeAuctionListPage(world string, page int) ([]string, error) {
 	var result []string
 	var scrapeErr error
 
-	c.OnHTML("div[class=AuctionLinks]", func(e *colly.HTMLElement) {
+	p.collector.OnHTML("div[class=AuctionLinks]", func(e *colly.HTMLElement) {
 		e.ForEach("a[href]", func(_ int, el *colly.HTMLElement) {
 			if href := el.Attr("href"); href != "" {
 				result = append(result, href)
@@ -147,13 +148,13 @@ func (p *AuctionListHtmlParser) scrapeAuctionListPage(c *colly.Collector, world 
 		})
 	})
 
-	c.OnError(func(r *colly.Response, err error) {
+	p.collector.OnError(func(r *colly.Response, err error) {
 		scrapeErr = eris.Wrapf(err, "scraping error for world %s page %d: status %d", world, page, r.StatusCode)
 	})
 
 	targetURL := fmt.Sprintf("%s&filter_world=%s&currentpage=%d", BaseAuctionListURL, world, page)
 
-	if err := c.Visit(targetURL); err != nil {
+	if err := p.collector.Visit(targetURL); err != nil {
 		return nil, eris.Wrapf(err, "failed to visit %s", targetURL)
 	}
 
@@ -182,13 +183,17 @@ func (p *AuctionListHtmlParser) extractAuctionID(link string) (int, error) {
 	return auctionID, nil
 }
 
-type AuctionHtmlParser struct{}
-
-func NewAuctionHtmlParser() *AuctionHtmlParser {
-	return &AuctionHtmlParser{}
+type AuctionHtmlParser struct {
+	collector *colly.Collector
 }
 
-func (p *AuctionHtmlParser) Parse(c *colly.Collector, auctionId int, link string) (AuctionDTO, error) {
+func NewAuctionHtmlParser(c *colly.Collector) *AuctionHtmlParser {
+	return &AuctionHtmlParser{
+		collector: c,
+	}
+}
+
+func (p *AuctionHtmlParser) Parse(auctionId int, link string) (*AuctionDTO, error) {
 	dto := AuctionDTO{
 		AuctionId: auctionId,
 		Link:      link,
@@ -196,11 +201,11 @@ func (p *AuctionHtmlParser) Parse(c *colly.Collector, auctionId int, link string
 
 	var parseErrors []error
 
-	c.OnError(func(r *colly.Response, err error) {
+	p.collector.OnError(func(r *colly.Response, err error) {
 		parseErrors = append(parseErrors, eris.Errorf("Failed to fetch %s: status %d", r.Request.URL, r.StatusCode))
 	})
 
-	c.OnHTML("div[class=Auction]", func(e *colly.HTMLElement) {
+	p.collector.OnHTML("div[class=Auction]", func(e *colly.HTMLElement) {
 		e.ForEach("div[class]", func(_ int, ch *colly.HTMLElement) {
 			switch ch.Attr("class") {
 			case "AuctionHeader":
@@ -216,15 +221,15 @@ func (p *AuctionHtmlParser) Parse(c *colly.Collector, auctionId int, link string
 		})
 	})
 
-	if err := c.Visit(link); err != nil {
-		parseErrors = append(parseErrors, eris.Wrap(err, "visit failed"))
+	if err := p.collector.Visit(link); err != nil {
+		parseErrors = append(parseErrors, eris.Wrap(err, "Visit failed"))
 	}
 
 	if len(parseErrors) > 0 {
-		return dto, eris.Errorf("parsing failed with %d errors: %v", len(parseErrors), parseErrors)
+		return &dto, eris.Errorf("Parsing failed with %d errors: %v", len(parseErrors), parseErrors)
 	}
 
-	return dto, nil
+	return &dto, nil
 }
 
 func (p *AuctionHtmlParser) parseAuctionHeader(e *colly.HTMLElement, dto *AuctionDTO) error {

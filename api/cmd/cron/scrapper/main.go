@@ -3,9 +3,13 @@ package main
 import (
 	"log"
 	"os"
+	"time"
 
 	"github.com/adriein/tibia-char/internal"
 	"github.com/adriein/tibia-char/internal/auction"
+	"github.com/adriein/tibia-char/pkg/constants"
+	"github.com/adriein/tibia-char/pkg/vendor"
+	"github.com/gocolly/colly/v2"
 	_ "github.com/lib/pq"
 )
 
@@ -15,11 +19,29 @@ func main() {
 	logger := log.New(os.Stderr, "[Scrapper Cron] ", log.LstdFlags|log.LUTC)
 
 	auctionRepository := auction.NewPgAuctionRepository(app.Databse)
-	vocationRepository := auction.NewPgVocationRepository(app.Databse)
-	genderRepository := auction.NewPgGenderRepository(app.Databse)
-	wolrdRepository := auction.NewPgWorldRepository(app.Databse)
+	worldRepository := auction.NewPgWorldRepository(app.Databse)
 
-	cron := auction.NewService(logger, auctionRepository, vocationRepository, genderRepository, wolrdRepository)
+	linkScrapper := auction.NewScrapper("CollectAuctionLinks")
+
+	linkScrapper.Collector.Limit(&colly.LimitRule{
+		DomainGlob:  constants.TibiaOfficialWebsite,
+		RandomDelay: 5 * time.Second,
+	})
+
+	detailScrapper := auction.NewScrapper("CollectAuctionDetails")
+
+	detailScrapper.Collector.Limit(&colly.LimitRule{
+		DomainGlob: constants.TibiaOfficialWebsite,
+	})
+
+	tibiaAPI := vendor.NewTibiaApi()
+
+	auctionListHtmlParser := auction.NewAuctionListHtmlParser(tibiaAPI, worldRepository, linkScrapper.Collector)
+	auctionHtmlParser := auction.NewAuctionHtmlParser(detailScrapper.Collector)
+
+	mapper := auction.NewMapper(worldRepository)
+
+	cron := auction.NewService(auctionListHtmlParser, auctionHtmlParser, auctionRepository, worldRepository, mapper, logger)
 
 	err := cron.ScrapBazaar()
 
