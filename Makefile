@@ -1,4 +1,4 @@
-include ./api/.env
+include ./app/.env
 
 CURRENT_DIR := $(dir $(abspath $(lastword $(MAKEFILE_LIST))))
 SHELL = /bin/sh
@@ -14,33 +14,33 @@ run:         ## Start production web server.
 .PHONY: dev
 dev:		## Start development database.
 	@echo "Starting app containers"
-	@docker compose --env-file ./api/.env up tibia_char_database
+	@docker compose --env-file ./app/.env up tibia_char_database
 
 .PHONY: stop
 stop:        ## Stop development web server.
-	@docker compose --env-file ./api/.env down
+	@docker compose --env-file ./app/.env down
 
 .PHONY: clean
 clean:       ## Clearing existing data.
 	@echo "Clearing existing data"
-	@docker compose down --volumes --env-file ./api/.env up
+	@docker compose down --volumes --env-file ./app/.env up
 
 .PHONY: start-containers
 start-containers:
 	@echo "Starting app containers"
-	@docker compose --env-file ./api/.env up
+	@docker compose --env-file ./app/.env up
 
 .PHONY: create-migration
 create-migration:
 	@echo "Creating migrations"
-	@cd ./api; ./migrate create -ext sql -dir database/migrations -seq $(name)
+	@cd ./app; ./migrate create -ext sql -dir database/migrations -seq $(name)
 
 .PHONY: migrate
 migrate:
 	@echo "Executing migrations"
-	@cd ./api; ./migrate -database ${DATABASE_URL} -path database/migrations up
+	@cd ./app; ./migrate -database ${DATABASE_URL} -path database/migrations up
 
 .PHONY: rollback
 rollback:
 	@echo "Executing migrations"
-	@cd ./api; ./migrate -database ${DATABASE_URL} -path database/migrations down
+	@cd ./app; ./migrate -database ${DATABASE_URL} -path database/migrations down

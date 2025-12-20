@@ -9,8 +9,8 @@
       "type": "go",
       "request": "launch",
       "mode": "debug",
-      "program": "${workspaceFolder}/api/cmd/tibia-char/main.go",
-      "cwd": "${workspaceFolder}/api",
+      "program": "${workspaceFolder}/app/cmd/tibia-char/main.go",
+      "cwd": "${workspaceFolder}/app",
       "env": {},
       "args": []
     },
@@ -19,8 +19,8 @@
       "type": "go",
       "request": "launch",
       "mode": "debug",
-      "program": "${workspaceFolder}/api/cmd/cron/scrapper/main.go",
-      "cwd": "${workspaceFolder}/api",
+      "program": "${workspaceFolder}/app/cmd/cron/scrapper/main.go",
+      "cwd": "${workspaceFolder}/app",
       "env": {},
       "args": []
     }
