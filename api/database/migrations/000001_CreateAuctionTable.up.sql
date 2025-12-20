@@ -67,6 +67,6 @@ CREATE TABLE IF NOT EXISTS tc_bid_history (
 
 CREATE INDEX idx_tbh_auction_id_time ON tc_bid_history (tbh_auction_id, tbh_date_add DESC);
 
-INSERT INTO tc_vocation (tv_name) VALUES ('Knight'), ('Paladin'), ('Sorcerer'), ('Druid'), ('Monk')
+INSERT INTO tc_vocation (tv_name) VALUES ('Knight'), ('Paladin'), ('Sorcerer'), ('Druid'), ('Monk');
 
-INSERT INTO tc_gender (tv_name) VALUES ('Male'), ('Female')
+INSERT INTO tc_gender (tg_name) VALUES ('Male'), ('Female');
