@@ -36,6 +36,16 @@ const (
 	EventDataIngestionDescription = "Ingested market data"
 )
 
+const (
+	GenderMale       = 1
+	GenderFemale     = 2
+	VocationKnight   = 1
+	VocationPaladin  = 2
+	VocationSorcerer = 3
+	VocationDruid    = 4
+	VocationMonk     = 5
+)
+
 // Errors
 
 const (

@@ -18,11 +18,12 @@ const (
 )
 
 type AuctionListHtmlParser struct {
-	tibiaAPI *vendor.TibiaApi
+	worldRepository WorldRepository
+	tibiaAPI        *vendor.TibiaApi
 }
 
-func NewAuctionListHtmlParser(api *vendor.TibiaApi) *AuctionListHtmlParser {
-	return &AuctionListHtmlParser{tibiaAPI: api}
+func NewAuctionListHtmlParser(api *vendor.TibiaApi, wr WorldRepository) *AuctionListHtmlParser {
+	return &AuctionListHtmlParser{tibiaAPI: api, worldRepository: wr}
 }
 
 func (p *AuctionListHtmlParser) GetLinks(c *colly.Collector) (AuctionLinkSet, error) {
@@ -35,6 +36,12 @@ func (p *AuctionListHtmlParser) GetLinks(c *colly.Collector) (AuctionLinkSet, er
 	}
 
 	for _, world := range worlds {
+		_, err := p.worldRepository.GetOrCreate(world)
+
+		if err != nil {
+			return set, err
+		}
+
 		if err := p.scrapeWorld(c, world, set); err != nil {
 			return set, eris.Wrapf(err, "Failed to scrape world %s", world)
 		}
