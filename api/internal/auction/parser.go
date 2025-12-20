@@ -30,11 +30,13 @@ func NewAuctionListHtmlParser(api *vendor.TibiaApi, wr WorldRepository, c *colly
 func (p *AuctionListHtmlParser) GetLinks() (AuctionLinkSet, error) {
 	set := make(AuctionLinkSet)
 
-	worlds, err := p.tibiaAPI.GetWorlds()
+	/*worlds, err := p.tibiaAPI.GetWorlds()
 
 	if err != nil {
 		return set, eris.Wrap(err, "Failed to fetch worlds from Tibia API")
-	}
+	}*/
+
+	worlds := []string{"Calmera"}
 
 	for _, world := range worlds {
 		_, err := p.worldRepository.GetOrCreate(world)

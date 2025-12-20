@@ -30,20 +30,28 @@ type Vocation struct {
 }
 
 var vocationMap = map[string]*Vocation{
-	constants.Knight:   &Vocation{Id: constants.VocationKnight, Name: constants.Knight},
-	constants.Paladin:  &Vocation{Id: constants.VocationPaladin, Name: constants.Paladin},
-	constants.Sorcerer: &Vocation{Id: constants.VocationSorcerer, Name: constants.Sorcerer},
-	constants.Druid:    &Vocation{Id: constants.VocationDruid, Name: constants.Druid},
-	constants.Monk:     &Vocation{Id: constants.VocationMonk, Name: constants.Monk},
+	constants.Knight:   {Id: constants.VocationKnight, Name: constants.Knight},
+	constants.Paladin:  {Id: constants.VocationPaladin, Name: constants.Paladin},
+	constants.Sorcerer: {Id: constants.VocationSorcerer, Name: constants.Sorcerer},
+	constants.Druid:    {Id: constants.VocationDruid, Name: constants.Druid},
+	constants.Monk:     {Id: constants.VocationMonk, Name: constants.Monk},
 }
 
 var genderMap = map[string]*Gender{
-	constants.Male:   &Gender{Id: constants.GenderMale, Name: constants.Male},
-	constants.Female: &Gender{Id: constants.GenderFemale, Name: constants.Female},
+	constants.Male:   {Id: constants.GenderMale, Name: constants.Male},
+	constants.Female: {Id: constants.GenderFemale, Name: constants.Female},
 }
 
 func NewVocationFromName(name string) (*Vocation, error) {
-	lowerCaseVocation := strings.ToLower(name)
+	promotionRemovedString := strings.NewReplacer(
+		"Elite ", "",
+		"Royal ", "",
+		"Master ", "",
+		"Elder ", "",
+		"Exalted ", "",
+	).Replace(name)
+
+	lowerCaseVocation := strings.ToLower(promotionRemovedString)
 
 	if vocation, ok := vocationMap[lowerCaseVocation]; ok {
 		return vocation, nil
