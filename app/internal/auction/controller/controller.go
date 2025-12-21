@@ -1,0 +1,61 @@
+package controller
+
+import (
+	"context"
+	"log"
+	"net/http"
+	"os"
+
+	"github.com/adriein/tibia-char/internal"
+	"github.com/adriein/tibia-char/internal/auction"
+	"github.com/adriein/tibia-char/internal/auction/view"
+	"github.com/adriein/tibia-char/pkg/vendor"
+	"github.com/gin-gonic/gin"
+)
+
+type Controller struct {
+	service *auction.Service
+	logger  *log.Logger
+}
+
+func NewController(app *internal.App) *Controller {
+	logger := log.New(os.Stderr, "[Auction] ", log.LstdFlags|log.LUTC)
+
+	auctionRepository := auction.NewPgAuctionRepository(app.Databse)
+	worldRepository := auction.NewPgWorldRepository(app.Databse)
+
+	linkScrapper := auction.NewScrapper("CollectAuctionLinks")
+
+	detailScrapper := auction.NewScrapper("CollectAuctionDetails")
+
+	tibiaAPI := vendor.NewTibiaApi()
+
+	auctionListHtmlParser := auction.NewAuctionListHtmlParser(tibiaAPI, worldRepository, linkScrapper.Collector)
+	auctionHtmlParser := auction.NewAuctionHtmlParser(detailScrapper.Collector)
+
+	mapper := auction.NewMapper(worldRepository)
+
+	service := auction.NewService(auctionListHtmlParser, auctionHtmlParser, auctionRepository, worldRepository, mapper, logger)
+
+	return &Controller{
+		service: service,
+		logger:  logger,
+	}
+}
+
+func (c *Controller) Get() gin.HandlerFunc {
+	return func(gCtx *gin.Context) {
+		traceID, _ := gCtx.Get("traceID")
+
+		ctx := context.WithValue(gCtx, "traceID", traceID)
+
+		auctions, err := c.service.GetAuctions(ctx)
+
+		if err != nil {
+			//Temporal logging until I decide what to do
+			c.logger.Printf("TraceID %s Error getting auctions: %v\n", traceID, err)
+		}
+
+		gCtx.HTML(http.StatusOK, "", view.Auctions(auctions))
+	}
+}

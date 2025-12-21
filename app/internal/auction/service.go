@@ -7,6 +7,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/adriein/tibia-char/internal/auction/model"
 	"github.com/adriein/tibia-char/pkg/helper/array"
 )
 
@@ -106,6 +107,12 @@ func (s *Service) ScrapBazaar(ctx context.Context) error {
 	return nil
 }
 
-//func (s *Service) GetAuctions() []*Auction {
-//s.auctionRepository
-//}
+func (s *Service) GetAuctions(ctx context.Context) ([]*model.Auction, error) {
+	auctions, err := s.auctionRepository.GetActiveAuctions(ctx)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return auctions, nil
+}

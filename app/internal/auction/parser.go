@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/adriein/tibia-char/internal/auction/model"
 	"github.com/adriein/tibia-char/pkg/vendor"
 	"github.com/gocolly/colly/v2"
 	"github.com/rotisserie/eris"
@@ -27,8 +28,8 @@ func NewAuctionListHtmlParser(api *vendor.TibiaApi, wr WorldRepository, c *colly
 	return &AuctionListHtmlParser{tibiaAPI: api, worldRepository: wr, collector: c}
 }
 
-func (p *AuctionListHtmlParser) GetLinks() (AuctionLinkSet, error) {
-	set := make(AuctionLinkSet)
+func (p *AuctionListHtmlParser) GetLinks() (model.AuctionLinkSet, error) {
+	set := make(model.AuctionLinkSet)
 
 	/*worlds, err := p.tibiaAPI.GetWorlds()
 
@@ -100,7 +101,7 @@ func (p *AuctionListHtmlParser) GetTotalCurrentAuctions() (int, error) {
 	return totalCurrentAuctions, nil
 }
 
-func (p *AuctionListHtmlParser) scrapeWorld(world string, set AuctionLinkSet) error {
+func (p *AuctionListHtmlParser) scrapeWorld(world string, set model.AuctionLinkSet) error {
 	for page := 1; ; page++ {
 		links, err := p.scrapeAuctionListPage(world, page)
 
@@ -195,8 +196,8 @@ func NewAuctionHtmlParser(c *colly.Collector) *AuctionHtmlParser {
 	}
 }
 
-func (p *AuctionHtmlParser) Parse(auctionId int, link string) (*AuctionDTO, error) {
-	dto := AuctionDTO{
+func (p *AuctionHtmlParser) Parse(auctionId int, link string) (*model.AuctionDTO, error) {
+	dto := model.AuctionDTO{
 		AuctionId: auctionId,
 		Link:      fmt.Sprintf("https://www.tibia.com/charactertrade/?subtopic=currentcharactertrades&page=details&auctionid=%d", auctionId),
 	}
@@ -234,7 +235,7 @@ func (p *AuctionHtmlParser) Parse(auctionId int, link string) (*AuctionDTO, erro
 	return &dto, nil
 }
 
-func (p *AuctionHtmlParser) parseAuctionHeader(e *colly.HTMLElement, dto *AuctionDTO) error {
+func (p *AuctionHtmlParser) parseAuctionHeader(e *colly.HTMLElement, dto *model.AuctionDTO) error {
 	dto.CharName = e.ChildText("div[class=AuctionCharacterName]")
 	dto.CharWorld = e.ChildText("a[href]")
 
@@ -254,7 +255,7 @@ func (p *AuctionHtmlParser) parseAuctionHeader(e *colly.HTMLElement, dto *Auctio
 	return nil
 }
 
-func (p *AuctionHtmlParser) parseAuctionBody(e *colly.HTMLElement, dto *AuctionDTO) error {
+func (p *AuctionHtmlParser) parseAuctionBody(e *colly.HTMLElement, dto *model.AuctionDTO) error {
 	var errors []error
 
 	e.ForEachWithBreak("div", func(_ int, ch *colly.HTMLElement) bool {
@@ -271,7 +272,7 @@ func (p *AuctionHtmlParser) parseAuctionBody(e *colly.HTMLElement, dto *AuctionD
 				imgTitle := itemViewBoxCh.Attr("title")
 				imgLink := itemViewBoxCh.ChildAttr("img", "src")
 
-				dto.FeaturedItems = append(dto.FeaturedItems, ImgDisplay{Name: imgTitle, Link: imgLink})
+				dto.FeaturedItems = append(dto.FeaturedItems, model.ImgDisplay{Name: imgTitle, Link: imgLink})
 			})
 
 		case "ShortAuctionData":

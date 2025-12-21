@@ -1,0 +1,19 @@
+package view
+
+import "github.com/adriein/tibia-char/internal/auction/model"
+
+
+templ Index(auctions []*model.Auction) {
+  <html>
+		<head>
+			<meta charset="UTF-8"/>
+			<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+			<title>Tibia Char</title>
+		</head>
+		<body>
+			<section>
+				@Auctions(auctions)
+			</section>
+		</body>
+	</html>
+}

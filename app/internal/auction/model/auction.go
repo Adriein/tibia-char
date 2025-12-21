@@ -1,4 +1,4 @@
-package auction
+package model
 
 import (
 	"strings"

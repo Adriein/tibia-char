@@ -1,0 +1,14 @@
+package view
+
+import "github.com/adriein/tibia-char/internal/auction/model"
+
+templ Auctions(auctions []*model.Auction) {
+	<div>
+		for _, auction := range auctions {
+    	<div>
+				<h1>{auction.Id}</h1>
+				<h2>{auction.CharName}</h2>
+			</div>
+  	}
+	</div>
+}

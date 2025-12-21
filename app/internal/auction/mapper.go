@@ -2,6 +2,8 @@ package auction
 
 import (
 	"time"
+
+	"github.com/adriein/tibia-char/internal/auction/model"
 )
 
 type Mapper struct {
@@ -14,14 +16,14 @@ func NewMapper(wr WorldRepository) *Mapper {
 	}
 }
 
-func (m *Mapper) ToDomain(dto *AuctionDTO) (*Auction, error) {
-	vocation, err := NewVocationFromName(dto.CharVocation)
+func (m *Mapper) ToDomain(dto *model.AuctionDTO) (*model.Auction, error) {
+	vocation, err := model.NewVocationFromName(dto.CharVocation)
 
 	if err != nil {
 		return nil, err
 	}
 
-	gender, err := NewGenderFromName(dto.CharGender)
+	gender, err := model.NewGenderFromName(dto.CharGender)
 
 	if err != nil {
 		return nil, err
@@ -33,7 +35,7 @@ func (m *Mapper) ToDomain(dto *AuctionDTO) (*Auction, error) {
 		return nil, err
 	}
 
-	return &Auction{
+	return &model.Auction{
 		Id:               dto.AuctionId,
 		TibiaAuctionLink: dto.Link,
 		Img:              dto.ImgUrl,

@@ -1,15 +1,17 @@
 package auction
 
 import (
+	"context"
 	"database/sql"
 	"strings"
 	"time"
 
+	"github.com/adriein/tibia-char/internal/auction/model"
 	"github.com/rotisserie/eris"
 )
 
 type VocationRepository interface {
-	GetOrCreate(vocation string) (*Vocation, error)
+	GetOrCreate(vocation string) (*model.Vocation, error)
 }
 
 type PgVocationReository struct {
@@ -20,7 +22,7 @@ func NewPgVocationRepository(c *sql.DB) *PgVocationReository {
 	return &PgVocationReository{connection: c}
 }
 
-func (vr *PgVocationReository) GetOrCreate(vocation string) (*Vocation, error) {
+func (vr *PgVocationReository) GetOrCreate(vocation string) (*model.Vocation, error) {
 	query := `
 		WITH ins AS (
 			INSERT INTO tc_vocation (tv_name)
@@ -34,7 +36,7 @@ func (vr *PgVocationReository) GetOrCreate(vocation string) (*Vocation, error) {
 		LIMIT 1;
 	`
 
-	var dto Vocation
+	var dto model.Vocation
 
 	err := vr.connection.QueryRow(query, vocation).Scan(&dto.Id, &dto.Name)
 
@@ -46,7 +48,7 @@ func (vr *PgVocationReository) GetOrCreate(vocation string) (*Vocation, error) {
 }
 
 type GenderRepository interface {
-	GetOrCreate(gender string) (*Gender, error)
+	GetOrCreate(gender string) (*model.Gender, error)
 }
 
 type PgGenderRepository struct {
@@ -57,7 +59,7 @@ func NewPgGenderRepository(c *sql.DB) *PgGenderRepository {
 	return &PgGenderRepository{connection: c}
 }
 
-func (gr *PgGenderRepository) GetOrCreate(gender string) (*Gender, error) {
+func (gr *PgGenderRepository) GetOrCreate(gender string) (*model.Gender, error) {
 	query := `
 		WITH ins AS (
 			INSERT INTO tc_gender (tg_name)
@@ -71,7 +73,7 @@ func (gr *PgGenderRepository) GetOrCreate(gender string) (*Gender, error) {
 		LIMIT 1;
 	`
 
-	var dto Gender
+	var dto model.Gender
 
 	err := gr.connection.QueryRow(query, gender).Scan(&dto.Id, &dto.Name)
 
@@ -83,7 +85,7 @@ func (gr *PgGenderRepository) GetOrCreate(gender string) (*Gender, error) {
 }
 
 type WorldRepository interface {
-	GetOrCreate(world string) (*World, error)
+	GetOrCreate(world string) (*model.World, error)
 }
 
 type PgWorldRepository struct {
@@ -94,7 +96,7 @@ func NewPgWorldRepository(c *sql.DB) *PgWorldRepository {
 	return &PgWorldRepository{connection: c}
 }
 
-func (wr *PgWorldRepository) GetOrCreate(world string) (*World, error) {
+func (wr *PgWorldRepository) GetOrCreate(world string) (*model.World, error) {
 	query := `
 		WITH ins AS (
 			INSERT INTO tc_world (tw_name)
@@ -108,7 +110,7 @@ func (wr *PgWorldRepository) GetOrCreate(world string) (*World, error) {
 		LIMIT 1;
 	`
 
-	var dto World
+	var dto model.World
 
 	err := wr.connection.QueryRow(query, world).Scan(&dto.Id, &dto.Name)
 
@@ -120,7 +122,8 @@ func (wr *PgWorldRepository) GetOrCreate(world string) (*World, error) {
 }
 
 type AuctionRepository interface {
-	Save(auction *Auction) error
+	Save(auction *model.Auction) error
+	GetActiveAuctions(ctx context.Context) ([]*model.Auction, error)
 }
 
 type PgAuctionRepository struct {
@@ -133,7 +136,7 @@ func NewPgAuctionRepository(connection *sql.DB) *PgAuctionRepository {
 	}
 }
 
-func (r *PgAuctionRepository) Save(auction *Auction) error {
+func (r *PgAuctionRepository) Save(auction *model.Auction) error {
 	var b strings.Builder
 
 	b.WriteString("INSERT INTO tc_auction (")
@@ -168,7 +171,7 @@ func (r *PgAuctionRepository) Save(auction *Auction) error {
 	return nil
 }
 
-func (r *PgAuctionRepository) GetActiveAuctions() ([]*Auction, error) {
+func (r *PgAuctionRepository) GetActiveAuctions(ctx context.Context) ([]*model.Auction, error) {
 	query := `
 		SELECT
 			a.ta_id,
@@ -201,7 +204,11 @@ func (r *PgAuctionRepository) GetActiveAuctions() ([]*Auction, error) {
 		ORDER BY a.ta_auction_end ASC;
 	`
 
-	rows, err := r.connection.Query(query)
+	ctxTimeout, cancel := context.WithTimeout(ctx, time.Second*10)
+
+	defer cancel()
+
+	rows, err := r.connection.QueryContext(ctxTimeout, query)
 
 	if err != nil {
 		return nil, eris.Wrap(err, "Failed to query active auctions")
@@ -209,13 +216,13 @@ func (r *PgAuctionRepository) GetActiveAuctions() ([]*Auction, error) {
 
 	defer rows.Close()
 
-	var auctions []*Auction
+	var auctions []*model.Auction
 
 	for rows.Next() {
-		var auction Auction
-		var vocation Vocation
-		var gender Gender
-		var world World
+		var auction model.Auction
+		var vocation model.Vocation
+		var gender model.Gender
+		var world model.World
 
 		err := rows.Scan(
 			&auction.Id,

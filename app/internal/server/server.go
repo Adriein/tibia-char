@@ -9,7 +9,7 @@ import (
 	"github.com/rotisserie/eris"
 
 	"github.com/adriein/tibia-char/internal"
-	"github.com/adriein/tibia-char/internal/auction"
+	auction "github.com/adriein/tibia-char/internal/auction/controller"
 	"github.com/adriein/tibia-char/internal/health"
 	"github.com/adriein/tibia-char/pkg/middleware"
 )
@@ -56,5 +56,5 @@ func (t *TibiaChar) routeSetup() {
 	t.gin.GET("/ping", health.NewController().Get())
 
 	//AUCTIONS
-	t.gin.GET("/index", auction.NewController().Get())
+	t.gin.GET("/index", auction.NewController(t.app).Get())
 }
