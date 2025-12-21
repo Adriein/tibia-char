@@ -1,6 +1,7 @@
 package auction
 
 import (
+	"context"
 	"log"
 	"math/rand"
 	"sync"
@@ -29,8 +30,10 @@ func NewService(lp *AuctionListHtmlParser, ap *AuctionHtmlParser, ar AuctionRepo
 	}
 }
 
-func (s *Service) ScrapBazaar() error {
-	s.logger.Println("Start Scrap Bazaar")
+func (s *Service) ScrapBazaar(ctx context.Context) error {
+	traceID := ctx.Value("traceID")
+
+	s.logger.Printf("TraceID: %s Start Scrap Bazaar\n", traceID)
 
 	now := time.Now()
 
@@ -42,7 +45,7 @@ func (s *Service) ScrapBazaar() error {
 
 	auctionLinkSet, err := s.linkParser.GetLinks()
 
-	s.logger.Printf("Current auctions %d - Scrapped Auctions %d", currentAuctions, len(auctionLinkSet))
+	s.logger.Printf("TraceID: %s Current auctions %d - Scrapped Auctions %d\n", traceID, currentAuctions, len(auctionLinkSet))
 
 	if err != nil {
 		return err
@@ -79,17 +82,17 @@ func (s *Service) ScrapBazaar() error {
 				dto, err := s.auctionParser.Parse(auctionId, linkURL)
 
 				if err != nil {
-					s.logger.Printf("Parsing of auction id: %d failed with: %s\n", auctionId, err.Error())
+					s.logger.Printf("TraceID: %s Parsing of auction id: %d failed with: %s\n", traceID, auctionId, err.Error())
 				}
 
 				auction, err := s.mapper.ToDomain(dto)
 
 				if err != nil {
-					s.logger.Printf("Error mapping auction dto to auction for auction id: %d: %v\n", auctionId, err)
+					s.logger.Printf("TraceID: %s Error mapping auction dto to auction for auction id: %d: %v\n", traceID, auctionId, err)
 				}
 
 				if err := s.auctionRepository.Save(auction); err != nil {
-					s.logger.Printf("Error saving auction: %d: %s\n", auctionId, err.Error())
+					s.logger.Printf("TraceID: %s Error saving auction: %d: %s\n", traceID, auctionId, err.Error())
 				}
 
 			}(id, link)
@@ -98,7 +101,11 @@ func (s *Service) ScrapBazaar() error {
 		wg.Wait()
 	}
 
-	s.logger.Printf("Finished Scrapping in %s", time.Since(now))
+	s.logger.Printf("TraceID: %s Finished Scrapping in %s\n", traceID, time.Since(now))
 
 	return nil
 }
+
+//func (s *Service) GetAuctions() []*Auction {
+//s.auctionRepository
+//}

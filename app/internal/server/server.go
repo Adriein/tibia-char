@@ -21,7 +21,7 @@ type TibiaChar struct {
 }
 
 func New(port string) *TibiaChar {
-	engine := gin.Default()
+	engine := gin.New()
 
 	ginHtmlRenderer := engine.HTMLRender
 
@@ -30,7 +30,7 @@ func New(port string) *TibiaChar {
 	// Disable trusted proxy warning.
 	engine.SetTrustedProxies(nil)
 
-	engine.Use(middleware.Error())
+	engine.Use(middleware.Error(), gin.Logger(), gin.Recovery(), middleware.Tracer())
 
 	tibiaChar := &TibiaChar{
 		app:       internal.NewApp(),
