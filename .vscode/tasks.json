@@ -1,0 +1,31 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "go",
+			"label": "go: build package",
+			"command": "build",
+			"args": [
+				"${fileDirname}"
+			],
+			"problemMatcher": [
+				"$go"
+			],
+			"group": "build",
+			"detail": "cd /home/aclaret/Dev/tibia-char; go build ${fileDirname}"
+		},
+		{
+      "label": "templ build",
+      "type": "shell",
+      "command": "templ generate",
+      "group": "build",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared",
+				"clear": false,
+				"close": false,
+				"showReuseMessage": false
+      }
+    }
+	]
+}

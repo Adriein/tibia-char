@@ -12,7 +12,8 @@
       "program": "${workspaceFolder}/app/cmd/tibia-char/main.go",
       "cwd": "${workspaceFolder}/app",
       "env": {},
-      "args": []
+      "args": [],
+      "preLaunchTask": "templ build"
     },
     {
       "name": "scrap-cron",
