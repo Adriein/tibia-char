@@ -30,7 +30,7 @@ func (r *HTMLTemplRenderer) Instance(s string, d any) render.Render {
 	}
 }
 
-func NewHtmlTemplRenderer(ctx context.Context, status int, component templ.Component) *Renderer {
+func NewTemplRenderer(ctx context.Context, status int, component templ.Component) *Renderer {
 	return &Renderer{
 		Ctx:       ctx,
 		Status:    status,

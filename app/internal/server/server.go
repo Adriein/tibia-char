@@ -15,33 +15,32 @@ import (
 )
 
 type TibiaChar struct {
-	app *internal.App
+	app       *internal.App
+	gin       *gin.Engine
+	validator *validator.Validate
 }
 
 func New(port string) *TibiaChar {
-	router := gin.Default()
+	engine := gin.Default()
 
-	ginHtmlRenderer := router.HTMLRender
+	ginHtmlRenderer := engine.HTMLRender
 
-	router.HTMLRender = &HTMLTemplRenderer{FallbackHtmlRenderer: ginHtmlRenderer}
+	engine.HTMLRender = &HTMLTemplRenderer{FallbackHtmlRenderer: ginHtmlRenderer}
 
 	// Disable trusted proxy warning.
-	router.SetTrustedProxies(nil)
+	engine.SetTrustedProxies(nil)
 
-	router.Use(middleware.Error())
-
-	//router.LoadHTMLGlob("views/*")
+	engine.Use(middleware.Error())
 
 	tibiaChar := &TibiaChar{
-		app: internal.NewApp(),
+		app:       internal.NewApp(),
+		gin:       engine,
+		validator: validator.New(),
 	}
-
-	tibiaChar.app.SetRouter(router)
-	tibiaChar.app.SetValidator(validator.New())
 
 	tibiaChar.routeSetup()
 
-	if ginErr := router.Run(port); ginErr != nil {
+	if ginErr := engine.Run(port); ginErr != nil {
 		err := eris.Wrap(ginErr, "Error starting HTTP server")
 
 		log.Fatal(eris.ToString(err, true))
@@ -54,8 +53,8 @@ func New(port string) *TibiaChar {
 
 func (t *TibiaChar) routeSetup() {
 	//HEALTH CHECK
-	t.app.Router.GET("/ping", health.NewController().Get())
+	t.gin.GET("/ping", health.NewController().Get())
 
 	//AUCTIONS
-	t.app.Router.GET("/index", auction.NewController().Get())
+	t.gin.GET("/index", auction.NewController().Get())
 }
