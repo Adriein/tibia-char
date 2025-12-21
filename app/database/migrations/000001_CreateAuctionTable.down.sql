@@ -2,9 +2,10 @@ ALTER TABLE tc_auction DROP CONSTRAINT fk_vocation_auction;
 ALTER TABLE tc_auction DROP CONSTRAINT fk_gender_auction;
 ALTER TABLE tc_auction DROP CONSTRAINT fk_world_auction;
 
-ALTER TABLE tc_bid_history DROP CONSTRAINT fk_bid_auction;
+ALTER TABLE tc_auction_recording DROP CONSTRAINT fk_recording_auction_id;
+ALTER TABLE tc_auction_recording DROP CONSTRAINT fk_recording_auction;
 
-DROP TABLE tc_bid_history;
+DROP TABLE tc_auction_recording;
 
 DROP TABLE tc_world;
 DROP TABLE tc_vocation;

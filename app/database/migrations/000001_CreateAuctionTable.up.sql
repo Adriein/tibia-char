@@ -15,7 +15,8 @@ CREATE TABLE IF NOT EXISTS tc_gender (
 
 
 CREATE TABLE IF NOT EXISTS tc_auction (
-    ta_id INT UNIQUE NOT NULL PRIMARY KEY,
+    ta_id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    ta_auction_id INT NOT NULL,
     ta_tibia_auction_link VARCHAR NOT NULL,
     ta_img VARCHAR NOT NULL,
     ta_char_name VARCHAR NOT NULL,
@@ -53,19 +54,23 @@ CREATE INDEX idx_ta_fk_vocation ON tc_auction (ta_char_vocation);
 CREATE INDEX idx_ta_fk_gender ON tc_auction (ta_char_gender);
 CREATE INDEX idx_ta_fk_world ON tc_auction (ta_char_world);
 
-CREATE TABLE IF NOT EXISTS tc_bid_history (
-    tbh_id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    tbh_auction_id INT NOT NULL,
-    tbh_bid INT NOT NULL,
-    tbh_date_add TIMESTAMP(0) WITHOUT TIME ZONE NOT NULL,
+CREATE TABLE IF NOT EXISTS tc_auction_recording (
+    tar_auction_id INT PRIMARY KEY,
+    tar_recordable_id BIGINT NOT NULL,
+    tar_status VARCHAR NOT NULL,
+    tar_date_add TIMESTAMP(0) WITHOUT TIME ZONE NOT NULL,
+    tar_date_upd TIMESTAMP(0) WITHOUT TIME ZONE NOT NULL,
 
-    CONSTRAINT fk_bid_auction
-        FOREIGN KEY (tbh_auction_id)
+    CONSTRAINT fk_recording_auction_id
+        FOREIGN KEY (tar_auction_id)
+        REFERENCES tc_auction (ta_auction_id),
+
+    CONSTRAINT fk_recording_auction
+        FOREIGN KEY (tar_recordable_id)
         REFERENCES tc_auction (ta_id)
-        ON DELETE CASCADE
 );
 
-CREATE INDEX idx_tbh_auction_id_time ON tc_bid_history (tbh_auction_id, tbh_date_add DESC);
+CREATE INDEX idx_tar_auction_id_time ON tc_auction_recording (tar_auction_id, tar_date_add DESC);
 
 INSERT INTO tc_vocation (tv_name) VALUES ('Knight'), ('Paladin'), ('Sorcerer'), ('Druid'), ('Monk');
 
