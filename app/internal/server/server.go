@@ -1,42 +1,47 @@
 package server
 
 import (
-	"database/sql"
-	"fmt"
 	"log"
 	"log/slog"
-	"os"
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 	"github.com/rotisserie/eris"
 
+	"github.com/adriein/tibia-char/internal"
+	"github.com/adriein/tibia-char/internal/auction"
 	"github.com/adriein/tibia-char/internal/health"
-	"github.com/adriein/tibia-char/pkg/constants"
 	"github.com/adriein/tibia-char/pkg/middleware"
 )
 
 type TibiaChar struct {
-	database  *sql.DB
-	router    *gin.RouterGroup
-	validator *validator.Validate
+	app *internal.App
 }
 
 func New(port string) *TibiaChar {
-	engine := gin.Default()
-	router := engine.Group("/api/v1")
+	router := gin.Default()
+
+	ginHtmlRenderer := router.HTMLRender
+
+	router.HTMLRender = &HTMLTemplRenderer{FallbackHtmlRenderer: ginHtmlRenderer}
+
+	// Disable trusted proxy warning.
+	router.SetTrustedProxies(nil)
 
 	router.Use(middleware.Error())
 
-	app := &TibiaChar{
-		database:  initDatabase(),
-		router:    router,
-		validator: validator.New(),
+	//router.LoadHTMLGlob("views/*")
+
+	tibiaChar := &TibiaChar{
+		app: internal.NewApp(),
 	}
 
-	app.routeSetup()
+	tibiaChar.app.SetRouter(router)
+	tibiaChar.app.SetValidator(validator.New())
 
-	if ginErr := engine.Run(port); ginErr != nil {
+	tibiaChar.routeSetup()
+
+	if ginErr := router.Run(port); ginErr != nil {
 		err := eris.Wrap(ginErr, "Error starting HTTP server")
 
 		log.Fatal(eris.ToString(err, true))
@@ -44,27 +49,13 @@ func New(port string) *TibiaChar {
 
 	slog.Info("Starting the TibiaChar at " + port)
 
-	return app
-}
-
-func initDatabase() *sql.DB {
-	databaseDsn := fmt.Sprintf(
-		"postgresql://%s:%s@localhost:5432/%s?sslmode=disable",
-		os.Getenv(constants.DatabaseUser),
-		os.Getenv(constants.DatabasePassword),
-		os.Getenv(constants.DatabaseName),
-	)
-
-	database, dbConnErr := sql.Open("postgres", databaseDsn)
-
-	if dbConnErr != nil {
-		log.Fatal(dbConnErr.Error())
-	}
-
-	return database
+	return tibiaChar
 }
 
 func (t *TibiaChar) routeSetup() {
 	//HEALTH CHECK
-	t.router.GET("/ping", health.NewController().Get())
+	t.app.Router.GET("/ping", health.NewController().Get())
+
+	//AUCTIONS
+	t.app.Router.GET("/index", auction.NewController().Get())
 }

@@ -8,11 +8,15 @@ import (
 	"github.com/adriein/tibia-char/database"
 	"github.com/adriein/tibia-char/pkg/constants"
 	"github.com/adriein/tibia-char/pkg/helper"
+	"github.com/gin-gonic/gin"
+	"github.com/go-playground/validator/v10"
 	"github.com/joho/godotenv"
 )
 
 type App struct {
-	Databse *sql.DB
+	Databse   *sql.DB
+	Router    *gin.Engine
+	Validator *validator.Validate
 }
 
 func NewApp() *App {
@@ -39,4 +43,12 @@ func NewApp() *App {
 	return &App{
 		Databse: database.New(),
 	}
+}
+
+func (a *App) SetRouter(r *gin.Engine) {
+	a.Router = r
+}
+
+func (a *App) SetValidator(v *validator.Validate) {
+	a.Validator = v
 }
