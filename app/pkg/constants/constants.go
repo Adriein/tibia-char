@@ -39,7 +39,7 @@ const (
 type AuctionRecordableStatus int
 
 const (
-	RecordableActive AuctionRecordableStatus = iota
+	RecordableActive AuctionRecordableStatus = iota + 1
 	RecordableArchived
 	RecordableDeleted
 )
