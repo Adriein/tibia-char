@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/adriein/tibia-char/internal/auction/model"
+	"github.com/adriein/tibia-char/pkg/constants"
 	"github.com/rotisserie/eris"
 )
 
@@ -237,6 +238,7 @@ func (r *PgAuctionRepository) GetActiveAuctions(ctx context.Context) ([]*model.A
 			a.ta_current_bid,
 			a.ta_auction_start,
 			a.ta_auction_end,
+			tar.tar_status,
 			a.ta_date_add,
 			a.ta_date_upd
 		FROM
@@ -247,8 +249,10 @@ func (r *PgAuctionRepository) GetActiveAuctions(ctx context.Context) ([]*model.A
 			tc_gender g ON a.ta_char_gender = g.tg_id
 		INNER JOIN
 			tc_world w ON a.ta_char_world = w.tw_id
+		INNER JOIN
+			tc_auction_recording tar ON a.ta_id = tar.tar_recordable_id
 		WHERE
-			a.ta_is_active = true
+			tar.tar_status = 'active'
 		ORDER BY a.ta_auction_end ASC;
 	`
 
@@ -271,6 +275,7 @@ func (r *PgAuctionRepository) GetActiveAuctions(ctx context.Context) ([]*model.A
 		var vocation model.Vocation
 		var gender model.Gender
 		var world model.World
+		var statusString string
 
 		err := rows.Scan(
 			&auction.ID,
@@ -288,6 +293,7 @@ func (r *PgAuctionRepository) GetActiveAuctions(ctx context.Context) ([]*model.A
 			&auction.Bid,
 			&auction.AuctionStart,
 			&auction.AuctionEnd,
+			&statusString,
 			&auction.DateAdd,
 			&auction.DateUpd,
 		)
@@ -296,6 +302,13 @@ func (r *PgAuctionRepository) GetActiveAuctions(ctx context.Context) ([]*model.A
 			return nil, eris.Wrap(err, "Failed to scan auction")
 		}
 
+		status, err := constants.GetAuctionRecordableStatusFromString(statusString)
+
+		if err != nil {
+			return nil, eris.Wrap(err, "Failed to parse auction status")
+		}
+
+		auction.Status = status
 		auction.CharVocation = &vocation
 		auction.CharGender = &gender
 		auction.CharWorld = &world

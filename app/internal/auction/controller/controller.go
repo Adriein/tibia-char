@@ -11,6 +11,7 @@ import (
 	"github.com/adriein/tibia-char/internal/auction/view"
 	"github.com/adriein/tibia-char/pkg/vendor"
 	"github.com/gin-gonic/gin"
+	"github.com/rotisserie/eris"
 )
 
 type Controller struct {
@@ -53,7 +54,7 @@ func (c *Controller) Get() gin.HandlerFunc {
 
 		if err != nil {
 			//Temporal logging until I decide what to do
-			c.logger.Printf("TraceID %s Error getting auctions: %v\n", traceID, err)
+			c.logger.Printf("TraceID %s Error getting auctions: %s\n", traceID, eris.ToString(err, true))
 		}
 
 		gCtx.HTML(http.StatusOK, "", view.Auctions(auctions))
