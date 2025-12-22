@@ -9,6 +9,7 @@ import (
 
 	"github.com/adriein/tibia-char/internal/auction/model"
 	"github.com/adriein/tibia-char/pkg/helper/array"
+	"github.com/rotisserie/eris"
 )
 
 type Service struct {
@@ -83,17 +84,20 @@ func (s *Service) ScrapBazaar(ctx context.Context) error {
 				dto, err := s.auctionParser.Parse(auctionId, linkURL)
 
 				if err != nil {
-					s.logger.Printf("TraceID: %s Parsing of auction id: %d failed with: %s\n", traceID, auctionId, err.Error())
+					s.logger.Printf("TraceID: %s Parsing of auction id: %d failed with: %s\n", traceID, auctionId, eris.ToString(err, true))
+					return
 				}
 
 				auction, err := s.mapper.FromDTO(dto)
 
 				if err != nil {
-					s.logger.Printf("TraceID: %s Error mapping auction dto to auction for auction id: %d: %v\n", traceID, auctionId, err)
+					s.logger.Printf("TraceID: %s Error mapping auction dto to auction for auction id: %d: %s\n", traceID, auctionId, eris.ToString(err, true))
+					return
 				}
 
 				if err := s.auctionRepository.Save(auction); err != nil {
-					s.logger.Printf("TraceID: %s Error saving auction: %d: %s\n", traceID, auctionId, err.Error())
+					s.logger.Printf("TraceID: %s Error saving auction: %d: %s\n", traceID, auctionId, eris.ToString(err, true))
+					return
 				}
 
 			}(id, link)
