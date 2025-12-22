@@ -1,0 +1,94 @@
+@layer reset, base;
+
+:root {
+  /* Spacing */
+  --inline-space: 1ch;
+  --inline-space-half: calc(var(--inline-space) / 2);
+  --inline-space-double: calc(var(--inline-space) * 2);
+  --block-space: 1rem;
+  --block-space-half: calc(var(--block-space) / 2);
+  --block-space-double: calc(var(--block-space) * 2);
+
+  /* Text */
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+  --font-serif: ui-serif, serif;
+  --font-mono: ui-monospace, monospace;
+
+  --text-xx-small: 0.55rem;
+  --text-x-small: 0.75rem;
+  --text-small: 0.85rem;
+  --text-normal: 1rem;
+  --text-medium: 1.1rem;
+  --text-large: 1.5rem;
+  --text-x-large: 1.8rem;
+  --text-xx-large: 2.5rem;
+
+  @media (max-width: 639px) {
+    --text-xx-small: 0.65rem;
+    --text-x-small: 0.85rem;
+    --text-small: 0.95rem;
+    --text-normal: 1.1rem;
+    --text-medium: 1.2rem;
+    --text-large: 1.5rem;
+    --text-x-large: 1.8rem;
+    --text-xx-large: 2.5rem;
+  }
+
+  /* Borders */
+  --border: 1px solid var(--color-ink-lighter);
+
+    /* Shadows */
+  --shadow: 0 0 0 1px oklch(var(--lch-black) / 5%),
+            0 0.2em 0.2em oklch(var(--lch-black) / 5%),
+            0 0.4em 0.4em oklch(var(--lch-black) / 5%),
+            0 0.8em 0.8em oklch(var(--lch-black) / 5%);
+
+  /* Components */
+  --btn-size: 2.65em;
+  --footer-height: 2.65rem;
+  --tray-size: clamp(12rem, 25dvw, 24rem);
+
+  /* Focus rings for keyboard navigation */
+  --focus-ring-color: var(--color-link);
+  --focus-ring-offset: 1px;
+  --focus-ring-size: 2px;
+  --focus-ring: var(--focus-ring-size) solid var(--focus-ring-color);
+
+  /* Dialogs */
+  --dialog-duration: 150ms;
+
+  /* Easing functions from https://easingwizard.com/ */
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-out-overshoot: cubic-bezier(0.25, 1.75, 0.5, 1);
+  --ease-out-overshoot-subtle: cubic-bezier(0.25, 1.25, 0.5, 1);
+
+  @media (max-width: 799px) {
+    --tray-size: var(--footer-height);
+  }
+
+  /* Layout */
+  --main-padding: clamp(var(--inline-space), 3vw, calc(var(--inline-space) * 3));
+  --main-width: 1400px;
+
+  /* Z-index */
+  --z-events-column-header: 1;
+  --z-events-day-header: 3;
+  --z-popup: 10;
+  --z-nav: 30;
+  --z-flash: 40;
+  --z-tooltip: 50;
+  --z-bar: 60;
+  --z-tray: 61;
+}
+
+/* Dark mode - explicit theme choice overrides system preference */
+html[data-theme="dark"] {
+
+}
+
+/* Fallback to system preference when no explicit theme is set */
+@media (prefers-color-scheme: dark) {
+  html:not([data-theme]) {
+
+  }
+}

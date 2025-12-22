@@ -1,0 +1,40 @@
+@layer base {
+  html {
+    font-size: 100%;
+
+    @media (min-width: 100ch) {
+      font-size: 1.1875rem;
+    }
+  }
+
+  body {
+    -moz-osx-font-smoothing: grayscale;
+    -webkit-font-smoothing: antialiased;
+    -webkit-text-size-adjust: none;
+    background: var(--color-canvas);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    interpolate-size: allow-keywords;
+    line-height: 1.375;
+    max-inline-size: 100vw;
+    scroll-behavior: auto;
+    text-rendering: optimizeLegibility;
+    text-size-adjust: none;
+  }
+
+  a {
+    text-decoration: none;
+
+    &:not([class]) {
+      color: var(--color-link);
+      text-decoration: underline;
+      text-decoration-skip-ink: auto;
+    }
+  }
+
+  :where(ul, ol):where([role="list"]) {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+}
