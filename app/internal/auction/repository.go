@@ -3,7 +3,6 @@ package auction
 import (
 	"context"
 	"database/sql"
-	"strings"
 	"time"
 
 	"github.com/adriein/tibia-char/internal/auction/model"
@@ -137,18 +136,37 @@ func NewPgAuctionRepository(connection *sql.DB) *PgAuctionRepository {
 }
 
 func (r *PgAuctionRepository) Save(auction *model.Auction) error {
-	var b strings.Builder
+	tx, err := r.connection.Begin()
 
-	b.WriteString("INSERT INTO tc_auction (")
-	b.WriteString("ta_id, ta_tibia_auction_link, ta_img, ta_char_name, ta_char_level, ta_char_vocation, ta_char_gender, ta_char_world, ")
-	b.WriteString("ta_current_bid, ta_auction_start, ta_auction_end, ta_is_active, ta_date_add, ta_date_upd")
-	b.WriteString(") VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)")
+	if err != nil {
+		return eris.Wrap(err, "Error creating transaction")
+	}
 
-	var query = b.String()
+	auctionQuery := `
+		INSERT INTO tc_auction (
+			ta_auction_id,
+			ta_tibia_auction_link,
+			ta_img,
+			ta_char_name,
+			ta_char_level,
+			ta_char_vocation,
+			ta_char_gender,
+			ta_char_world,
+			ta_current_bid,
+			ta_auction_start,
+			ta_auction_end,
+			ta_date_add,
+			ta_date_upd
+		)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+		RETURNING ta_id;
+	`
 
-	_, err := r.connection.Exec(
-		query,
-		auction.Id,
+	var generatedId int64
+
+	err = tx.QueryRow(
+		auctionQuery,
+		auction.AuctionID,
 		auction.TibiaAuctionLink,
 		auction.Img,
 		auction.CharName,
@@ -157,24 +175,55 @@ func (r *PgAuctionRepository) Save(auction *model.Auction) error {
 		auction.CharGender.Id,
 		auction.CharWorld.Id,
 		auction.Bid,
-		auction.AuctionStart.Format(time.DateTime),
-		auction.AuctionEnd.Format(time.DateTime),
-		auction.IsActive,
-		auction.DateAdd.Format(time.DateTime),
-		auction.DateUpd.Format(time.DateTime),
+		auction.AuctionStart,
+		auction.AuctionEnd,
+		auction.DateAdd,
+		auction.DateUpd,
+	).Scan(&generatedId)
+
+	if err != nil {
+		tx.Rollback()
+
+		return eris.Wrap(err, "Error on insert on tc_auction")
+	}
+
+	recordingQuery := `
+		INSERT INTO tc_auction_recording (
+			tar_auction_id,
+			tar_recordable_id,
+			tar_status,
+			tar_date_add,
+			tar_date_upd
+		)
+		VALUES ($1, $2, $3, $4, $5)
+		ON CONFLICT (tar_auction_id) DO UPDATE SET
+			tar_status = EXCLUDED.tar_status,
+			tar_date_upd = EXCLUDED.tar_date_upd;
+	`
+
+	_, err = tx.Exec(
+		recordingQuery,
+		auction.AuctionID,
+		generatedId,
+		auction.Status,
+		auction.DateAdd,
+		auction.DateUpd,
 	)
 
 	if err != nil {
-		return eris.New(err.Error())
+		tx.Rollback()
+
+		return eris.Wrap(err, "Error in upsert on tc_auction_recording")
 	}
 
-	return nil
+	return tx.Commit()
 }
 
 func (r *PgAuctionRepository) GetActiveAuctions(ctx context.Context) ([]*model.Auction, error) {
 	query := `
 		SELECT
 			a.ta_id,
+			a.ta_auction_id,
 			a.ta_tibia_auction_link,
 			a.ta_img,
 			a.ta_char_name,
@@ -188,7 +237,6 @@ func (r *PgAuctionRepository) GetActiveAuctions(ctx context.Context) ([]*model.A
 			a.ta_current_bid,
 			a.ta_auction_start,
 			a.ta_auction_end,
-			a.ta_is_active,
 			a.ta_date_add,
 			a.ta_date_upd
 		FROM
@@ -200,7 +248,7 @@ func (r *PgAuctionRepository) GetActiveAuctions(ctx context.Context) ([]*model.A
 		INNER JOIN
 			tc_world w ON a.ta_char_world = w.tw_id
 		WHERE
-			a.ta_is_active = 1
+			a.ta_is_active = true
 		ORDER BY a.ta_auction_end ASC;
 	`
 
@@ -225,7 +273,8 @@ func (r *PgAuctionRepository) GetActiveAuctions(ctx context.Context) ([]*model.A
 		var world model.World
 
 		err := rows.Scan(
-			&auction.Id,
+			&auction.ID,
+			&auction.AuctionID,
 			&auction.TibiaAuctionLink,
 			&auction.Img,
 			&auction.CharName,
@@ -239,10 +288,10 @@ func (r *PgAuctionRepository) GetActiveAuctions(ctx context.Context) ([]*model.A
 			&auction.Bid,
 			&auction.AuctionStart,
 			&auction.AuctionEnd,
-			&auction.IsActive,
 			&auction.DateAdd,
 			&auction.DateUpd,
 		)
+
 		if err != nil {
 			return nil, eris.Wrap(err, "Failed to scan auction")
 		}

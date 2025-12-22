@@ -80,7 +80,8 @@ type World struct {
 	Name string
 }
 type Auction struct {
-	Id               int
+	ID               int64
+	AuctionID        int64
 	TibiaAuctionLink string
 	Img              string
 	FeaturedItems    []ImgDisplay
@@ -93,7 +94,7 @@ type Auction struct {
 	Bid              int
 	AuctionStart     time.Time
 	AuctionEnd       time.Time
-	IsActive         bool
+	Status           string
 	DateAdd          time.Time
 	DateUpd          time.Time
 }

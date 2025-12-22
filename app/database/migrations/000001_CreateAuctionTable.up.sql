@@ -27,7 +27,6 @@ CREATE TABLE IF NOT EXISTS tc_auction (
     ta_current_bid INT NOT NULL,
     ta_auction_start TIMESTAMP(0) WITHOUT TIME ZONE NOT NULL,
     ta_auction_end TIMESTAMP(0) WITHOUT TIME ZONE NOT NULL,
-    ta_is_active BOOLEAN NOT NULL,
     ta_date_add TIMESTAMP(0) WITHOUT TIME ZONE NOT NULL,
     ta_date_upd TIMESTAMP(0) WITHOUT TIME ZONE NOT NULL,
 
@@ -44,12 +43,6 @@ CREATE TABLE IF NOT EXISTS tc_auction (
         REFERENCES tc_world (tw_id)
 );
 
-CREATE INDEX idx_ta_active_vocation_world ON tc_auction (
-    ta_is_active,
-    ta_char_vocation,
-    ta_char_world
-);
-
 CREATE INDEX idx_ta_fk_vocation ON tc_auction (ta_char_vocation);
 CREATE INDEX idx_ta_fk_gender ON tc_auction (ta_char_gender);
 CREATE INDEX idx_ta_fk_world ON tc_auction (ta_char_world);
@@ -60,10 +53,6 @@ CREATE TABLE IF NOT EXISTS tc_auction_recording (
     tar_status VARCHAR NOT NULL,
     tar_date_add TIMESTAMP(0) WITHOUT TIME ZONE NOT NULL,
     tar_date_upd TIMESTAMP(0) WITHOUT TIME ZONE NOT NULL,
-
-    CONSTRAINT fk_recording_auction_id
-        FOREIGN KEY (tar_auction_id)
-        REFERENCES tc_auction (ta_auction_id),
 
     CONSTRAINT fk_recording_auction
         FOREIGN KEY (tar_recordable_id)

@@ -36,7 +36,7 @@ func (m *Mapper) ToDomain(dto *model.AuctionDTO) (*model.Auction, error) {
 	}
 
 	return &model.Auction{
-		Id:               dto.AuctionId,
+		AuctionID:        int64(dto.AuctionId),
 		TibiaAuctionLink: dto.Link,
 		Img:              dto.ImgUrl,
 		FeaturedItems:    dto.FeaturedItems,
@@ -49,7 +49,7 @@ func (m *Mapper) ToDomain(dto *model.AuctionDTO) (*model.Auction, error) {
 		Bid:              dto.Bid,
 		AuctionStart:     dto.AuctionStartTime,
 		AuctionEnd:       dto.AuctionEndTime,
-		IsActive:         true,
+		Status:           "status",
 		DateAdd:          time.Now(),
 		DateUpd:          time.Now(),
 	}, nil
