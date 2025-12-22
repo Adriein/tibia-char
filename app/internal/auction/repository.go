@@ -205,7 +205,7 @@ func (r *PgAuctionRepository) Save(auction *model.Auction) error {
 		recordingQuery,
 		auction.AuctionID,
 		generatedId,
-		auction.Status,
+		auction.Status.String(),
 		auction.DateAdd,
 		auction.DateUpd,
 	)
