@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/adriein/tibia-char/internal/auction/model"
+	"github.com/adriein/tibia-char/pkg/constants"
 )
 
 type Mapper struct {
@@ -16,7 +17,7 @@ func NewMapper(wr WorldRepository) *Mapper {
 	}
 }
 
-func (m *Mapper) ToDomain(dto *model.AuctionDTO) (*model.Auction, error) {
+func (m *Mapper) FromDTO(dto *model.AuctionDTO) (*model.Auction, error) {
 	vocation, err := model.NewVocationFromName(dto.CharVocation)
 
 	if err != nil {
@@ -49,7 +50,7 @@ func (m *Mapper) ToDomain(dto *model.AuctionDTO) (*model.Auction, error) {
 		Bid:              dto.Bid,
 		AuctionStart:     dto.AuctionStartTime,
 		AuctionEnd:       dto.AuctionEndTime,
-		Status:           "status",
+		Status:           constants.RecordableActive,
 		DateAdd:          time.Now(),
 		DateUpd:          time.Now(),
 	}, nil

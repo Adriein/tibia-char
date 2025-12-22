@@ -86,7 +86,7 @@ func (s *Service) ScrapBazaar(ctx context.Context) error {
 					s.logger.Printf("TraceID: %s Parsing of auction id: %d failed with: %s\n", traceID, auctionId, err.Error())
 				}
 
-				auction, err := s.mapper.ToDomain(dto)
+				auction, err := s.mapper.FromDTO(dto)
 
 				if err != nil {
 					s.logger.Printf("TraceID: %s Error mapping auction dto to auction for auction id: %d: %v\n", traceID, auctionId, err)

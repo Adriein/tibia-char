@@ -94,7 +94,7 @@ type Auction struct {
 	Bid              int
 	AuctionStart     time.Time
 	AuctionEnd       time.Time
-	Status           string
+	Status           constants.AuctionRecordableStatus
 	DateAdd          time.Time
 	DateUpd          time.Time
 }

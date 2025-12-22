@@ -36,6 +36,24 @@ const (
 	EventDataIngestionDescription = "Ingested market data"
 )
 
+type AuctionRecordableStatus int
+
+const (
+	RecordableActive AuctionRecordableStatus = iota
+	RecordableArchived
+	RecordableDeleted
+)
+
+var auctionRecordableStatusName = map[AuctionRecordableStatus]string{
+	RecordableActive:   "active",
+	RecordableArchived: "archived",
+	RecordableDeleted:  "deleted",
+}
+
+func (ars AuctionRecordableStatus) String() string {
+	return auctionRecordableStatusName[ars]
+}
+
 const (
 	GenderMale       = 1
 	GenderFemale     = 2
