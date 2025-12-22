@@ -34,8 +34,34 @@
     --text-xx-large: 2.5rem;
   }
 
+  /* Layout Colors (The Canvas) */
+  --color-canvas: oklch(0.141 0.005 285.823);
+  --color-ink: oklch(0.985 0 0);
+
+  /* Component Surfaces (The Cards) */
+  --color-surface: oklch(0.21 0.006 285.885);
+  --color-surface-ink: oklch(0.985 0 0);
+
+  /* Action Colors (The Brand) */
+  --color-brand-main: oklch(0.795 0.184 86.047);
+  --color-brand-ink: oklch(0.421 0.095 57.708); /* Use this for text inside buttons */
+
+  /* UI Accents */
+  --color-muted: oklch(0.274 0.006 286.033);
+  --color-muted-ink: oklch(0.705 0.015 286.067);
+  --color-border: oklch(1 0 0 / 10%); /* Subtle white with transparency */
+
+  /* Status */
+  --color-error: oklch(0.704 0.191 22.216);
+
   /* Borders */
   --border: 1px solid var(--color-ink-lighter);
+
+  /* Border Radius */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 16px;
+  --radius-full: 9999px;
 
     /* Shadows */
   --shadow: 0 0 0 1px oklch(var(--lch-black) / 5%),
@@ -79,16 +105,4 @@
   --z-tooltip: 50;
   --z-bar: 60;
   --z-tray: 61;
-}
-
-/* Dark mode - explicit theme choice overrides system preference */
-html[data-theme="dark"] {
-
-}
-
-/* Fallback to system preference when no explicit theme is set */
-@media (prefers-color-scheme: dark) {
-  html:not([data-theme]) {
-
-  }
-}
+};
