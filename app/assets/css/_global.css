@@ -1,4 +1,4 @@
-@layer reset, base;
+@layer reset, base, components;
 
 :root {
   /* Spacing */

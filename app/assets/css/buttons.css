@@ -3,7 +3,7 @@
     background-color: var(--btn-background, var(--color-canvas));
     color: var(--btn-color, var(--color-ink));
     border: var(--btn-border-size, 1px) solid var(--btn-border-color, var(--color-ink-light));
-  };
+  }
 
   .btn--primary {
     --btn-background: var(--color-brand-main);
