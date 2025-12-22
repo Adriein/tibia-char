@@ -57,6 +57,6 @@ func (c *Controller) Get() gin.HandlerFunc {
 			c.logger.Printf("TraceID %s Error getting auctions: %s\n", traceID, eris.ToString(err, true))
 		}
 
-		gCtx.HTML(http.StatusOK, "", view.Auctions(auctions))
+		gCtx.HTML(http.StatusOK, "", view.Index(auctions))
 	}
 }

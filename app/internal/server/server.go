@@ -1,8 +1,10 @@
 package server
 
 import (
+	"fmt"
 	"log"
 	"log/slog"
+	"os"
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
@@ -54,6 +56,11 @@ func New(port string) *TibiaChar {
 func (t *TibiaChar) routeSetup() {
 	//HEALTH CHECK
 	t.gin.GET("/ping", health.NewController().Get())
+
+	cwd, _ := os.Getwd()
+
+	//STATIC
+	t.gin.Static("/assets", fmt.Sprintf("%s/assets", cwd))
 
 	//AUCTIONS
 	t.gin.GET("/index", auction.NewController(t.app).Get())
