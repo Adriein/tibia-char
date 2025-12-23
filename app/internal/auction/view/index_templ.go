@@ -31,7 +31,7 @@ func Index(auctions []*model.Auction) templ.Component {
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<html><head><meta charset=\"UTF-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"><title>Tibia Char</title><link rel=\"stylesheet\" href=\"/assets/css/reset.css\"><link rel=\"stylesheet\" href=\"/assets/css/base.css\"><link rel=\"stylesheet\" href=\"/assets/css/_global.css\"><link rel=\"stylesheet\" href=\"/assets/css/buttons.css\"></head><body><section>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<html><head><meta charset=\"UTF-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"><title>Tibia Char</title><link rel=\"stylesheet\" href=\"/assets/css/main.css\"></head><body><section>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

@@ -2,14 +2,52 @@ package view
 
 import "github.com/adriein/tibia-char/internal/auction/model"
 
+/**
++-------------+-----------------------------------+---------------------------------------------------------+
+| SECTION     | CONTENT                           | INSIGHT / WHY?                                          |
++-------------+-----------------------------------+---------------------------------------------------------+
+| Header      | Level, Vocation, Name             | Immediate identity recognition. The "hook" for the user.|
++-------------+-----------------------------------+---------------------------------------------------------+
+| Main Body   | Base Skill + Charm Points         | Displays the two biggest value drivers that cannot be   |
+|             |                                   | easily rushed or bought cheaply.                        |
++-------------+-----------------------------------+---------------------------------------------------------+
+| Icons Row   | T3 Imbuements, Soul War, Quests   | The "Gatekeepers." Reduces friction by showing which    |
+|             |                                   | boring "chore quests" are already finished.             |
++-------------+-----------------------------------+---------------------------------------------------------+
+| Footer      | Price, Time Left, Transfer Status | Actionable data. Provides the urgency and logistical    |
+|             |                                   | feasibility needed to decide on a bid.                  |
++-------------+-----------------------------------+---------------------------------------------------------+
+*/
+
+templ AuctionCard(auction *model.Auction) {
+	<div>
+		<div>
+			<div>
+				<img src={auction.Img}/>
+			</div>
+			<div>
+				<div>
+					<h1>{auction.CharName}</h1>
+				</div>
+				<div>
+					<span>{auction.CharLevel}</span>
+					<span>{auction.CharVocation.Name}</span>
+				</div>
+			</div>
+		</div>
+		<div>
+			<div>
+				<span>{auction.CharWorld.Name}</span>
+				<span>Transfer status</span>
+			</div>
+		</div>
+	</div>
+}
+
 templ Auctions(auctions []*model.Auction) {
 	<div>
 		for _, auction := range auctions {
-    	<div>
-				<h1>{auction.AuctionID}</h1>
-				<h2>{auction.CharName}</h2>
-				<button class="btn btn--primary">Test</button>
-			</div>
+    	@AuctionCard(auction)
   	}
 	</div>
 }
