@@ -29,13 +29,12 @@ templ AuctionCard(auction *model.Auction) {
 				<div class="card__header-title">
 					<h1>{auction.CharName}</h1>
 				</div>
-				<div>
-					<span>{auction.CharLevel}</span>
-					<span>{auction.CharVocation.Name}</span>
+				<div class="card__header-subtitle">
+					<h2>{auction.CharLevel} {auction.CharVocation.Name}</h2>
 				</div>
 			</div>
 		</div>
-		<div>
+		<div class="card__body">
 			<div>
 				<span>{auction.CharWorld.Name}</span>
 				<span>Transfer status</span>

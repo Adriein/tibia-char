@@ -2,6 +2,7 @@
   .card {
     --card-header-space: 1ch;
     --card-header-padding-block: var(--block-space);
+    --card-body-padding-block: var(--block-space);
 
     background-color: var(--card-background, var(--color-surface));
     color: var(--card-color, var(--color-surface-ink));
@@ -20,9 +21,20 @@
 
     .card__header-title {
       h1 {
-        font-size: var(--text-normal);
+        font-size: var(--text-medium);
       }
     }
+
+    .card__header-subtitle {
+      h2 {
+        font-size: var(--text-small);
+      }
+    }
+  }
+
+  .card__body {
+    border-top: 1px solid var(--card-body-border-color, var(--color-border));
+    padding: var(--card-body-padding-block);
   }
 
   .card--auction {
@@ -35,10 +47,7 @@
       img {
         width: 64px;
         height: 64px;
-
-        /* Adjust these % values until the character is perfectly centered */
         transform: translate(-20%, -20%);
-
         object-fit: contain;
       }
     }
