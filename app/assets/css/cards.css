@@ -16,17 +16,30 @@
     border-radius: inherit;
     padding: var(--card-header-padding-block);
     gap: var(--card-header-space);
+    align-items: center;
 
     .card__header-title {
-      font-size: var(--text-normal);
+      h1 {
+        font-size: var(--text-normal);
+      }
     }
   }
 
   .card--auction {
     .card__header-avatar {
+      background-color: var(--color-brand-main);
+      width: 56px;
+      height: 56px;
+      border-radius: var(--card-border-radius, var(--radius-md));
+
       img {
-        object-position: center;
-        object-fit: cover;
+        width: 64px;
+        height: 64px;
+
+        /* Adjust these % values until the character is perfectly centered */
+        transform: translate(-20%, -20%);
+
+        object-fit: contain;
       }
     }
   }
