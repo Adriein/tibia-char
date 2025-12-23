@@ -1,3 +1,33 @@
 @layer components {
+  .card {
+    --card-header-space: 1ch;
+    --card-header-padding-block: var(--block-space);
 
+    background-color: var(--card-background, var(--color-surface));
+    color: var(--card-color, var(--color-surface-ink));
+    border: var(--card-border-size, 1px) solid var(--card-border-color, var(--color-border));
+    border-radius: var(--card-border-radius, var(--radius-md));
+  }
+
+  .card__header {
+    display: flex;
+    background-color: var(--card-header-background, var(--color-surface));
+    color: var(--card-header-color, var(--color-surface-ink));
+    border-radius: inherit;
+    padding: var(--card-header-padding-block);
+    gap: var(--card-header-space);
+
+    .card__header-title {
+      font-size: var(--text-normal);
+    }
+  }
+
+  .card--auction {
+    .card__header-avatar {
+      img {
+        object-position: center;
+        object-fit: cover;
+      }
+    }
+  }
 }

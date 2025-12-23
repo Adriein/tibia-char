@@ -20,9 +20,9 @@ import "github.com/adriein/tibia-char/internal/auction/model"
 */
 
 templ AuctionCard(auction *model.Auction) {
-	<div>
-		<div>
-			<div>
+	<div class="card card--auction">
+		<div class="card__header">
+			<div class="card__header-avatar">
 				<img src={auction.Img}/>
 			</div>
 			<div>
