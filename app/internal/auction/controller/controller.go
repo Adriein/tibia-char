@@ -31,12 +31,12 @@ func NewController(app *internal.App) *Controller {
 
 	tibiaAPI := vendor.NewTibiaApi()
 
-	auctionListHtmlParser := auction.NewAuctionListHtmlParser(tibiaAPI, worldRepository, linkScrapper.Collector)
+	auctionListHtmlParser := auction.NewAuctionListHtmlParser(linkScrapper.Collector)
 	auctionHtmlParser := auction.NewAuctionHtmlParser(detailScrapper.Collector)
 
 	mapper := auction.NewMapper(worldRepository)
 
-	service := auction.NewService(auctionListHtmlParser, auctionHtmlParser, auctionRepository, worldRepository, mapper, logger)
+	service := auction.NewService(tibiaAPI, auctionListHtmlParser, auctionHtmlParser, auctionRepository, worldRepository, mapper, logger)
 
 	return &Controller{
 		service: service,

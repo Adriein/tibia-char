@@ -9,10 +9,13 @@ import (
 
 	"github.com/adriein/tibia-char/internal/auction/model"
 	"github.com/adriein/tibia-char/pkg/helper/array"
+	"github.com/adriein/tibia-char/pkg/vendor"
 	"github.com/rotisserie/eris"
+	"golang.org/x/sync/errgroup"
 )
 
 type Service struct {
+	tibiaAPI          *vendor.TibiaApi
 	linkParser        *AuctionListHtmlParser
 	auctionParser     *AuctionHtmlParser
 	auctionRepository AuctionRepository
@@ -21,8 +24,9 @@ type Service struct {
 	logger            *log.Logger
 }
 
-func NewService(lp *AuctionListHtmlParser, ap *AuctionHtmlParser, ar AuctionRepository, wr WorldRepository, m *Mapper, logger *log.Logger) *Service {
+func NewService(ta *vendor.TibiaApi, lp *AuctionListHtmlParser, ap *AuctionHtmlParser, ar AuctionRepository, wr WorldRepository, m *Mapper, logger *log.Logger) *Service {
 	return &Service{
+		tibiaAPI:          ta,
 		linkParser:        lp,
 		auctionParser:     ap,
 		auctionRepository: ar,
@@ -33,6 +37,9 @@ func NewService(lp *AuctionListHtmlParser, ap *AuctionHtmlParser, ar AuctionRepo
 }
 
 func (s *Service) ScrapBazaar(ctx context.Context) error {
+	const MaxConcurrency = 5
+	const LinkMaxConcurrency = 5
+
 	traceID := ctx.Value("traceID")
 
 	s.logger.Printf("TraceID: %s Start Scrap Bazaar\n", traceID)
@@ -45,17 +52,64 @@ func (s *Service) ScrapBazaar(ctx context.Context) error {
 		return err
 	}
 
-	auctionLinkSet, err := s.linkParser.GetLinks()
-
-	s.logger.Printf("TraceID: %s Current auctions %d - Scrapped Auctions %d\n", traceID, currentAuctions, len(auctionLinkSet))
+	worlds, err := s.tibiaAPI.GetWorlds()
 
 	if err != nil {
-		return err
+		return eris.Wrap(err, "Failed to fetch worlds from Tibia API")
 	}
 
-	const MaxConcurrency = 5
+	for _, world := range worlds {
+		_, err := s.worldRepository.GetOrCreate(world)
 
-	links := array.ChunkMap(auctionLinkSet, MaxConcurrency)
+		if err != nil {
+			return err
+		}
+	}
+
+	semaphore := make(chan struct{}, LinkMaxConcurrency)
+
+	worldsChunk := array.Chunk(worlds, LinkMaxConcurrency)
+
+	auctionLinkSet := model.NewAuctionLinkSet()
+
+	for i, chunk := range worldsChunk {
+		g, ctx := errgroup.WithContext(context.Background())
+
+		if i != 0 {
+			randDelay := time.Duration(1+rand.Intn(10)) * time.Second
+
+			time.Sleep(randDelay)
+		}
+
+		for _, world := range chunk {
+			g.Go(func() error {
+				select {
+				case <-ctx.Done():
+					return ctx.Err()
+				case semaphore <- struct{}{}:
+					defer func() { <-semaphore }()
+				}
+
+				if err := s.linkParser.ScrapeWorld(world, auctionLinkSet); err != nil {
+					s.logger.Printf("Error for world %s: %v\n", world, err)
+
+					return err
+				}
+				return nil
+			})
+
+		}
+
+		err := g.Wait()
+
+		if err != nil {
+			return err
+		}
+	}
+
+	s.logger.Printf("TraceID: %s Current auctions %d - Scrapped Auctions %d\n", traceID, currentAuctions, len(auctionLinkSet.Data))
+
+	links := array.ChunkMap(auctionLinkSet.Data, MaxConcurrency)
 
 	var wg sync.WaitGroup
 

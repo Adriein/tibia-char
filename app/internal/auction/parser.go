@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/adriein/tibia-char/internal/auction/model"
-	"github.com/adriein/tibia-char/pkg/vendor"
 	"github.com/gocolly/colly/v2"
 	"github.com/rotisserie/eris"
 )
@@ -19,39 +18,11 @@ const (
 )
 
 type AuctionListHtmlParser struct {
-	worldRepository WorldRepository
-	tibiaAPI        *vendor.TibiaApi
-	collector       *colly.Collector
+	collector *colly.Collector
 }
 
-func NewAuctionListHtmlParser(api *vendor.TibiaApi, wr WorldRepository, c *colly.Collector) *AuctionListHtmlParser {
-	return &AuctionListHtmlParser{tibiaAPI: api, worldRepository: wr, collector: c}
-}
-
-func (p *AuctionListHtmlParser) GetLinks() (model.AuctionLinkSet, error) {
-	set := make(model.AuctionLinkSet)
-
-	/*worlds, err := p.tibiaAPI.GetWorlds()
-
-	if err != nil {
-		return set, eris.Wrap(err, "Failed to fetch worlds from Tibia API")
-	}*/
-
-	worlds := []string{"Calmera"}
-
-	for _, world := range worlds {
-		_, err := p.worldRepository.GetOrCreate(world)
-
-		if err != nil {
-			return set, err
-		}
-
-		if err := p.scrapeWorld(world, set); err != nil {
-			return set, eris.Wrapf(err, "Failed to scrape world %s", world)
-		}
-	}
-
-	return set, nil
+func NewAuctionListHtmlParser(c *colly.Collector) *AuctionListHtmlParser {
+	return &AuctionListHtmlParser{collector: c}
 }
 
 func (p *AuctionListHtmlParser) GetTotalCurrentAuctions() (int, error) {
@@ -101,7 +72,7 @@ func (p *AuctionListHtmlParser) GetTotalCurrentAuctions() (int, error) {
 	return totalCurrentAuctions, nil
 }
 
-func (p *AuctionListHtmlParser) scrapeWorld(world string, set model.AuctionLinkSet) error {
+func (p *AuctionListHtmlParser) ScrapeWorld(world string, set *model.AuctionLinkSet) error {
 	for page := 1; ; page++ {
 		links, err := p.scrapeAuctionListPage(world, page)
 

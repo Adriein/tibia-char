@@ -38,12 +38,12 @@ func main() {
 
 	tibiaAPI := vendor.NewTibiaApi()
 
-	auctionListHtmlParser := auction.NewAuctionListHtmlParser(tibiaAPI, worldRepository, linkScrapper.Collector)
+	auctionListHtmlParser := auction.NewAuctionListHtmlParser(linkScrapper.Collector)
 	auctionHtmlParser := auction.NewAuctionHtmlParser(detailScrapper.Collector)
 
 	mapper := auction.NewMapper(worldRepository)
 
-	cron := auction.NewService(auctionListHtmlParser, auctionHtmlParser, auctionRepository, worldRepository, mapper, logger)
+	cron := auction.NewService(tibiaAPI, auctionListHtmlParser, auctionHtmlParser, auctionRepository, worldRepository, mapper, logger)
 
 	ctx := context.WithValue(context.Background(), "traceID", helper.TraceID())
 

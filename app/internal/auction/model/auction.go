@@ -2,6 +2,7 @@ package model
 
 import (
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/adriein/tibia-char/pkg/constants"
@@ -99,36 +100,40 @@ type Auction struct {
 	DateUpd          time.Time
 }
 
-type AuctionLinkSet map[int]string
+type AuctionLinkSet struct {
+	sync.RWMutex
+	Data map[int]string
+}
 
-func (set AuctionLinkSet) Get(key int) (string, bool) {
-	value, ok := set[key]
+func NewAuctionLinkSet() *AuctionLinkSet {
+	return &AuctionLinkSet{
+		Data: make(map[int]string),
+	}
+}
+
+func (s *AuctionLinkSet) Get(key int) (string, bool) {
+	s.RLock()
+	defer s.RUnlock()
+
+	value, ok := s.Data[key]
 
 	return value, ok
 }
 
-func (set AuctionLinkSet) Set(key int, value string) {
-	set[key] = value
+func (s *AuctionLinkSet) Set(key int, value string) {
+	s.Lock()
+	defer s.Unlock()
+
+	s.Data[key] = value
 }
 
-func (set AuctionLinkSet) Del(key int) {
-	delete(set, key)
-}
+func (s *AuctionLinkSet) Has(key int) bool {
+	s.RLock()
+	defer s.RUnlock()
 
-func (set AuctionLinkSet) Has(key int) bool {
-	_, ok := set[key]
+	_, ok := s.Data[key]
 
 	return ok
-}
-
-func (set AuctionLinkSet) Values() []string {
-	values := make([]string, 0, len(set))
-
-	for _, v := range set {
-		values = append(values, v)
-	}
-
-	return values
 }
 
 type ImgDisplay struct {
