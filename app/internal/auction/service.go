@@ -24,7 +24,7 @@ type Service struct {
 }
 
 const AuctionDetailMaxConcurrency = 5
-const AuctionLinkMaxConcurrency = 5
+const AuctionLinkMaxConcurrency = 10
 
 func NewService(ta *vendor.TibiaApi, lp *AuctionListHtmlParser, ap *AuctionHtmlParser, ar AuctionRepository, wr WorldRepository, m *Mapper, logger *log.Logger) *Service {
 	return &Service{
@@ -103,14 +103,8 @@ func (s *Service) scrapAuctionLinks(worlds []string) (*model.AuctionLinkSet, err
 
 	auctionLinkSet := model.NewAuctionLinkSet()
 
-	for i, chunk := range worldsChunk {
+	for _, chunk := range worldsChunk {
 		g, ctx := errgroup.WithContext(context.Background())
-
-		if i != 0 {
-			randDelay := time.Duration(1+rand.Intn(10)) * time.Second
-
-			time.Sleep(randDelay)
-		}
 
 		for _, world := range chunk {
 			g.Go(func() error {
