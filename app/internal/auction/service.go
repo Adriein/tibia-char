@@ -4,7 +4,6 @@ import (
 	"context"
 	"log"
 	"math/rand"
-	"sync"
 	"time"
 
 	"github.com/adriein/tibia-char/internal/auction/model"
@@ -24,6 +23,9 @@ type Service struct {
 	logger            *log.Logger
 }
 
+const AuctionDetailMaxConcurrency = 5
+const AuctionLinkMaxConcurrency = 5
+
 func NewService(ta *vendor.TibiaApi, lp *AuctionListHtmlParser, ap *AuctionHtmlParser, ar AuctionRepository, wr WorldRepository, m *Mapper, logger *log.Logger) *Service {
 	return &Service{
 		tibiaAPI:          ta,
@@ -37,9 +39,6 @@ func NewService(ta *vendor.TibiaApi, lp *AuctionListHtmlParser, ap *AuctionHtmlP
 }
 
 func (s *Service) ScrapBazaar(ctx context.Context) error {
-	const MaxConcurrency = 5
-	const LinkMaxConcurrency = 5
-
 	traceID := ctx.Value("traceID")
 
 	s.logger.Printf("TraceID: %s Start Scrap Bazaar\n", traceID)
@@ -66,9 +65,41 @@ func (s *Service) ScrapBazaar(ctx context.Context) error {
 		}
 	}
 
-	semaphore := make(chan struct{}, LinkMaxConcurrency)
+	auctionLinkSet, err := s.scrapAuctionLinks(worlds)
 
-	worldsChunk := array.Chunk(worlds, LinkMaxConcurrency)
+	s.logger.Printf("TraceID: %s Total auction links %d - Auction links obtained %d\n", traceID, currentAuctions, len(auctionLinkSet.Data))
+
+	if err != nil {
+		s.logger.Printf("TraceID: %s Finished Scrapping with error in %s\n", traceID, time.Since(now))
+
+		return err
+	}
+
+	if err := s.scrapAuctionDetail(auctionLinkSet); err != nil {
+		s.logger.Printf("TraceID: %s Finished Scrapping with error in %s\n", traceID, time.Since(now))
+
+		return err
+	}
+
+	s.logger.Printf("TraceID: %s Finished Scrapping in %s\n", traceID, time.Since(now))
+
+	return nil
+}
+
+func (s *Service) GetAuctions(ctx context.Context) ([]*model.Auction, error) {
+	auctions, err := s.auctionRepository.GetActiveAuctions(ctx)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return auctions, nil
+}
+
+func (s *Service) scrapAuctionLinks(worlds []string) (*model.AuctionLinkSet, error) {
+	semaphore := make(chan struct{}, AuctionLinkMaxConcurrency)
+
+	worldsChunk := array.Chunk(worlds, AuctionLinkMaxConcurrency)
 
 	auctionLinkSet := model.NewAuctionLinkSet()
 
@@ -91,31 +122,30 @@ func (s *Service) ScrapBazaar(ctx context.Context) error {
 				}
 
 				if err := s.linkParser.ScrapeWorld(world, auctionLinkSet); err != nil {
-					s.logger.Printf("Error for world %s: %v\n", world, err)
-
 					return err
 				}
 				return nil
 			})
-
 		}
 
 		err := g.Wait()
 
 		if err != nil {
-			return err
+			return nil, err
 		}
 	}
 
-	s.logger.Printf("TraceID: %s Current auctions %d - Scrapped Auctions %d\n", traceID, currentAuctions, len(auctionLinkSet.Data))
+	return auctionLinkSet, nil
+}
 
-	links := array.ChunkMap(auctionLinkSet.Data, MaxConcurrency)
+func (s *Service) scrapAuctionDetail(auctionLinkSet *model.AuctionLinkSet) error {
+	links := array.ChunkMap(auctionLinkSet.Data, AuctionDetailMaxConcurrency)
 
-	var wg sync.WaitGroup
-
-	maxWorkers := make(chan struct{}, MaxConcurrency)
+	semaphore := make(chan struct{}, AuctionDetailMaxConcurrency)
 
 	for i, chunk := range links {
+		g, ctx := errgroup.WithContext(context.Background())
+
 		if i != 0 {
 			randDelay := time.Duration(1+rand.Intn(5)) * time.Second
 
@@ -123,54 +153,39 @@ func (s *Service) ScrapBazaar(ctx context.Context) error {
 		}
 
 		for _, kv := range chunk {
-			maxWorkers <- struct{}{}
+			g.Go(func() error {
+				select {
+				case <-ctx.Done():
+					return ctx.Err()
+				case semaphore <- struct{}{}:
+					defer func() { <-semaphore }()
+				}
 
-			wg.Add(1)
-
-			id := kv.Key
-			link := kv.Value
-
-			go func(auctionId int, linkURL string) {
-				defer wg.Done()
-
-				defer func() { <-maxWorkers }()
+				auctionId := kv.Key
+				linkURL := kv.Value
 
 				dto, err := s.auctionParser.Parse(auctionId, linkURL)
 
 				if err != nil {
-					s.logger.Printf("TraceID: %s Parsing of auction id: %d failed with: %s\n", traceID, auctionId, eris.ToString(err, true))
-					return
+					return err
 				}
 
 				auction, err := s.mapper.FromDTO(dto)
 
 				if err != nil {
-					s.logger.Printf("TraceID: %s Error mapping auction dto to auction for auction id: %d: %s\n", traceID, auctionId, eris.ToString(err, true))
-					return
+					return err
 				}
 
 				if err := s.auctionRepository.Save(auction); err != nil {
-					s.logger.Printf("TraceID: %s Error saving auction: %d: %s\n", traceID, auctionId, eris.ToString(err, true))
-					return
+					return err
 				}
 
-			}(id, link)
+				return nil
+			})
 		}
 
-		wg.Wait()
+		g.Wait()
 	}
-
-	s.logger.Printf("TraceID: %s Finished Scrapping in %s\n", traceID, time.Since(now))
 
 	return nil
-}
-
-func (s *Service) GetAuctions(ctx context.Context) ([]*model.Auction, error) {
-	auctions, err := s.auctionRepository.GetActiveAuctions(ctx)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return auctions, nil
 }
