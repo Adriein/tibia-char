@@ -4,7 +4,6 @@ import (
 	"context"
 	"log"
 	"os"
-	"time"
 
 	"github.com/adriein/tibia-char/internal"
 	"github.com/adriein/tibia-char/internal/auction"
@@ -26,8 +25,7 @@ func main() {
 	linkScrapper := auction.NewScrapper("CollectAuctionLinks")
 
 	linkScrapper.Collector.Limit(&colly.LimitRule{
-		DomainGlob:  constants.TibiaOfficialWebsite,
-		RandomDelay: 5 * time.Second,
+		DomainGlob: constants.TibiaOfficialWebsite,
 	})
 
 	detailScrapper := auction.NewScrapper("CollectAuctionDetails")

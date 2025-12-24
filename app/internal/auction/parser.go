@@ -2,6 +2,7 @@ package auction
 
 import (
 	"fmt"
+	"math/rand"
 	"net/url"
 	"strconv"
 	"strings"
@@ -74,10 +75,14 @@ func (p *AuctionListHtmlParser) GetTotalCurrentAuctions() (int, error) {
 
 func (p *AuctionListHtmlParser) ScrapeWorld(world string, set *model.AuctionLinkSet) error {
 	for page := 1; ; page++ {
+		randDelay := time.Duration(2+rand.Intn(5)) * time.Second
+
+		time.Sleep(randDelay)
+
 		links, err := p.scrapeAuctionListPage(world, page)
 
 		if err != nil {
-			return eris.Wrapf(err, "Failed to scrape page %d", page)
+			return eris.Wrapf(err, "Failed to scrape page %d for world %s", page, world)
 		}
 
 		if len(links) == 0 {

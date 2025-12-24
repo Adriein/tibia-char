@@ -9,7 +9,6 @@ import (
 	"github.com/adriein/tibia-char/internal/auction/model"
 	"github.com/adriein/tibia-char/pkg/helper/array"
 	"github.com/adriein/tibia-char/pkg/vendor"
-	"github.com/rotisserie/eris"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -24,7 +23,7 @@ type Service struct {
 }
 
 const AuctionDetailMaxConcurrency = 5
-const AuctionLinkMaxConcurrency = 10
+const AuctionLinkMaxConcurrency = 2
 
 func NewService(ta *vendor.TibiaApi, lp *AuctionListHtmlParser, ap *AuctionHtmlParser, ar AuctionRepository, wr WorldRepository, m *Mapper, logger *log.Logger) *Service {
 	return &Service{
@@ -51,11 +50,13 @@ func (s *Service) ScrapBazaar(ctx context.Context) error {
 		return err
 	}
 
-	worlds, err := s.tibiaAPI.GetWorlds()
+	/*worlds, err := s.tibiaAPI.GetWorlds()
 
 	if err != nil {
 		return eris.Wrap(err, "Failed to fetch worlds from Tibia API")
-	}
+	}*/
+
+	worlds := []string{"Calmera"}
 
 	for _, world := range worlds {
 		_, err := s.worldRepository.GetOrCreate(world)
@@ -67,13 +68,13 @@ func (s *Service) ScrapBazaar(ctx context.Context) error {
 
 	auctionLinkSet, err := s.scrapAuctionLinks(worlds)
 
-	s.logger.Printf("TraceID: %s Total auction links %d - Auction links obtained %d\n", traceID, currentAuctions, len(auctionLinkSet.Data))
-
 	if err != nil {
 		s.logger.Printf("TraceID: %s Finished Scrapping with error in %s\n", traceID, time.Since(now))
 
 		return err
 	}
+
+	s.logger.Printf("TraceID: %s Total auction links %d - Auction links obtained %d\n", traceID, currentAuctions, len(auctionLinkSet.Data))
 
 	if err := s.scrapAuctionDetail(auctionLinkSet); err != nil {
 		s.logger.Printf("TraceID: %s Finished Scrapping with error in %s\n", traceID, time.Since(now))
@@ -141,7 +142,7 @@ func (s *Service) scrapAuctionDetail(auctionLinkSet *model.AuctionLinkSet) error
 		g, ctx := errgroup.WithContext(context.Background())
 
 		if i != 0 {
-			randDelay := time.Duration(1+rand.Intn(5)) * time.Second
+			randDelay := time.Duration(2+rand.Intn(5)) * time.Second
 
 			time.Sleep(randDelay)
 		}
@@ -178,7 +179,11 @@ func (s *Service) scrapAuctionDetail(auctionLinkSet *model.AuctionLinkSet) error
 			})
 		}
 
-		g.Wait()
+		err := g.Wait()
+
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
