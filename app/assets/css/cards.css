@@ -2,6 +2,7 @@
   .card {
     --card-header-space: 1ch;
     --card-header-padding-block: var(--block-space);
+    --card-subheader-space: 1ch;
     --card-body-padding-block: var(--block-space);
 
     background-color: var(--card-background, var(--color-surface));
@@ -32,6 +33,13 @@
     }
   }
 
+  .card__subheader {
+    border-top: 1px solid var(--card-body-border-color, var(--color-border));
+    display: flex;
+    align-items: center;
+    gap: var(--card-subheader-space);
+  }
+
   .card__body {
     border-top: 1px solid var(--card-body-border-color, var(--color-border));
     padding: var(--card-body-padding-block);
@@ -50,6 +58,10 @@
         transform: translate(-20%, -20%);
         object-fit: contain;
       }
+    }
+
+    .card__subheader_world {
+      font-size: var(--text-small);
     }
   }
 }
