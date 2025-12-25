@@ -20,6 +20,7 @@ type AuctionDTO struct {
 	CharVocation     string
 	CharGender       string
 	CharWorld        string
+	WorldTransfer    constants.WorldTransferAllowance
 	Bid              int
 	AuctionStartTime time.Time
 	AuctionEndTime   time.Time
@@ -82,6 +83,12 @@ type World struct {
 	Location  string
 	BattleEye constants.BattleEye
 }
+
+type WorldTransfer struct {
+	Id   int
+	Name constants.WorldTransferAllowance
+}
+
 type Auction struct {
 	ID               int64
 	AuctionID        int64
@@ -94,6 +101,7 @@ type Auction struct {
 	CharVocation     *Vocation
 	CharGender       *Gender
 	CharWorld        *World
+	WorldTransfer    *WorldTransfer
 	Bid              int
 	AuctionStart     time.Time
 	AuctionEnd       time.Time

@@ -62,3 +62,32 @@ func GetBattleEyeFromString(battleEye string) (BattleEye, error) {
 
 	return 0, eris.Errorf("Unknown BattleEye: %s", battleEye)
 }
+
+type WorldTransferAllowance int
+
+const (
+	WorldTransferImmediately WorldTransferAllowance = iota + 1
+	WorldTransferForbidden
+)
+
+var worldTransferAllowanceName = map[WorldTransferAllowance]string{
+	WorldTransferImmediately: "immediately",
+	WorldTransferForbidden:   "forbidden",
+}
+
+var worldTransferAllowanceValue = map[string]WorldTransferAllowance{
+	"immediately": WorldTransferImmediately,
+	"forbidden":   WorldTransferForbidden,
+}
+
+func (w WorldTransferAllowance) String() string {
+	return worldTransferAllowanceName[w]
+}
+
+func GetWorldTransferAllowanceFromString(allowance string) (WorldTransferAllowance, error) {
+	if val, ok := worldTransferAllowanceValue[allowance]; ok {
+		return val, nil
+	}
+
+	return 0, eris.Errorf("Unknown WorldTransferAllowance: %s", allowance)
+}

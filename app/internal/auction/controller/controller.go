@@ -24,6 +24,7 @@ func NewController(app *internal.App) *Controller {
 
 	auctionRepository := auction.NewPgAuctionRepository(app.Databse)
 	worldRepository := auction.NewPgWorldRepository(app.Databse)
+	worldTransferRepository := auction.NewPgWorldTransferRepository(app.Databse)
 
 	linkScrapper := auction.NewScrapper("CollectAuctionLinks")
 
@@ -34,7 +35,7 @@ func NewController(app *internal.App) *Controller {
 	auctionListHtmlParser := auction.NewAuctionListHtmlParser(linkScrapper.Collector)
 	auctionHtmlParser := auction.NewAuctionHtmlParser(detailScrapper.Collector)
 
-	mapper := auction.NewMapper(worldRepository)
+	mapper := auction.NewMapper(worldRepository, worldTransferRepository)
 
 	service := auction.NewService(tibiaAPI, auctionListHtmlParser, auctionHtmlParser, auctionRepository, worldRepository, mapper, logger)
 

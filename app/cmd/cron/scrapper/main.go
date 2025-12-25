@@ -12,6 +12,7 @@ import (
 	"github.com/adriein/tibia-char/pkg/vendor"
 	"github.com/gocolly/colly/v2"
 	_ "github.com/lib/pq"
+	"github.com/rotisserie/eris"
 )
 
 func main() {
@@ -21,6 +22,7 @@ func main() {
 
 	auctionRepository := auction.NewPgAuctionRepository(app.Databse)
 	worldRepository := auction.NewPgWorldRepository(app.Databse)
+	worldTransferRepository := auction.NewPgWorldTransferRepository(app.Databse)
 
 	linkScrapper := auction.NewScrapper("CollectAuctionLinks")
 
@@ -39,7 +41,7 @@ func main() {
 	auctionListHtmlParser := auction.NewAuctionListHtmlParser(linkScrapper.Collector)
 	auctionHtmlParser := auction.NewAuctionHtmlParser(detailScrapper.Collector)
 
-	mapper := auction.NewMapper(worldRepository)
+	mapper := auction.NewMapper(worldRepository, worldTransferRepository)
 
 	cron := auction.NewService(tibiaAPI, auctionListHtmlParser, auctionHtmlParser, auctionRepository, worldRepository, mapper, logger)
 
@@ -48,6 +50,6 @@ func main() {
 	err := cron.ScrapBazaar(ctx)
 
 	if err != nil {
-		log.Fatal(err.Error())
+		log.Fatal(eris.ToString(err, true))
 	}
 }

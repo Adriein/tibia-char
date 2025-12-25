@@ -8,12 +8,14 @@ import (
 )
 
 type Mapper struct {
-	worldRepository WorldRepository
+	worldRepository         WorldRepository
+	worldTransferRepository WorldTransferRepository
 }
 
-func NewMapper(wr WorldRepository) *Mapper {
+func NewMapper(wr WorldRepository, wtr WorldTransferRepository) *Mapper {
 	return &Mapper{
-		worldRepository: wr,
+		worldRepository:         wr,
+		worldTransferRepository: wtr,
 	}
 }
 
@@ -36,6 +38,12 @@ func (m *Mapper) FromDTO(dto *model.AuctionDTO) (*model.Auction, error) {
 		return nil, err
 	}
 
+	transfer, err := m.worldTransferRepository.Get(dto.WorldTransfer.String())
+
+	if err != nil {
+		return nil, err
+	}
+
 	return &model.Auction{
 		AuctionID:        int64(dto.AuctionId),
 		TibiaAuctionLink: dto.Link,
@@ -47,6 +55,7 @@ func (m *Mapper) FromDTO(dto *model.AuctionDTO) (*model.Auction, error) {
 		CharVocation:     vocation,
 		CharGender:       gender,
 		CharWorld:        world,
+		WorldTransfer:    transfer,
 		Bid:              dto.Bid,
 		AuctionStart:     dto.AuctionStartTime,
 		AuctionEnd:       dto.AuctionEndTime,

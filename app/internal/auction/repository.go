@@ -139,6 +139,43 @@ func (wr *PgWorldRepository) GetOrCreate(world *model.World) (*model.World, erro
 	return &dto, nil
 }
 
+type WorldTransferRepository interface {
+	Get(transfer string) (*model.WorldTransfer, error)
+}
+
+type PgWorldTransferRepository struct {
+	connection *sql.DB
+}
+
+func NewPgWorldTransferRepository(c *sql.DB) *PgWorldTransferRepository {
+	return &PgWorldTransferRepository{connection: c}
+}
+
+func (wtr *PgWorldTransferRepository) Get(transfer string) (*model.WorldTransfer, error) {
+	query := `
+		SELECT * FROM tc_world_transfer WHERE twt_name = $1;
+	`
+
+	var dto model.WorldTransfer
+	var worldTransferAllowance string
+
+	err := wtr.connection.QueryRow(query, transfer).Scan(&dto.Id, &worldTransferAllowance)
+
+	if err != nil {
+		return nil, eris.New(err.Error())
+	}
+
+	wta, err := constants.GetWorldTransferAllowanceFromString(worldTransferAllowance)
+
+	if err != nil {
+		return nil, err
+	}
+
+	dto.Name = wta
+
+	return &dto, nil
+}
+
 type AuctionRepository interface {
 	Save(auction *model.Auction) error
 	GetActiveAuctions(ctx context.Context) ([]*model.Auction, error)
@@ -171,13 +208,14 @@ func (r *PgAuctionRepository) Save(auction *model.Auction) error {
 			ta_char_vocation,
 			ta_char_gender,
 			ta_char_world,
+			ta_world_transfer,
 			ta_current_bid,
 			ta_auction_start,
 			ta_auction_end,
 			ta_date_add,
 			ta_date_upd
 		)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
 		RETURNING ta_id;
 	`
 
@@ -193,6 +231,7 @@ func (r *PgAuctionRepository) Save(auction *model.Auction) error {
 		auction.CharVocation.Id,
 		auction.CharGender.Id,
 		auction.CharWorld.Id,
+		auction.WorldTransfer.Id,
 		auction.Bid,
 		auction.AuctionStart,
 		auction.AuctionEnd,

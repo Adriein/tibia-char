@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/adriein/tibia-char/internal/auction/model"
+	"github.com/adriein/tibia-char/pkg/constants"
 	"github.com/gocolly/colly/v2"
 	"github.com/rotisserie/eris"
 )
@@ -200,6 +201,10 @@ func (p *AuctionHtmlParser) Parse(auctionId int, link string) (*model.AuctionDTO
 		})
 	})
 
+	p.collector.OnHTML("span[class=LabelV]", func(e *colly.HTMLElement) {
+		p.parseAuctionGeneral(e, &dto)
+	})
+
 	if err := p.collector.Visit(link); err != nil {
 		parseErrors = append(parseErrors, eris.Wrap(err, "Visit failed"))
 	}
@@ -340,4 +345,22 @@ func (p *AuctionHtmlParser) extractGender(auctionHeader string) string {
 	headerParts := strings.Split(auctionHeader, "|")
 
 	return strings.TrimSpace(headerParts[2])
+}
+
+func (p *AuctionHtmlParser) parseAuctionGeneral(e *colly.HTMLElement, dto *model.AuctionDTO) error {
+
+	if e.Text == "Regular World Transfer:" {
+		divSibling := e.DOM.Siblings().Contents()
+
+		worldTransferAllowance := divSibling.Text()
+
+		switch worldTransferAllowance {
+		case "can be purchased and used immediately":
+			dto.WorldTransfer = constants.WorldTransferImmediately
+		default:
+			dto.WorldTransfer = constants.WorldTransferForbidden
+		}
+	}
+
+	return nil
 }
