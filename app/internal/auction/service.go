@@ -57,7 +57,7 @@ func (s *Service) ScrapBazaar(ctx context.Context) error {
 		return eris.Wrap(err, "Failed to fetch worlds from Tibia API")
 	}*/
 
-	worlds := []*model.World{&model.World{Id: 1, Name: "Calmera", Location: "Europe", BattleEye: constants.BattleEyeYellow}}
+	worlds := []*model.World{{Id: 1, Name: "Calmera", Location: "Europe", BattleEye: constants.BattleEyeYellow}}
 
 	for _, world := range worlds {
 		_, err := s.worldRepository.GetOrCreate(world)
@@ -77,6 +77,7 @@ func (s *Service) ScrapBazaar(ctx context.Context) error {
 
 	s.logger.Printf("TraceID: %s Total auction links %d - Auction links obtained %d\n", traceID, currentAuctions, len(auctionLinkSet.Data))
 
+	//TODO: insert ctx to retrieve what auction id failed to scrap
 	if err := s.scrapAuctionDetail(auctionLinkSet); err != nil {
 		s.logger.Printf("TraceID: %s Finished Scrapping with error in %s\n", traceID, time.Since(now))
 
