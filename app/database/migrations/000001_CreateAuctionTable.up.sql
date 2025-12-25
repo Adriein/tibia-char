@@ -78,4 +78,4 @@ INSERT INTO tc_vocation (tv_name) VALUES ('Knight'), ('Paladin'), ('Sorcerer'), 
 
 INSERT INTO tc_gender (tg_name) VALUES ('Male'), ('Female');
 
-INSERT INTO tc_world_transfer (twt_name) VALUES ('immediately'), ('forbbiden');
+INSERT INTO tc_world_transfer (twt_name) VALUES ('immediately'), ('forbidden');
