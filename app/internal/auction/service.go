@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/adriein/tibia-char/internal/auction/model"
+	"github.com/adriein/tibia-char/pkg/constants"
 	"github.com/adriein/tibia-char/pkg/helper/array"
 	"github.com/adriein/tibia-char/pkg/vendor"
 	"golang.org/x/sync/errgroup"
@@ -56,7 +57,7 @@ func (s *Service) ScrapBazaar(ctx context.Context) error {
 		return eris.Wrap(err, "Failed to fetch worlds from Tibia API")
 	}*/
 
-	worlds := []string{"Calmera"}
+	worlds := []*model.World{&model.World{Id: 1, Name: "Calmera", Location: "Europe", BattleEye: constants.BattleEyeYellow}}
 
 	for _, world := range worlds {
 		_, err := s.worldRepository.GetOrCreate(world)
@@ -97,7 +98,7 @@ func (s *Service) GetAuctions(ctx context.Context) ([]*model.Auction, error) {
 	return auctions, nil
 }
 
-func (s *Service) scrapAuctionLinks(worlds []string) (*model.AuctionLinkSet, error) {
+func (s *Service) scrapAuctionLinks(worlds []*model.World) (*model.AuctionLinkSet, error) {
 	semaphore := make(chan struct{}, AuctionLinkMaxConcurrency)
 
 	worldsChunk := array.Chunk(worlds, AuctionLinkMaxConcurrency)
@@ -116,7 +117,7 @@ func (s *Service) scrapAuctionLinks(worlds []string) (*model.AuctionLinkSet, err
 					defer func() { <-semaphore }()
 				}
 
-				if err := s.linkParser.ScrapeWorld(world, auctionLinkSet); err != nil {
+				if err := s.linkParser.ScrapeWorld(world.Name, auctionLinkSet); err != nil {
 					return err
 				}
 				return nil

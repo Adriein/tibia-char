@@ -85,7 +85,7 @@ func (gr *PgGenderRepository) GetOrCreate(gender string) (*model.Gender, error) 
 }
 
 type WorldRepository interface {
-	GetOrCreate(world string) (*model.World, error)
+	GetOrCreate(world *model.World) (*model.World, error)
 }
 
 type PgWorldRepository struct {
@@ -96,26 +96,44 @@ func NewPgWorldRepository(c *sql.DB) *PgWorldRepository {
 	return &PgWorldRepository{connection: c}
 }
 
-func (wr *PgWorldRepository) GetOrCreate(world string) (*model.World, error) {
+func (wr *PgWorldRepository) GetOrCreate(world *model.World) (*model.World, error) {
 	query := `
 		WITH ins AS (
-			INSERT INTO tc_world (tw_name)
-			VALUES ($1)
+			INSERT INTO tc_world (tw_name, tw_location, tw_battle_eye)
+			VALUES ($1, $2, $3)
 			ON CONFLICT (tw_name) DO NOTHING
-			RETURNING tw_id, tw_name
+			RETURNING tw_id, tw_name, tw_location, tw_battle_eye
 		)
-		SELECT tw_id, tw_name FROM ins
+		SELECT * FROM ins
 		UNION ALL
-		SELECT tw_id, tw_name FROM tc_world WHERE tw_name = $1
+		SELECT * FROM tc_world WHERE tw_name = $1
 		LIMIT 1;
 	`
 
 	var dto model.World
 
-	err := wr.connection.QueryRow(query, world).Scan(&dto.Id, &dto.Name)
+	var battleEye string
+
+	err := wr.connection.QueryRow(
+		query,
+		world.Name,
+		world.Location,
+		world.BattleEye.String(),
+	).Scan(
+		&dto.Id,
+		&dto.Name,
+		&dto.Location,
+		&battleEye,
+	)
 
 	if err != nil {
 		return nil, eris.New(err.Error())
+	}
+
+	dto.BattleEye, err = constants.GetBattleEyeFromString(battleEye)
+
+	if err != nil {
+		return nil, err
 	}
 
 	return &dto, nil

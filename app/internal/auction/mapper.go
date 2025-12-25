@@ -30,7 +30,7 @@ func (m *Mapper) FromDTO(dto *model.AuctionDTO) (*model.Auction, error) {
 		return nil, err
 	}
 
-	world, err := m.worldRepository.GetOrCreate(dto.CharWorld)
+	world, err := m.worldRepository.GetOrCreate(&model.World{Name: dto.CharWorld})
 
 	if err != nil {
 		return nil, err

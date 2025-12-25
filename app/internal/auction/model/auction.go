@@ -77,8 +77,10 @@ func NewGenderFromName(name string) (*Gender, error) {
 }
 
 type World struct {
-	Id   int
-	Name string
+	Id        int
+	Name      string
+	Location  string
+	BattleEye constants.BattleEye
 }
 type Auction struct {
 	ID               int64

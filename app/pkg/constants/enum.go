@@ -33,3 +33,32 @@ func GetAuctionRecordableStatusFromString(status string) (AuctionRecordableStatu
 
 	return 0, eris.Errorf("Unknown AuctionRecordableStatus: %s", status)
 }
+
+type BattleEye int
+
+const (
+	BattleEyeYellow BattleEye = iota + 1
+	BattlerEyeGreen
+)
+
+var battlEyeName = map[BattleEye]string{
+	BattleEyeYellow: "yellow",
+	BattlerEyeGreen: "green",
+}
+
+var battleEyeValue = map[string]BattleEye{
+	"yellow": BattleEyeYellow,
+	"green":  BattlerEyeGreen,
+}
+
+func (b BattleEye) String() string {
+	return battlEyeName[b]
+}
+
+func GetBattleEyeFromString(battleEye string) (BattleEye, error) {
+	if val, ok := battleEyeValue[battleEye]; ok {
+		return val, nil
+	}
+
+	return 0, eris.Errorf("Unknown BattleEye: %s", battleEye)
+}
