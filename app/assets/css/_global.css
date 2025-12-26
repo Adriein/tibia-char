@@ -53,6 +53,9 @@
 
   /* Status */
   --color-error: oklch(0.704 0.191 22.216);
+  --color-success: oklch(0.75 0.15 150);
+  --color-success-ink: oklch(0.25 0.05 150);
+  --color-success-bg: oklch(0.75 0.15 150 / 15%);
 
   /* Borders */
   --border: 1px solid var(--color-ink-lighter);

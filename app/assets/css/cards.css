@@ -11,6 +11,7 @@
     color: var(--card-color, var(--color-surface-ink));
     border: var(--card-border-size, 1px) solid var(--card-border-color, var(--color-border));
     border-radius: var(--card-border-radius, var(--radius-md));
+    max-width: 400px;
   }
 
   .card__header {
@@ -70,6 +71,26 @@
       display: inherit;
       gap: var(--inline-space);
       font-size: var(--text-small);
+      align-items: center;
+    }
+
+    .card__subheader-world-detail img {
+      height: 18px; /* Closer to the original size to avoid blur */
+      width: auto;
+    }
+
+    .card__subheader-world-detail svg {
+      height: 18px; /* Match the image height */
+      width: 18px;
+      flex-shrink: 0;
+    }
+
+    .card__subheader-transfer--allowed {
+      color: var(--color-success);
+    }
+
+    .card__subheader-transfer--forbidden {
+      color: var(--color-error);
     }
   }
 }
