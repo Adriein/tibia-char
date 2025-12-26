@@ -70,7 +70,7 @@
     }
 
     .card__subheader-world-detail {
-      display: inherit;
+      display: flex;
       gap: var(--inline-space);
       font-size: var(--text-small);
       align-items: center;
@@ -83,9 +83,9 @@
       flex-shrink: 0;
     }
 
-    .card__subheader-world-detail img {
-      image-rendering: -webkit-optimize-contrast;
-      image-rendering: crisp-edges;
+    .card__subheader-world-detail .card__subheader-country-flag {
+      width: 16px;
+      height: 10px;
     }
 
     .card__subheader-transfer--allowed {
