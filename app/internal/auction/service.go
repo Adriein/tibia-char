@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/adriein/tibia-char/internal/auction/model"
-	"github.com/adriein/tibia-char/pkg/constants"
+	"github.com/adriein/tibia-char/pkg/enums"
 	"github.com/adriein/tibia-char/pkg/helper/array"
 	"github.com/adriein/tibia-char/pkg/vendor"
 	"github.com/rotisserie/eris"
@@ -58,7 +58,7 @@ func (s *Service) ScrapBazaar(ctx context.Context) error {
 		return eris.Wrap(err, "Failed to fetch worlds from Tibia API")
 	}*/
 
-	worlds := []*model.World{{Id: 1, Name: "Calmera", Location: "Europe", BattleEye: constants.BattleEyeYellow}}
+	worlds := []*model.World{{Id: 1, Name: "Calmera", Location: "Europe", BattleEye: enums.BattleEyeYellow}}
 
 	for _, world := range worlds {
 		_, err := s.worldRepository.GetOrCreate(world)

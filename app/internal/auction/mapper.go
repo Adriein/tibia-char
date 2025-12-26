@@ -4,7 +4,7 @@ import (
 	"time"
 
 	"github.com/adriein/tibia-char/internal/auction/model"
-	"github.com/adriein/tibia-char/pkg/constants"
+	"github.com/adriein/tibia-char/pkg/enums"
 )
 
 type Mapper struct {
@@ -59,7 +59,7 @@ func (m *Mapper) FromDTO(dto *model.AuctionDTO) (*model.Auction, error) {
 		Bid:              dto.Bid,
 		AuctionStart:     dto.AuctionStartTime,
 		AuctionEnd:       dto.AuctionEndTime,
-		Status:           constants.RecordableActive,
+		Status:           enums.RecordableActive,
 		DateAdd:          time.Now(),
 		DateUpd:          time.Now(),
 	}, nil

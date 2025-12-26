@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/adriein/tibia-char/internal/auction/model"
-	"github.com/adriein/tibia-char/pkg/constants"
+	"github.com/adriein/tibia-char/pkg/enums"
 	"github.com/gocolly/colly/v2"
 	"github.com/rotisserie/eris"
 )
@@ -356,9 +356,9 @@ func (p *AuctionHtmlParser) parseAuctionGeneral(e *colly.HTMLElement, dto *model
 
 		switch worldTransferAllowance {
 		case "can be purchased and used immediately":
-			dto.WorldTransfer = constants.WorldTransferImmediately
+			dto.WorldTransfer = enums.WorldTransferImmediately
 		default:
-			dto.WorldTransfer = constants.WorldTransferForbidden
+			dto.WorldTransfer = enums.WorldTransferForbidden
 		}
 	}
 

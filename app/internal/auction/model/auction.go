@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/adriein/tibia-char/pkg/constants"
+	"github.com/adriein/tibia-char/pkg/enums"
 	"github.com/rotisserie/eris"
 )
 
@@ -20,7 +21,7 @@ type AuctionDTO struct {
 	CharVocation     string
 	CharGender       string
 	CharWorld        string
-	WorldTransfer    constants.WorldTransferAllowance
+	WorldTransfer    enums.WorldTransferAllowance
 	Bid              int
 	AuctionStartTime time.Time
 	AuctionEndTime   time.Time
@@ -81,12 +82,12 @@ type World struct {
 	Id        int
 	Name      string
 	Location  string
-	BattleEye constants.BattleEye
+	BattleEye enums.BattleEye
 }
 
 type WorldTransfer struct {
 	Id   int
-	Name constants.WorldTransferAllowance
+	Name enums.WorldTransferAllowance
 }
 
 type Auction struct {
@@ -105,7 +106,7 @@ type Auction struct {
 	Bid              int
 	AuctionStart     time.Time
 	AuctionEnd       time.Time
-	Status           constants.AuctionRecordableStatus
+	Status           enums.AuctionRecordableStatus
 	DateAdd          time.Time
 	DateUpd          time.Time
 }

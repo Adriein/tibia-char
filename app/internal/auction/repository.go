@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/adriein/tibia-char/internal/auction/model"
-	"github.com/adriein/tibia-char/pkg/constants"
+	"github.com/adriein/tibia-char/pkg/enums"
 	"github.com/rotisserie/eris"
 )
 
@@ -130,7 +130,7 @@ func (wr *PgWorldRepository) GetOrCreate(world *model.World) (*model.World, erro
 		return nil, eris.New(err.Error())
 	}
 
-	dto.BattleEye, err = constants.GetBattleEyeFromString(battleEye)
+	dto.BattleEye, err = enums.GetBattleEyeFromString(battleEye)
 
 	if err != nil {
 		return nil, err
@@ -165,7 +165,7 @@ func (wtr *PgWorldTransferRepository) Get(transfer string) (*model.WorldTransfer
 		return nil, eris.New(err.Error())
 	}
 
-	wta, err := constants.GetWorldTransferAllowanceFromString(worldTransferAllowance)
+	wta, err := enums.GetWorldTransferAllowanceFromString(worldTransferAllowance)
 
 	if err != nil {
 		return nil, err
@@ -292,6 +292,10 @@ func (r *PgAuctionRepository) GetActiveAuctions(ctx context.Context) ([]*model.A
 			g.tg_name,
 			w.tw_id,
 			w.tw_name,
+			w.tw_location,
+			w.tw_battle_eye,
+			wt.twt_id,
+			wt.twt_name,
 			a.ta_current_bid,
 			a.ta_auction_start,
 			a.ta_auction_end,
@@ -306,6 +310,8 @@ func (r *PgAuctionRepository) GetActiveAuctions(ctx context.Context) ([]*model.A
 			tc_gender g ON a.ta_char_gender = g.tg_id
 		INNER JOIN
 			tc_world w ON a.ta_char_world = w.tw_id
+		INNER JOIN
+			tc_world_transfer wt ON a.ta_world_transfer = wt.twt_id
 		INNER JOIN
 			tc_auction_recording tar ON a.ta_id = tar.tar_recordable_id
 		WHERE
@@ -332,6 +338,9 @@ func (r *PgAuctionRepository) GetActiveAuctions(ctx context.Context) ([]*model.A
 		var vocation model.Vocation
 		var gender model.Gender
 		var world model.World
+		var battleEyeString string
+		var worldTransfer model.WorldTransfer
+		var worldTransferString string
 		var statusString string
 
 		err := rows.Scan(
@@ -347,6 +356,10 @@ func (r *PgAuctionRepository) GetActiveAuctions(ctx context.Context) ([]*model.A
 			&gender.Name,
 			&world.Id,
 			&world.Name,
+			&world.Location,
+			&battleEyeString,
+			&worldTransfer.Id,
+			&worldTransferString,
 			&auction.Bid,
 			&auction.AuctionStart,
 			&auction.AuctionEnd,
@@ -359,16 +372,31 @@ func (r *PgAuctionRepository) GetActiveAuctions(ctx context.Context) ([]*model.A
 			return nil, eris.Wrap(err, "Failed to scan auction")
 		}
 
-		status, err := constants.GetAuctionRecordableStatusFromString(statusString)
+		status, err := enums.GetAuctionRecordableStatusFromString(statusString)
 
 		if err != nil {
 			return nil, eris.Wrap(err, "Failed to parse auction status")
 		}
 
+		worldTransferEnum, err := enums.GetWorldTransferAllowanceFromString(worldTransferString)
+
+		if err != nil {
+			return nil, eris.Wrap(err, "Failed to parse World Transfer")
+		}
+
+		battleEyeEnum, err := enums.GetBattleEyeFromString(battleEyeString)
+
+		if err != nil {
+			return nil, eris.Wrap(err, "Failed parsing Battle Eye")
+		}
+
 		auction.Status = status
 		auction.CharVocation = &vocation
 		auction.CharGender = &gender
+		world.BattleEye = battleEyeEnum
 		auction.CharWorld = &world
+		worldTransfer.Name = worldTransferEnum
+		auction.WorldTransfer = &worldTransfer
 
 		auctions = append(auctions, &auction)
 	}

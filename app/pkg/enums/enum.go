@@ -1,4 +1,4 @@
-package constants
+package enums
 
 import "github.com/rotisserie/eris"
 
@@ -38,17 +38,17 @@ type BattleEye int
 
 const (
 	BattleEyeYellow BattleEye = iota + 1
-	BattlerEyeGreen
+	BattleEyeGreen
 )
 
 var battlEyeName = map[BattleEye]string{
 	BattleEyeYellow: "yellow",
-	BattlerEyeGreen: "green",
+	BattleEyeGreen:  "green",
 }
 
 var battleEyeValue = map[string]BattleEye{
 	"yellow": BattleEyeYellow,
-	"green":  BattlerEyeGreen,
+	"green":  BattleEyeGreen,
 }
 
 func (b BattleEye) String() string {

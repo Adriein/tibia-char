@@ -5,7 +5,7 @@ import (
 	"net/http"
 
 	"github.com/adriein/tibia-char/internal/auction/model"
-	"github.com/adriein/tibia-char/pkg/constants"
+	"github.com/adriein/tibia-char/pkg/enums"
 	"github.com/rotisserie/eris"
 )
 
@@ -55,12 +55,12 @@ func (t *TibiaApi) GetWorlds() ([]*model.World, error) {
 		location := world.Location
 
 		if world.BattleEyeDate == "release" {
-			results = append(results, &model.World{Name: name, Location: location, BattleEye: constants.BattlerEyeGreen})
+			results = append(results, &model.World{Name: name, Location: location, BattleEye: enums.BattleEyeGreen})
 
 			continue
 		}
 
-		results = append(results, &model.World{Name: name, Location: location, BattleEye: constants.BattleEyeYellow})
+		results = append(results, &model.World{Name: name, Location: location, BattleEye: enums.BattleEyeYellow})
 	}
 
 	return results, nil
