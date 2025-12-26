@@ -354,7 +354,6 @@ func (p *AuctionHtmlParser) parseAuctionGeneral(e *colly.HTMLElement, dto *model
 
 		worldTransferAllowance := divSibling.Text()
 
-		//TODO: pending to parse when cannot be purchased immediately: can be purchased and used after May 25 2026, 11:05:36 CEST
 		switch worldTransferAllowance {
 		case "can be purchased and used immediately":
 			dto.WorldTransfer = constants.WorldTransferImmediately

@@ -10,6 +10,7 @@ import (
 	"github.com/adriein/tibia-char/pkg/constants"
 	"github.com/adriein/tibia-char/pkg/helper/array"
 	"github.com/adriein/tibia-char/pkg/vendor"
+	"github.com/rotisserie/eris"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -77,9 +78,8 @@ func (s *Service) ScrapBazaar(ctx context.Context) error {
 
 	s.logger.Printf("TraceID: %s Total auction links %d - Auction links obtained %d\n", traceID, currentAuctions, len(auctionLinkSet.Data))
 
-	//TODO: insert ctx to retrieve what auction id failed to scrap
 	if err := s.scrapAuctionDetail(auctionLinkSet); err != nil {
-		s.logger.Printf("TraceID: %s Finished Scrapping with error in %s\n", traceID, time.Since(now))
+		s.logger.Printf("TraceID: %s Finished Scrapping with error: %s in %s\n", traceID, err.Error(), time.Since(now))
 
 		return err
 	}
@@ -164,17 +164,17 @@ func (s *Service) scrapAuctionDetail(auctionLinkSet *model.AuctionLinkSet) error
 				dto, err := s.auctionParser.Parse(auctionId, linkURL)
 
 				if err != nil {
-					return err
+					return eris.Wrapf(err, "Error parsing auctionId %d", auctionId)
 				}
 
 				auction, err := s.mapper.FromDTO(dto)
 
 				if err != nil {
-					return err
+					return eris.Wrapf(err, "Error mapping from DTO auctionId %d", auctionId)
 				}
 
 				if err := s.auctionRepository.Save(auction); err != nil {
-					return err
+					return eris.Wrapf(err, "Error saving to DB auctionId %d", auctionId)
 				}
 
 				return nil
