@@ -17,6 +17,7 @@ type TibiaApiWorlds struct {
 			Name          string `json:"name"`
 			Location      string `json:"location"`
 			BattleEyeDate string `json:"battleye_date"`
+			PvpType       string `json:"pvp_type"`
 		} `json:"regular_worlds"`
 	} `json:"worlds"`
 }
@@ -53,14 +54,15 @@ func (t *TibiaApi) GetWorlds() ([]*model.World, error) {
 	for _, world := range regularWorlds {
 		name := world.Name
 		location := world.Location
+		pvp := world.PvpType
 
 		if world.BattleEyeDate == "release" {
-			results = append(results, &model.World{Name: name, Location: location, BattleEye: enums.BattleEyeGreen})
+			results = append(results, &model.World{Name: name, Location: location, BattleEye: enums.BattleEyeGreen, Pvp: pvp})
 
 			continue
 		}
 
-		results = append(results, &model.World{Name: name, Location: location, BattleEye: enums.BattleEyeYellow})
+		results = append(results, &model.World{Name: name, Location: location, BattleEye: enums.BattleEyeYellow, Pvp: pvp})
 	}
 
 	return results, nil

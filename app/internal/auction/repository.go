@@ -99,10 +99,10 @@ func NewPgWorldRepository(c *sql.DB) *PgWorldRepository {
 func (wr *PgWorldRepository) GetOrCreate(world *model.World) (*model.World, error) {
 	query := `
 		WITH ins AS (
-			INSERT INTO tc_world (tw_name, tw_location, tw_battle_eye)
-			VALUES ($1, $2, $3)
+			INSERT INTO tc_world (tw_name, tw_location, tw_battle_eye, tw_pvp)
+			VALUES ($1, $2, $3, $4)
 			ON CONFLICT (tw_name) DO NOTHING
-			RETURNING tw_id, tw_name, tw_location, tw_battle_eye
+			RETURNING tw_id, tw_name, tw_location, tw_battle_eye, tw_pvp
 		)
 		SELECT * FROM ins
 		UNION ALL
@@ -119,11 +119,13 @@ func (wr *PgWorldRepository) GetOrCreate(world *model.World) (*model.World, erro
 		world.Name,
 		world.Location,
 		world.BattleEye.String(),
+		world.Pvp,
 	).Scan(
 		&dto.Id,
 		&dto.Name,
 		&dto.Location,
 		&battleEye,
+		&dto.Pvp,
 	)
 
 	if err != nil {

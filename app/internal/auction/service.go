@@ -58,7 +58,7 @@ func (s *Service) ScrapBazaar(ctx context.Context) error {
 		return eris.Wrap(err, "Failed to fetch worlds from Tibia API")
 	}*/
 
-	worlds := []*model.World{{Id: 1, Name: "Calmera", Location: "Europe", BattleEye: enums.BattleEyeYellow}}
+	worlds := []*model.World{{Id: 1, Name: "Calmera", Location: "North America", BattleEye: enums.BattleEyeYellow, Pvp: "Optional Pvp"}}
 
 	for _, world := range worlds {
 		_, err := s.worldRepository.GetOrCreate(world)

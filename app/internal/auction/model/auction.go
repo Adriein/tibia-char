@@ -83,6 +83,7 @@ type World struct {
 	Name      string
 	Location  string
 	BattleEye enums.BattleEye
+	Pvp       string
 }
 
 type WorldTransfer struct {

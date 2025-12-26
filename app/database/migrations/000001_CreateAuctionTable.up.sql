@@ -2,7 +2,8 @@ CREATE TABLE IF NOT EXISTS tc_world (
     tw_id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     tw_name VARCHAR UNIQUE NOT NULL,
     tw_location VARCHAR NOT NULL,
-    tw_battle_eye VARCHAR NOT NULL -- (GREEN, YELLOW)
+    tw_battle_eye VARCHAR NOT NULL,
+    tw_pvp VARCHAR NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS tc_vocation (
