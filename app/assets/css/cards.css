@@ -53,6 +53,8 @@
       width: 56px;
       height: 56px;
       border-radius: var(--card-border-radius, var(--radius-md));
+      overflow: hidden; /* Prevent image overflow */
+      flex-shrink: 0; /* Prevent avatar from shrinking */
 
       img {
         width: 64px;
@@ -74,15 +76,16 @@
       align-items: center;
     }
 
-    .card__subheader-world-detail img {
-      height: 18px; /* Closer to the original size to avoid blur */
-      width: auto;
+    .card__subheader-world-detail img,
+    .card__subheader-world-detail svg {
+      block-size: 18px;
+      inline-size: 18px;
+      flex-shrink: 0;
     }
 
-    .card__subheader-world-detail svg {
-      height: 18px; /* Match the image height */
-      width: 18px;
-      flex-shrink: 0;
+    .card__subheader-world-detail img {
+      image-rendering: -webkit-optimize-contrast;
+      image-rendering: crisp-edges;
     }
 
     .card__subheader-transfer--allowed {
