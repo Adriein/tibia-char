@@ -1,7 +1,13 @@
 package view
 
-import "github.com/adriein/tibia-char/internal/auction/model"
-import "github.com/adriein/tibia-char/pkg/enums"
+import (
+	"strings"
+	"fmt"
+
+	"github.com/adriein/tibia-char/internal/auction/model"
+	"github.com/adriein/tibia-char/pkg/enums"
+	"github.com/adriein/tibia-char/pkg/helper/str"
+)
 
 /**
 +-------------+-----------------------------------+---------------------------------------------------------+
@@ -37,7 +43,7 @@ templ AuctionCard(auction *model.Auction) {
 		</div>
 		<div class="card__subheader">
 			<div class="card__subheader-world-detail">
-				<img class="card__subheader-country-flag" alt="Country flag" src="/assets/images/europe.png"/>
+				<img class="card__subheader-country-flag" alt="Country flag" src={fmt.Sprintf("/assets/images/%s.png", str.CamelToSnake(strings.ReplaceAll(auction.CharWorld.Location, " ", "")))}/>
 				<p>{auction.CharWorld.Name}</p>
 				if auction.WorldTransfer.Name == enums.WorldTransferImmediately {
 					<svg class="card__subheader-transfer--allowed" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-world-check"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M20.946 12.99a9 9 0 1 0 -9.46 7.995" /><path d="M3.6 9h16.8" /><path d="M3.6 15h13.9" /><path d="M11.5 3a17 17 0 0 0 0 18" /><path d="M12.5 3a16.997 16.997 0 0 1 2.311 12.001" /><path d="M15 19l2 2l4 -4" /></svg>

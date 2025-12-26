@@ -8,7 +8,7 @@ import (
 
 	"github.com/adriein/tibia-char/internal/auction/model"
 	"github.com/adriein/tibia-char/pkg/enums"
-	"github.com/adriein/tibia-char/pkg/helper/array"
+	"github.com/adriein/tibia-char/pkg/helper/collections"
 	"github.com/adriein/tibia-char/pkg/vendor"
 	"github.com/rotisserie/eris"
 	"golang.org/x/sync/errgroup"
@@ -102,7 +102,7 @@ func (s *Service) GetAuctions(ctx context.Context) ([]*model.Auction, error) {
 func (s *Service) scrapAuctionLinks(worlds []*model.World) (*model.AuctionLinkSet, error) {
 	semaphore := make(chan struct{}, AuctionLinkMaxConcurrency)
 
-	worldsChunk := array.Chunk(worlds, AuctionLinkMaxConcurrency)
+	worldsChunk := collections.Chunk(worlds, AuctionLinkMaxConcurrency)
 
 	auctionLinkSet := model.NewAuctionLinkSet()
 
@@ -136,7 +136,7 @@ func (s *Service) scrapAuctionLinks(worlds []*model.World) (*model.AuctionLinkSe
 }
 
 func (s *Service) scrapAuctionDetail(auctionLinkSet *model.AuctionLinkSet) error {
-	links := array.ChunkMap(auctionLinkSet.Data, AuctionDetailMaxConcurrency)
+	links := collections.ChunkMap(auctionLinkSet.Data, AuctionDetailMaxConcurrency)
 
 	semaphore := make(chan struct{}, AuctionDetailMaxConcurrency)
 
