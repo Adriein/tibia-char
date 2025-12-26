@@ -2,8 +2,10 @@
   .card {
     --card-header-space: 1ch;
     --card-header-padding-block: var(--block-space);
+    --card-header-padding-inline: var(--inline-space-double);
     --card-subheader-space: 1ch;
     --card-body-padding-block: var(--block-space);
+    --card-body-padding-inline: var(--block-space);
 
     background-color: var(--card-background, var(--color-surface));
     color: var(--card-color, var(--color-surface-ink));
@@ -16,7 +18,7 @@
     background-color: var(--card-header-background, var(--color-surface));
     color: var(--card-header-color, var(--color-surface-ink));
     border-radius: inherit;
-    padding: var(--card-header-padding-block);
+    padding: var(--card-header-padding-block) var(--card-header-padding-inline);
     gap: var(--card-header-space);
     align-items: center;
 
@@ -42,7 +44,6 @@
 
   .card__body {
     border-top: 1px solid var(--card-body-border-color, var(--color-border));
-    padding: var(--card-body-padding-block);
   }
 
   .card--auction {
@@ -60,7 +61,14 @@
       }
     }
 
-    .card__subheader_world {
+    .card__subheader {
+      padding: var(--block-space-half) var(--inline-space-double);
+      justify-content: space-between;
+    }
+
+    .card__subheader-world-detail {
+      display: inherit;
+      gap: var(--inline-space);
       font-size: var(--text-small);
     }
   }
