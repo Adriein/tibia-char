@@ -45,6 +45,7 @@
 
   .card__body {
     border-top: 1px solid var(--card-body-border-color, var(--color-border));
+    padding: var(--block-space) var(--inline-space-double);
   }
 
   .card--auction {
@@ -94,6 +95,45 @@
 
     .card__subheader-transfer--forbidden {
       color: var(--color-error);
+    }
+
+    .card__body--skills-container {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: var(--inline-space);
+
+      .skill-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background-color: var(--card-background, var(--color-surface));
+        color: var(--card-color, var(--color-surface-ink));
+        border: var(--card-border-size, 1px) solid var(--card-border-color, var(--color-border));
+        border-radius: var(--card-border-radius, var(--radius-md));
+        font-size: var(--text-small);
+        padding: var(--block-space-half);
+      }
+
+      .skill-item p {
+        margin: 0;
+      }
+
+      .skill-item div {
+        display: flex;
+        gap: var(--inline-space);
+        align-items: center;
+
+        img {
+          width: 18px;
+          height: 18px;
+        }
+      }
+    }
+
+    @media (max-width: 400px) {
+      .card__body--skills-container  {
+        grid-template-columns: 1fr;
+      }
     }
   }
 }

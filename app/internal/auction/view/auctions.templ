@@ -61,8 +61,64 @@ templ AuctionCard(auction *model.Auction) {
 			</div>
 		</div>
 		<div class="card__body">
-			<div></div>
-			<div></div>
+			<div class="card__body--skills-container">
+				<div class="skill-item">
+					<div>
+						<img src="/assets/images/stonecutter_axe.png"/>
+						<p>Axe</p>
+					</div>
+					<span>{auction.Skills.Axe}</span>
+				</div>
+				<div class="skill-item">
+					<div>
+						<img src="/assets/images/thunder_hammer.png"/>
+						<p>Club</p>
+					</div>
+					<span>{auction.Skills.Club}</span>
+				</div>
+				<div class="skill-item">
+					<div>
+						<img src="/assets/images/soulbleeder.png"/>
+						<p>Distance</p>
+					</div>
+					<span>{auction.Skills.Distance}</span>
+				</div>
+				<div class="skill-item">
+					<div>
+						<img src="/assets/images/fishing_rod.png"/>
+						<p>Fishing</p>
+					</div>
+					<span>{auction.Skills.Fishing}</span>
+				</div>
+				<div class="skill-item">
+					<div>
+						<img src="/assets/images/grand_sanguine_claws.png"/>
+						<p>Fist</p>
+					</div>
+					<span>{auction.Skills.Fist}</span>
+				</div>
+				<div class="skill-item">
+					<div>
+						<img src="/assets/images/spell_book.png"/>
+						<p>Magic Level</p>
+					</div>
+					<span>{auction.Skills.MagicLevel}</span>
+				</div>
+				<div class="skill-item">
+					<div>
+						<img src="/assets/images/demon_shield.png"/>
+						<p>Shielding</p>
+					</div>
+					<span>{auction.Skills.Shielding}</span>
+				</div>
+				<div class="skill-item">
+					<div>
+						<img src="/assets/images/magic_sword.png"/>
+						<p>Sword</p>
+					</div>
+					<span>{auction.Skills.Sword}</span>
+				</div>
+			</div>
 		</div>
 	</div>
 }
