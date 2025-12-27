@@ -276,6 +276,50 @@ func (r *PgAuctionRepository) Save(auction *model.Auction) error {
 		return eris.Wrap(err, "Error in upsert on tc_auction_recording")
 	}
 
+	skillsQuery := `
+		INSERT INTO tc_skills (
+			ts_auction_id,
+			ts_axe,
+			ts_club,
+			ts_distance,
+			ts_fishing,
+			ts_fist,
+			ts_magic_level,
+			ts_shielding,
+			ts_sword
+		)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+		ON CONFLICT (ts_auction_id) DO UPDATE SET
+			ts_axe = EXCLUDED.ts_axe,
+			ts_club = EXCLUDED.ts_club,
+			ts_distance = EXCLUDED.ts_distance,
+			ts_fishing = EXCLUDED.ts_fishing,
+			ts_fist = EXCLUDED.ts_fist,
+			ts_magic_level = EXCLUDED.ts_magic_level,
+			ts_shielding = EXCLUDED.ts_shielding,
+			ts_sword = EXCLUDED.ts_sword
+		;
+	`
+
+	_, err = tx.Exec(
+		skillsQuery,
+		auction.Skills.AuctionID,
+		auction.Skills.Axe,
+		auction.Skills.Club,
+		auction.Skills.Distance,
+		auction.Skills.Fishing,
+		auction.Skills.Fist,
+		auction.Skills.MagicLevel,
+		auction.Skills.Shielding,
+		auction.Skills.Sword,
+	)
+
+	if err != nil {
+		tx.Rollback()
+
+		return eris.Wrap(err, "Error in upsert on tc_skills")
+	}
+
 	return tx.Commit()
 }
 
@@ -288,17 +332,11 @@ func (r *PgAuctionRepository) GetActiveAuctions(ctx context.Context) ([]*model.A
 			a.ta_img,
 			a.ta_char_name,
 			a.ta_char_level,
-			v.tv_id,
-			v.tv_name,
-			g.tg_id,
-			g.tg_name,
-			w.tw_id,
-			w.tw_name,
-			w.tw_location,
-			w.tw_battle_eye,
-			w.tw_pvp,
-			wt.twt_id,
-			wt.twt_name,
+			v.*,
+			g.*,
+			w.*,
+			wt.*,
+			ts.*,
 			a.ta_current_bid,
 			a.ta_auction_start,
 			a.ta_auction_end,
@@ -317,6 +355,8 @@ func (r *PgAuctionRepository) GetActiveAuctions(ctx context.Context) ([]*model.A
 			tc_world_transfer wt ON a.ta_world_transfer = wt.twt_id
 		INNER JOIN
 			tc_auction_recording tar ON a.ta_id = tar.tar_recordable_id
+		INNER JOIN
+			tc_skills ts ON tar.tar_auction_id = ts_auction_id
 		WHERE
 			tar.tar_status = 'active'
 		ORDER BY a.ta_auction_end ASC;
@@ -345,6 +385,7 @@ func (r *PgAuctionRepository) GetActiveAuctions(ctx context.Context) ([]*model.A
 		var worldTransfer model.WorldTransfer
 		var worldTransferString string
 		var statusString string
+		var skills model.Skills
 
 		err := rows.Scan(
 			&auction.ID,
@@ -364,6 +405,16 @@ func (r *PgAuctionRepository) GetActiveAuctions(ctx context.Context) ([]*model.A
 			&world.Pvp,
 			&worldTransfer.Id,
 			&worldTransferString,
+			&skills.ID,
+			&skills.AuctionID,
+			&skills.Axe,
+			&skills.Club,
+			&skills.Distance,
+			&skills.Fishing,
+			&skills.Fist,
+			&skills.MagicLevel,
+			&skills.Shielding,
+			&skills.Sword,
 			&auction.Bid,
 			&auction.AuctionStart,
 			&auction.AuctionEnd,
@@ -401,6 +452,7 @@ func (r *PgAuctionRepository) GetActiveAuctions(ctx context.Context) ([]*model.A
 		auction.CharWorld = &world
 		worldTransfer.Name = worldTransferEnum
 		auction.WorldTransfer = &worldTransfer
+		auction.Skills = &skills
 
 		auctions = append(auctions, &auction)
 	}

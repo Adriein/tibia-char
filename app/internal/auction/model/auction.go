@@ -91,6 +91,19 @@ type WorldTransfer struct {
 	Name enums.WorldTransferAllowance
 }
 
+type Skills struct {
+	ID         int64
+	AuctionID  int64
+	Axe        int
+	Club       int
+	Distance   int
+	Fishing    int
+	Fist       int
+	MagicLevel int
+	Shielding  int
+	Sword      int
+}
+
 type Auction struct {
 	ID               int64
 	AuctionID        int64
@@ -104,6 +117,7 @@ type Auction struct {
 	CharGender       *Gender
 	CharWorld        *World
 	WorldTransfer    *WorldTransfer
+	Skills           *Skills
 	Bid              int
 	AuctionStart     time.Time
 	AuctionEnd       time.Time
