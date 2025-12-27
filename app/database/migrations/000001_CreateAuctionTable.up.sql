@@ -76,19 +76,19 @@ CREATE TABLE IF NOT EXISTS tc_auction_recording (
 CREATE INDEX idx_tar_auction_id_time ON tc_auction_recording (tar_auction_id, tar_date_add DESC);
 
 CREATE TABLE IF NOT EXISTS tc_skills (
-    tas_id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    tas_auction_id BIGINT NOT NULL,
-    tas_axe INT NOT NULL,
-    tas_club INT NOT NULL,
-    tas_distance INT NOT NULL,
-    tas_fishing INT NOT NULL,
-    tas_fist INT NOT NULL,
-    tas_magic_level INT NOT NULL,
-    tas_shielding INT NOT NULL,
-    tas_sword INT NOT NULL,
+    ts_id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    ts_auction_id BIGINT NOT NULL,
+    ts_axe INT NOT NULL,
+    ts_club INT NOT NULL,
+    ts_distance INT NOT NULL,
+    ts_fishing INT NOT NULL,
+    ts_fist INT NOT NULL,
+    ts_magic_level INT NOT NULL,
+    ts_shielding INT NOT NULL,
+    ts_sword INT NOT NULL,
 
     CONSTRAINT fk_skills_auction_recording
-        FOREIGN KEY (tas_auction_id)
+        FOREIGN KEY (ts_auction_id)
         REFERENCES tc_auction_recording (tar_auction_id)
 );
 
