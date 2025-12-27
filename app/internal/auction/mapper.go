@@ -60,7 +60,18 @@ func (m *Mapper) FromDTO(dto *model.AuctionDTO) (*model.Auction, error) {
 		AuctionStart:     dto.AuctionStartTime,
 		AuctionEnd:       dto.AuctionEndTime,
 		Status:           enums.RecordableActive,
-		DateAdd:          time.Now(),
-		DateUpd:          time.Now(),
+		Skills: &model.Skills{
+			AuctionID:  int64(dto.AuctionId),
+			Axe:        dto.Skills.Axe,
+			Club:       dto.Skills.Club,
+			Distance:   dto.Skills.Distance,
+			Fishing:    dto.Skills.Fishing,
+			Fist:       dto.Skills.Fist,
+			MagicLevel: dto.Skills.MagicLevel,
+			Shielding:  dto.Skills.Shielding,
+			Sword:      dto.Skills.Sword,
+		},
+		DateAdd: time.Now(),
+		DateUpd: time.Now(),
 	}, nil
 }
