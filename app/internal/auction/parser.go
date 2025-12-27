@@ -177,6 +177,7 @@ func (p *AuctionHtmlParser) Parse(auctionId int, link string) (*model.AuctionDTO
 	dto := model.AuctionDTO{
 		AuctionId: auctionId,
 		Link:      fmt.Sprintf("https://www.tibia.com/charactertrade/?subtopic=currentcharactertrades&page=details&auctionid=%d", auctionId),
+		Skills:    &model.SkillsDTO{},
 	}
 
 	var parseErrors []error
@@ -201,7 +202,7 @@ func (p *AuctionHtmlParser) Parse(auctionId int, link string) (*model.AuctionDTO
 		})
 	})
 
-	p.collector.OnHTML("span[class=LabelV]", func(e *colly.HTMLElement) {
+	p.collector.OnHTML("table[id=CharacterDetails]", func(e *colly.HTMLElement) {
 		p.parseAuctionGeneral(e, &dto)
 	})
 
@@ -348,7 +349,20 @@ func (p *AuctionHtmlParser) extractGender(auctionHeader string) string {
 }
 
 func (p *AuctionHtmlParser) parseAuctionGeneral(e *colly.HTMLElement, dto *model.AuctionDTO) error {
+	e.ForEachWithBreak("span[class=LabelV],td[class=PercentageColumn]", func(_ int, el *colly.HTMLElement) bool {
+		if err := p.extractSkills(el, dto); err != nil {
+			//TODO: propagate errors here i suppose context is needed
+			return false
+		}
 
+		p.extractWorldTransfer(el, dto)
+		return true
+	})
+
+	return nil
+}
+
+func (p *AuctionHtmlParser) extractWorldTransfer(e *colly.HTMLElement, dto *model.AuctionDTO) {
 	if e.Text == "Regular World Transfer:" {
 		divSibling := e.DOM.Siblings().Contents()
 
@@ -359,6 +373,46 @@ func (p *AuctionHtmlParser) parseAuctionGeneral(e *colly.HTMLElement, dto *model
 			dto.WorldTransfer = enums.WorldTransferImmediately
 		default:
 			dto.WorldTransfer = enums.WorldTransferForbidden
+		}
+	}
+}
+
+func (p *AuctionHtmlParser) extractSkills(e *colly.HTMLElement, dto *model.AuctionDTO) error {
+	skillComponents := e.DOM.Siblings().AndSelf().Nodes
+
+	if len(skillComponents) == 3 {
+		skillTagColumn := skillComponents[0]
+		skillValueColumn := skillComponents[1]
+
+		class := skillTagColumn.Attr[0]
+
+		if class.Val == "LabelColumn" {
+			skillName := skillTagColumn.FirstChild.FirstChild.Data
+
+			skill, err := strconv.Atoi(skillValueColumn.FirstChild.Data)
+
+			if err != nil {
+				return eris.Wrapf(err, "Error converting skill to number")
+			}
+
+			switch skillName {
+			case "Axe Fighting":
+				dto.Skills.Axe = skill
+			case "Club Fighting":
+				dto.Skills.Club = skill
+			case "Distance Fighting":
+				dto.Skills.Distance = skill
+			case "Fishing":
+				dto.Skills.Fishing = skill
+			case "Fist Fighting":
+				dto.Skills.Fist = skill
+			case "Magic Level":
+				dto.Skills.MagicLevel = skill
+			case "Shielding":
+				dto.Skills.Shielding = skill
+			case "Sword Fighting":
+				dto.Skills.Sword = skill
+			}
 		}
 	}
 
