@@ -92,7 +92,7 @@ CREATE TABLE IF NOT EXISTS tc_skills (
         REFERENCES tc_auction_recording (tar_auction_id)
 );
 
-INSERT INTO tc_vocation (tv_name) VALUES ('Knight'), ('Paladin'), ('Sorcerer'), ('Druid'), ('Monk');
+INSERT INTO tc_vocation (tv_name) VALUES ('Knight'), ('Paladin'), ('Sorcerer'), ('Druid'), ('Monk'), ('None');
 
 INSERT INTO tc_gender (tg_name) VALUES ('Male'), ('Female');
 
