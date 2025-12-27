@@ -75,6 +75,23 @@ CREATE TABLE IF NOT EXISTS tc_auction_recording (
 
 CREATE INDEX idx_tar_auction_id_time ON tc_auction_recording (tar_auction_id, tar_date_add DESC);
 
+CREATE TABLE IF NOT EXISTS tc_skills (
+    tas_id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    tas_auction_id BIGINT NOT NULL,
+    tas_axe INT NOT NULL,
+    tas_club INT NOT NULL,
+    tas_distance INT NOT NULL,
+    tas_fishing INT NOT NULL,
+    tas_fist INT NOT NULL,
+    tas_magic_level INT NOT NULL,
+    tas_shielding INT NOT NULL,
+    tas_sword INT NOT NULL,
+
+    CONSTRAINT fk_skills_auction_recording
+        FOREIGN KEY (tas_auction_id)
+        REFERENCES tc_auction_recording (tar_auction_id)
+);
+
 INSERT INTO tc_vocation (tv_name) VALUES ('Knight'), ('Paladin'), ('Sorcerer'), ('Druid'), ('Monk');
 
 INSERT INTO tc_gender (tg_name) VALUES ('Male'), ('Female');
