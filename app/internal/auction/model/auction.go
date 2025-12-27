@@ -22,9 +22,21 @@ type AuctionDTO struct {
 	CharGender       string
 	CharWorld        string
 	WorldTransfer    enums.WorldTransferAllowance
+	Skills           *SkillsDTO
 	Bid              int
 	AuctionStartTime time.Time
 	AuctionEndTime   time.Time
+}
+
+type SkillsDTO struct {
+	Axe        int
+	Club       int
+	Distance   int
+	Fishing    int
+	Fist       int
+	MagicLevel int
+	Shielding  int
+	Sword      int
 }
 
 type Vocation struct {
