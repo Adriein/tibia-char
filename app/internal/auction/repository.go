@@ -322,6 +322,7 @@ func (r *PgAuctionRepository) GetActiveAuctions(ctx context.Context) ([]*model.A
 			g.*,
 			w.*,
 			ts.*,
+			tfi.*,
 			a.ta_world_transfer,
 			a.ta_current_bid,
 			a.ta_auction_start,
@@ -341,6 +342,8 @@ func (r *PgAuctionRepository) GetActiveAuctions(ctx context.Context) ([]*model.A
 			tc_auction_recording tar ON a.ta_id = tar.tar_recordable_id
 		INNER JOIN
 			tc_skills ts ON tar.tar_auction_id = ts_auction_id
+		LEFT JOIN
+			tc_featured_items tfi ON tar_auction_id = tfi_auction_id
 		WHERE
 			tar.tar_status = 'active'
 		ORDER BY a.ta_auction_end ASC;
@@ -358,16 +361,23 @@ func (r *PgAuctionRepository) GetActiveAuctions(ctx context.Context) ([]*model.A
 
 	defer rows.Close()
 
-	var auctions []*model.Auction
+	auctionMap := make(map[int64]*model.Auction)
+	var orderedIDs []int64
 
 	for rows.Next() {
-		var auction model.Auction
-		var vocation model.Vocation
-		var gender model.Gender
-		var world model.World
-		var battleEyeString string
-		var statusString string
-		var skills model.Skills
+		var (
+			auction         model.Auction
+			vocation        model.Vocation
+			gender          model.Gender
+			world           model.World
+			featuredItem    model.FeaturedItem
+			battleEyeString string
+			statusString    string
+			skills          model.Skills
+			tfiID           sql.NullInt64
+			tfiAuctionID    sql.NullInt64
+			tfiItemID       sql.NullInt32
+		)
 
 		err := rows.Scan(
 			&auction.ID,
@@ -395,6 +405,9 @@ func (r *PgAuctionRepository) GetActiveAuctions(ctx context.Context) ([]*model.A
 			&skills.MagicLevel,
 			&skills.Shielding,
 			&skills.Sword,
+			&tfiID,
+			&tfiAuctionID,
+			&tfiItemID,
 			&auction.WorldTransfer,
 			&auction.Bid,
 			&auction.AuctionStart,
@@ -406,6 +419,18 @@ func (r *PgAuctionRepository) GetActiveAuctions(ctx context.Context) ([]*model.A
 
 		if err != nil {
 			return nil, eris.Wrap(err, "Failed to scan auction")
+		}
+
+		existingAuction, exists := auctionMap[auction.AuctionID]
+
+		if exists && tfiID.Valid {
+			featuredItem.ID = tfiID.Int64
+			featuredItem.AuctionID = tfiAuctionID.Int64
+			featuredItem.ItemID = int(tfiItemID.Int32)
+
+			existingAuction.FeaturedItems = append(existingAuction.FeaturedItems, &featuredItem)
+
+			continue
 		}
 
 		status, err := enums.GetAuctionRecordableStatusFromString(statusString)
@@ -427,11 +452,26 @@ func (r *PgAuctionRepository) GetActiveAuctions(ctx context.Context) ([]*model.A
 		auction.CharWorld = &world
 		auction.Skills = &skills
 
-		auctions = append(auctions, &auction)
+		if tfiID.Valid {
+			auction.FeaturedItems = append(auction.FeaturedItems, &featuredItem)
+			orderedIDs = append(orderedIDs, auction.AuctionID)
+			auctionMap[auction.AuctionID] = &auction
+
+			continue
+		}
+
+		orderedIDs = append(orderedIDs, auction.AuctionID)
+		auctionMap[auction.AuctionID] = &auction
 	}
 
 	if err = rows.Err(); err != nil {
 		return nil, eris.Wrap(err, "Failed iterating rows")
+	}
+
+	auctions := make([]*model.Auction, 0, len(orderedIDs))
+
+	for _, auctionID := range orderedIDs {
+		auctions = append(auctions, auctionMap[auctionID])
 	}
 
 	return auctions, nil
