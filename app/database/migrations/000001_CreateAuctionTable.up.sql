@@ -88,7 +88,10 @@ CREATE TABLE IF NOT EXISTS tc_featured_items (
 
     CONSTRAINT fk_featured_items_auction_recording
         FOREIGN KEY (tfi_auction_id)
-        REFERENCES tc_auction_recording (tar_auction_id)
+        REFERENCES tc_auction_recording (tar_auction_id),
+
+    CONSTRAINT unique_auction_item
+        UNIQUE (tfi_auction_id, tfi_item_id)
 );
 
 INSERT INTO tc_vocation (tv_name) VALUES ('Knight'), ('Paladin'), ('Sorcerer'), ('Druid'), ('Monk'), ('None');

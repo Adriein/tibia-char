@@ -111,12 +111,18 @@ type Skills struct {
 	Sword      int
 }
 
+type FeaturedItem struct {
+	ID        int64
+	AuctionID int64
+	ItemID    int
+}
+
 type Auction struct {
 	ID               int64
 	AuctionID        int64
 	TibiaAuctionLink string
 	Img              string
-	FeaturedItems    []ImgDisplay
+	FeaturedItems    []*FeaturedItem
 	Featured         []string
 	CharName         string
 	CharLevel        int

@@ -283,6 +283,29 @@ func (r *PgAuctionRepository) Save(auction *model.Auction) error {
 		return eris.Wrap(err, "Error in upsert on tc_skills")
 	}
 
+	for _, fi := range auction.FeaturedItems {
+		featuredItemsQuery := `
+			INSERT INTO tc_featured_items (
+				tfi_auction_id,
+				tfi_item_id
+			)
+			VALUES ($1, $2)
+			ON CONFLICT DO NOTHING;
+		`
+
+		_, err = tx.Exec(
+			featuredItemsQuery,
+			fi.AuctionID,
+			fi.ItemID,
+		)
+
+		if err != nil {
+			tx.Rollback()
+
+			return eris.Wrap(err, "Error in insert on tc_featued_items")
+		}
+	}
+
 	return tx.Commit()
 }
 

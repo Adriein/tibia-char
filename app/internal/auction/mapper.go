@@ -1,10 +1,14 @@
 package auction
 
 import (
+	"path"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/adriein/tibia-char/internal/auction/model"
 	"github.com/adriein/tibia-char/pkg/enums"
+	"github.com/rotisserie/eris"
 )
 
 type Mapper struct {
@@ -36,11 +40,30 @@ func (m *Mapper) FromDTO(dto *model.AuctionDTO) (*model.Auction, error) {
 		return nil, err
 	}
 
+	var featuredItems []*model.FeaturedItem
+
+	for _, item := range dto.FeaturedItems {
+		if item.Link == "" {
+			continue
+		}
+
+		fileName := path.Base(item.Link)
+		itemIDString := strings.TrimSuffix(fileName, ".gif")
+
+		itemID, err := strconv.Atoi(itemIDString)
+
+		if err != nil {
+			return nil, eris.Wrap(err, "Error parsing itemIDString to int")
+		}
+
+		featuredItems = append(featuredItems, &model.FeaturedItem{AuctionID: int64(dto.AuctionId), ItemID: itemID})
+	}
+
 	return &model.Auction{
 		AuctionID:        int64(dto.AuctionId),
 		TibiaAuctionLink: dto.Link,
 		Img:              dto.ImgUrl,
-		FeaturedItems:    dto.FeaturedItems,
+		FeaturedItems:    featuredItems,
 		Featured:         dto.Featured,
 		CharName:         dto.CharName,
 		CharLevel:        dto.CharLevel,
