@@ -22,7 +22,6 @@ func main() {
 
 	auctionRepository := auction.NewPgAuctionRepository(app.Databse)
 	worldRepository := auction.NewPgWorldRepository(app.Databse)
-	worldTransferRepository := auction.NewPgWorldTransferRepository(app.Databse)
 
 	linkScrapper := auction.NewScrapper("CollectAuctionLinks")
 
@@ -41,7 +40,7 @@ func main() {
 	auctionListHtmlParser := auction.NewAuctionListHtmlParser(linkScrapper.Collector)
 	auctionHtmlParser := auction.NewAuctionHtmlParser(detailScrapper.Collector)
 
-	mapper := auction.NewMapper(worldRepository, worldTransferRepository)
+	mapper := auction.NewMapper(worldRepository)
 
 	cron := auction.NewService(tibiaAPI, auctionListHtmlParser, auctionHtmlParser, auctionRepository, worldRepository, mapper, logger)
 

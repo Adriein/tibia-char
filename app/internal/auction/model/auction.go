@@ -21,8 +21,8 @@ type AuctionDTO struct {
 	CharVocation     string
 	CharGender       string
 	CharWorld        string
-	WorldTransfer    enums.WorldTransferAllowance
 	Skills           *SkillsDTO
+	WorldTransfer    bool
 	Bid              int
 	AuctionStartTime time.Time
 	AuctionEndTime   time.Time
@@ -98,11 +98,6 @@ type World struct {
 	Pvp       string
 }
 
-type WorldTransfer struct {
-	Id   int
-	Name enums.WorldTransferAllowance
-}
-
 type Skills struct {
 	ID         int64
 	AuctionID  int64
@@ -128,8 +123,8 @@ type Auction struct {
 	CharVocation     *Vocation
 	CharGender       *Gender
 	CharWorld        *World
-	WorldTransfer    *WorldTransfer
 	Skills           *Skills
+	WorldTransfer    bool
 	Bid              int
 	AuctionStart     time.Time
 	AuctionEnd       time.Time

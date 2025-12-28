@@ -141,43 +141,6 @@ func (wr *PgWorldRepository) GetOrCreate(world *model.World) (*model.World, erro
 	return &dto, nil
 }
 
-type WorldTransferRepository interface {
-	Get(transfer string) (*model.WorldTransfer, error)
-}
-
-type PgWorldTransferRepository struct {
-	connection *sql.DB
-}
-
-func NewPgWorldTransferRepository(c *sql.DB) *PgWorldTransferRepository {
-	return &PgWorldTransferRepository{connection: c}
-}
-
-func (wtr *PgWorldTransferRepository) Get(transfer string) (*model.WorldTransfer, error) {
-	query := `
-		SELECT * FROM tc_world_transfer WHERE twt_name = $1;
-	`
-
-	var dto model.WorldTransfer
-	var worldTransferAllowance string
-
-	err := wtr.connection.QueryRow(query, transfer).Scan(&dto.Id, &worldTransferAllowance)
-
-	if err != nil {
-		return nil, eris.New(err.Error())
-	}
-
-	wta, err := enums.GetWorldTransferAllowanceFromString(worldTransferAllowance)
-
-	if err != nil {
-		return nil, err
-	}
-
-	dto.Name = wta
-
-	return &dto, nil
-}
-
 type AuctionRepository interface {
 	Save(auction *model.Auction) error
 	GetActiveAuctions(ctx context.Context) ([]*model.Auction, error)
@@ -233,7 +196,7 @@ func (r *PgAuctionRepository) Save(auction *model.Auction) error {
 		auction.CharVocation.Id,
 		auction.CharGender.Id,
 		auction.CharWorld.Id,
-		auction.WorldTransfer.Id,
+		auction.WorldTransfer,
 		auction.Bid,
 		auction.AuctionStart,
 		auction.AuctionEnd,
@@ -335,8 +298,8 @@ func (r *PgAuctionRepository) GetActiveAuctions(ctx context.Context) ([]*model.A
 			v.*,
 			g.*,
 			w.*,
-			wt.*,
 			ts.*,
+			a.ta_world_transfer,
 			a.ta_current_bid,
 			a.ta_auction_start,
 			a.ta_auction_end,
@@ -351,8 +314,6 @@ func (r *PgAuctionRepository) GetActiveAuctions(ctx context.Context) ([]*model.A
 			tc_gender g ON a.ta_char_gender = g.tg_id
 		INNER JOIN
 			tc_world w ON a.ta_char_world = w.tw_id
-		INNER JOIN
-			tc_world_transfer wt ON a.ta_world_transfer = wt.twt_id
 		INNER JOIN
 			tc_auction_recording tar ON a.ta_id = tar.tar_recordable_id
 		INNER JOIN
@@ -382,8 +343,6 @@ func (r *PgAuctionRepository) GetActiveAuctions(ctx context.Context) ([]*model.A
 		var gender model.Gender
 		var world model.World
 		var battleEyeString string
-		var worldTransfer model.WorldTransfer
-		var worldTransferString string
 		var statusString string
 		var skills model.Skills
 
@@ -403,8 +362,6 @@ func (r *PgAuctionRepository) GetActiveAuctions(ctx context.Context) ([]*model.A
 			&world.Location,
 			&battleEyeString,
 			&world.Pvp,
-			&worldTransfer.Id,
-			&worldTransferString,
 			&skills.ID,
 			&skills.AuctionID,
 			&skills.Axe,
@@ -415,6 +372,7 @@ func (r *PgAuctionRepository) GetActiveAuctions(ctx context.Context) ([]*model.A
 			&skills.MagicLevel,
 			&skills.Shielding,
 			&skills.Sword,
+			&auction.WorldTransfer,
 			&auction.Bid,
 			&auction.AuctionStart,
 			&auction.AuctionEnd,
@@ -433,12 +391,6 @@ func (r *PgAuctionRepository) GetActiveAuctions(ctx context.Context) ([]*model.A
 			return nil, eris.Wrap(err, "Failed to parse auction status")
 		}
 
-		worldTransferEnum, err := enums.GetWorldTransferAllowanceFromString(worldTransferString)
-
-		if err != nil {
-			return nil, eris.Wrap(err, "Failed to parse World Transfer")
-		}
-
 		battleEyeEnum, err := enums.GetBattleEyeFromString(battleEyeString)
 
 		if err != nil {
@@ -450,8 +402,6 @@ func (r *PgAuctionRepository) GetActiveAuctions(ctx context.Context) ([]*model.A
 		auction.CharGender = &gender
 		world.BattleEye = battleEyeEnum
 		auction.CharWorld = &world
-		worldTransfer.Name = worldTransferEnum
-		auction.WorldTransfer = &worldTransfer
 		auction.Skills = &skills
 
 		auctions = append(auctions, &auction)
