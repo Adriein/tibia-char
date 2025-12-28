@@ -1,5 +1,5 @@
 CREATE TABLE IF NOT EXISTS tc_world (
-    tw_id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    tw_id SMALLINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     tw_name VARCHAR UNIQUE NOT NULL,
     tw_location VARCHAR NOT NULL,
     tw_battle_eye VARCHAR NOT NULL,
@@ -7,20 +7,14 @@ CREATE TABLE IF NOT EXISTS tc_world (
 );
 
 CREATE TABLE IF NOT EXISTS tc_vocation (
-    tv_id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    tv_id SMALLINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     tv_name VARCHAR UNIQUE NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS tc_gender (
-    tg_id SMALLSERIAL PRIMARY KEY,
+    tg_id SMALLINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     tg_name VARCHAR UNIQUE NOT NULL
 );
-
-CREATE TABLE IF NOT EXISTS tc_world_transfer (
-    twt_id SMALLSERIAL PRIMARY KEY,
-    twt_name VARCHAR UNIQUE NOT NULL
-);
-
 
 CREATE TABLE IF NOT EXISTS tc_auction (
     ta_id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
@@ -32,7 +26,7 @@ CREATE TABLE IF NOT EXISTS tc_auction (
     ta_char_vocation INT NOT NULL,
     ta_char_gender SMALLINT NOT NULL,
     ta_char_world INT NOT NULL,
-    ta_world_transfer INT NOT NULL,
+    ta_world_transfer BOOLEAN NOT NULL,
     ta_current_bid INT NOT NULL,
     ta_auction_start TIMESTAMP(0) WITHOUT TIME ZONE NOT NULL,
     ta_auction_end TIMESTAMP(0) WITHOUT TIME ZONE NOT NULL,
@@ -49,17 +43,12 @@ CREATE TABLE IF NOT EXISTS tc_auction (
 
     CONSTRAINT fk_world_auction
         FOREIGN KEY (ta_char_world)
-        REFERENCES tc_world (tw_id),
-
-    CONSTRAINT fk_world_transfer_auction
-        FOREIGN KEY (ta_world_transfer)
-        REFERENCES tc_world_transfer (twt_id)
+        REFERENCES tc_world (tw_id)
 );
 
 CREATE INDEX idx_ta_fk_vocation ON tc_auction (ta_char_vocation);
 CREATE INDEX idx_ta_fk_gender ON tc_auction (ta_char_gender);
 CREATE INDEX idx_ta_fk_world ON tc_auction (ta_char_world);
-CREATE INDEX idx_ta_fk_world_transfer ON tc_auction (ta_world_transfer);
 
 CREATE TABLE IF NOT EXISTS tc_auction_recording (
     tar_auction_id INT PRIMARY KEY,
@@ -92,8 +81,16 @@ CREATE TABLE IF NOT EXISTS tc_skills (
         REFERENCES tc_auction_recording (tar_auction_id)
 );
 
+CREATE TABLE IF NOT EXISTS tc_featured_items (
+    tfi_id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    tfi_auction_id BIGINT NOT NULL,
+    tfi_item_id INT,
+
+    CONSTRAINT fk_featured_items_auction_recording
+        FOREIGN KEY (tfi_auction_id)
+        REFERENCES tc_auction_recording (tar_auction_id)
+);
+
 INSERT INTO tc_vocation (tv_name) VALUES ('Knight'), ('Paladin'), ('Sorcerer'), ('Druid'), ('Monk'), ('None');
 
 INSERT INTO tc_gender (tg_name) VALUES ('Male'), ('Female');
-
-INSERT INTO tc_world_transfer (twt_name) VALUES ('immediately'), ('forbidden');
