@@ -349,7 +349,7 @@ func (r *PgAuctionRepository) GetActiveAuctions(ctx context.Context) ([]*model.A
 		ORDER BY a.ta_auction_end ASC;
 	`
 
-	ctxTimeout, cancel := context.WithTimeout(ctx, time.Second*10)
+	ctxTimeout, cancel := context.WithTimeout(ctx, time.Second*1000000000)
 
 	defer cancel()
 
@@ -453,6 +453,10 @@ func (r *PgAuctionRepository) GetActiveAuctions(ctx context.Context) ([]*model.A
 		auction.Skills = &skills
 
 		if tfiID.Valid {
+			featuredItem.ID = tfiID.Int64
+			featuredItem.AuctionID = tfiAuctionID.Int64
+			featuredItem.ItemID = int(tfiItemID.Int32)
+
 			auction.FeaturedItems = append(auction.FeaturedItems, &featuredItem)
 			orderedIDs = append(orderedIDs, auction.AuctionID)
 			auctionMap[auction.AuctionID] = &auction
