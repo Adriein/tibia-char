@@ -76,7 +76,41 @@
       justify-content: space-between;
     }
 
-    .card__subheader-world-detail {
+    .card__subheader-section {
+      display: flex;
+      flex-direction: column;
+      gap: var(--inline-space);
+    }
+
+    .card__subheader-bid-amount {
+      display: flex;
+      gap: 2px;
+      font-size: var(--text-small);
+      font-weight: 800;
+      align-items: center;
+
+      img {
+        width: 25px;
+        height: 25px;
+        transform: translate(-16%, 0%);
+        flex-shrink: 0;
+      }
+    }
+
+    .card__subheader-bid-time {
+      display: flex;
+      gap: var(--inline-space);
+      font-size: var(--text-small);
+      align-items: center;
+
+      svg {
+        width: 20px;
+        height: 20px;
+        flex-shrink: 0;
+      }
+    }
+
+    .world {
       align-items: center;
       display: flex;
       gap: var(--inline-space);
@@ -87,14 +121,14 @@
       }
     }
 
-    .card__subheader-world-detail img,
-    .card__subheader-world-detail svg {
+    .world img,
+    .world svg {
       block-size: 18px;
       inline-size: 18px;
       flex-shrink: 0;
     }
 
-    .card__subheader-world-detail .card__subheader-country-flag {
+    .world .card__subheader-country-flag {
       width: 16px;
       height: 10px;
     }
