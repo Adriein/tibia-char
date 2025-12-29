@@ -1,12 +1,48 @@
 @layer components {
   .btn {
-    background-color: var(--btn-background, var(--color-canvas));
-    color: var(--btn-color, var(--color-ink));
-    border: var(--btn-border-size, 1px) solid var(--btn-border-color, var(--color-ink-light));
+    /* 1. Defaults (The "Ghost" or "Secondary" style) */
+    --btn-background: var(--color-muted);
+    --btn-color: var(--color-ink);
+    --btn-border-color: var(--color-border);
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--inline-space-half);
+
+    padding: var(--block-space-half) var(--inline-space-double);
+    font-size: var(--text-small);
+    font-weight: 600;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+
+    background-color: var(--btn-background);
+    color: var(--btn-color);
+    border: 1px solid var(--btn-border-color);
+
+    /* Use your predefined easing */
+    transition: all var(--dialog-duration) var(--ease-out-expo);
+
+    /* Interaction logic */
+    &:hover {
+      filter: brightness(1.1); /* Simple way to get a hover color without new variables */
+      border-color: var(--color-ink-muted);
+    }
+
+    &:active {
+      scale: 0.97; /* Physical feedback */
+      filter: brightness(0.9);
+    }
+
+    &:focus-visible {
+      outline: var(--focus-ring);
+      outline-offset: var(--focus-ring-offset);
+    }
   }
 
   .btn--primary {
     --btn-background: var(--color-brand-main);
     --btn-color: var(--color-brand-ink);
+    --btn-border-color: transparent;
   }
 }

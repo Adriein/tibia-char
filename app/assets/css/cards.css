@@ -48,6 +48,12 @@
     border-top: 1px solid var(--card-body-border-color, var(--color-border));
   }
 
+  .card__footer {
+    display: flex;
+    border-top: 1px solid var(--card-body-border-color, var(--color-border));
+    padding: var(--block-space) var(--inline-space-double);
+  }
+
   .card--auction {
     .card__header-avatar {
       background-color: var(--color-brand-main);
@@ -173,6 +179,15 @@
           image-rendering: pixelated;
         }
       }
+    }
+
+    .card__footer a {
+      display: block;
+      width: 100%;
+    }
+
+    .card__footer .btn {
+      width: 100%;
     }
 
     @media (max-width: 400px) {
