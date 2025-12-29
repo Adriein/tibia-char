@@ -126,10 +126,10 @@
         transition: background-color var(--dialog-duration) var(--ease-out-expo);
 
         /* Subtle hover effect makes the UI feel alive */
-        &:hover {
+        /*&:hover {
           background-color: oklch(from var(--color-muted) calc(l + 0.05) c h);
           border-color: var(--color-brand-main);
-        }
+        }*/
       }
 
       .skill-item p {
