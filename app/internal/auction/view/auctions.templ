@@ -61,7 +61,7 @@ templ AuctionCard(auction *model.Auction) {
 			</div>
 		</div>
 		<div class="card__body">
-			<div class="card__body--skills-container">
+			<div class="card__body-skills-container">
 				<div class="skill-item">
 					<div>
 						<img src="/assets/images/stonecutter_axe.png"/>
@@ -119,6 +119,16 @@ templ AuctionCard(auction *model.Auction) {
 					<span>{auction.Skills.Sword}</span>
 				</div>
 			</div>
+			<div class="card__body-featured-items-container">
+				for _, featured := range auction.FeaturedItems {
+					<div class="featured-item">
+						<img src={fmt.Sprintf("https://static.tibia.com/images/charactertrade/objects/%d.gif", featured.ItemID)}/>
+					</div>
+				}
+			</div>
+		</div>
+		<div class="card__footer">
+			<a target="_blank" href={fmt.Sprintf("https://www.tibia.com/charactertrade/?subtopic=currentcharactertrades&page=details&auctionid=%d", auction.AuctionID)}>View on tibia.com</a>
 		</div>
 	</div>
 }

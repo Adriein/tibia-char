@@ -6,6 +6,7 @@
     --card-subheader-space: 1ch;
     --card-body-padding-block: var(--block-space);
     --card-body-padding-inline: var(--block-space);
+    --card-body-vertical-space: var(--block-space);
 
     background-color: var(--card-background, var(--color-surface));
     color: var(--card-color, var(--color-surface-ink));
@@ -45,7 +46,6 @@
 
   .card__body {
     border-top: 1px solid var(--card-body-border-color, var(--color-border));
-    padding: var(--block-space) var(--inline-space-double);
   }
 
   .card--auction {
@@ -97,7 +97,8 @@
       color: var(--color-error);
     }
 
-    .card__body--skills-container {
+    .card__body-skills-container {
+      padding: var(--block-space) var(--inline-space-double);
       display: grid;
       grid-template-columns: repeat(2, 1fr);
       gap: var(--inline-space);
@@ -130,8 +131,38 @@
       }
     }
 
+    .card__body-featured-items-container {
+      padding: var(--block-space) var(--inline-space-double);
+      /* Use the standard border color for the divider */
+      border-top: 1px solid var(--color-border);
+      display: flex;
+      gap: var(--inline-space);
+      align-items: center;
+      justify-content: center;
+
+      .featured-item {
+        width: 56px;
+        height: 56px;
+        background-color: var(--color-muted);
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-md);
+
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        .img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          image-rendering: pixelated;
+        }
+      }
+    }
+
     @media (max-width: 400px) {
-      .card__body--skills-container  {
+      .card__body-skills-container  {
         grid-template-columns: 1fr;
       }
     }
