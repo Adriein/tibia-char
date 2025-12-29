@@ -77,10 +77,14 @@
     }
 
     .card__subheader-world-detail {
+      align-items: center;
       display: flex;
       gap: var(--inline-space);
       font-size: var(--text-small);
-      align-items: center;
+
+      p {
+        margin: 0;
+      }
     }
 
     .card__subheader-world-detail img,
