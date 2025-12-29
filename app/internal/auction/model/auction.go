@@ -50,6 +50,7 @@ var vocationMap = map[string]*Vocation{
 	constants.Sorcerer: {Id: constants.VocationSorcerer, Name: constants.Sorcerer},
 	constants.Druid:    {Id: constants.VocationDruid, Name: constants.Druid},
 	constants.Monk:     {Id: constants.VocationMonk, Name: constants.Monk},
+	constants.None:     {Id: constants.VocationNone, Name: constants.None},
 }
 
 var genderMap = map[string]*Gender{

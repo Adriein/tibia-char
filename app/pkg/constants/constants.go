@@ -44,6 +44,7 @@ const (
 	VocationSorcerer = 3
 	VocationDruid    = 4
 	VocationMonk     = 5
+	VocationNone     = 6
 )
 
 const (
@@ -54,6 +55,7 @@ const (
 	Sorcerer = "sorcerer"
 	Druid    = "druid"
 	Monk     = "monk"
+	None     = "none"
 )
 
 // Errors
