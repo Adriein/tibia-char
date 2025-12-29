@@ -30,7 +30,9 @@ func (p *AuctionListHtmlParser) GetTotalCurrentAuctions() (int, error) {
 	var errors []error
 	var totalCurrentAuctions int = 0
 
-	p.collector.OnHTML("td[class=PageNavigation]", func(e *colly.HTMLElement) {
+	c := p.collector.Clone()
+
+	c.OnHTML("td[class=PageNavigation]", func(e *colly.HTMLElement) {
 		htmlExtractedText := e.Text
 
 		parts := strings.Split(htmlExtractedText, ": ")
@@ -58,7 +60,7 @@ func (p *AuctionListHtmlParser) GetTotalCurrentAuctions() (int, error) {
 		totalCurrentAuctions = resultInt
 	})
 
-	p.collector.Visit(BaseAuctionListURL)
+	c.Visit(BaseAuctionListURL)
 
 	if len(errors) > 0 {
 		var b strings.Builder
@@ -119,7 +121,9 @@ func (p *AuctionListHtmlParser) scrapeAuctionListPage(world string, page int) ([
 	var result []string
 	var scrapeErr error
 
-	p.collector.OnHTML("div[class=AuctionLinks]", func(e *colly.HTMLElement) {
+	c := p.collector.Clone()
+
+	c.OnHTML("div[class=AuctionLinks]", func(e *colly.HTMLElement) {
 		e.ForEach("a[href]", func(_ int, el *colly.HTMLElement) {
 			if href := el.Attr("href"); href != "" {
 				result = append(result, href)
@@ -127,13 +131,13 @@ func (p *AuctionListHtmlParser) scrapeAuctionListPage(world string, page int) ([
 		})
 	})
 
-	p.collector.OnError(func(r *colly.Response, err error) {
+	c.OnError(func(r *colly.Response, err error) {
 		scrapeErr = eris.Wrapf(err, "scraping error for world %s page %d: status %d", world, page, r.StatusCode)
 	})
 
 	targetURL := fmt.Sprintf("%s&filter_world=%s&currentpage=%d", BaseAuctionListURL, world, page)
 
-	if err := p.collector.Visit(targetURL); err != nil {
+	if err := c.Visit(targetURL); err != nil {
 		return nil, eris.Wrapf(err, "failed to visit %s", targetURL)
 	}
 
@@ -181,11 +185,13 @@ func (p *AuctionHtmlParser) Parse(auctionId int, link string) (*model.AuctionDTO
 
 	var parseErrors []error
 
-	p.collector.OnError(func(r *colly.Response, err error) {
+	c := p.collector.Clone()
+
+	c.OnError(func(r *colly.Response, err error) {
 		parseErrors = append(parseErrors, eris.Errorf("Failed to fetch %s: status %d", r.Request.URL, r.StatusCode))
 	})
 
-	p.collector.OnHTML("div[class=Auction]", func(e *colly.HTMLElement) {
+	c.OnHTML("div[class=Auction]", func(e *colly.HTMLElement) {
 		e.ForEach("div[class]", func(_ int, ch *colly.HTMLElement) {
 			switch ch.Attr("class") {
 			case "AuctionHeader":
@@ -201,11 +207,11 @@ func (p *AuctionHtmlParser) Parse(auctionId int, link string) (*model.AuctionDTO
 		})
 	})
 
-	p.collector.OnHTML("table[id=CharacterDetails]", func(e *colly.HTMLElement) {
+	c.OnHTML("table[id=CharacterDetails]", func(e *colly.HTMLElement) {
 		p.parseAuctionGeneral(e, &dto)
 	})
 
-	if err := p.collector.Visit(link); err != nil {
+	if err := c.Visit(link); err != nil {
 		parseErrors = append(parseErrors, eris.Wrap(err, "Visit failed"))
 	}
 
@@ -250,10 +256,11 @@ func (p *AuctionHtmlParser) parseAuctionBody(e *colly.HTMLElement, dto *model.Au
 
 		case "AuctionItemsViewBox":
 			ch.ForEach("div[title]", func(_ int, itemViewBoxCh *colly.HTMLElement) {
+				//TODO parse also the item tiers that has an extra element
 				imgTitle := itemViewBoxCh.Attr("title")
 				imgLink := itemViewBoxCh.ChildAttr("img", "src")
 
-				dto.FeaturedItems = append(dto.FeaturedItems, model.ImgDisplay{Name: imgTitle, Link: imgLink})
+				dto.FeaturedItems = append(dto.FeaturedItems, &model.ImgDisplay{Name: imgTitle, Link: imgLink})
 			})
 
 		case "ShortAuctionData":

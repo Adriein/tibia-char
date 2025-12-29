@@ -14,7 +14,7 @@ type AuctionDTO struct {
 	AuctionId        int
 	Link             string
 	ImgUrl           string
-	FeaturedItems    []ImgDisplay
+	FeaturedItems    []*ImgDisplay
 	Featured         []string
 	CharName         string
 	CharLevel        int
