@@ -120,10 +120,16 @@ templ AuctionCard(auction *model.Auction) {
 				</div>
 			</div>
 			<div class="card__body-featured-items-container">
-				for _, featured := range auction.FeaturedItems {
-					<div class="featured-item">
-						<img src={fmt.Sprintf("https://static.tibia.com/images/charactertrade/objects/%d.gif", featured.ItemID)}/>
-					</div>
+				for i := range 4 {
+					if i+1 > len(auction.FeaturedItems) {
+						<div class="featured-item">
+							<img class="featured-item-img--empty" src="https://static.tibia.com/images/charactertrade/objects/2865.gif"/>
+						</div>
+					} else {
+						<div class="featured-item">
+							<img class="featured-item-img" src={fmt.Sprintf("https://static.tibia.com/images/charactertrade/objects/%d.gif", auction.FeaturedItems[i].ItemID)}/>
+						</div>
+					}
 				}
 			</div>
 		</div>

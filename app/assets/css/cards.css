@@ -107,16 +107,24 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
-        background-color: var(--card-background, var(--color-surface));
-        color: var(--card-color, var(--color-surface-ink));
-        border: var(--card-border-size, 1px) solid var(--card-border-color, var(--color-border));
-        border-radius: var(--card-border-radius, var(--radius-md));
+        background-color: var(--color-muted);
+        color: var(--color-ink);
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-sm);
         font-size: var(--text-small);
-        padding: var(--block-space-half);
+        padding: var(--block-space-half) var(--inline-space);
+        transition: background-color var(--dialog-duration) var(--ease-out-expo);
+
+        /* Subtle hover effect makes the UI feel alive */
+        &:hover {
+          background-color: oklch(from var(--color-muted) calc(l + 0.05) c h);
+          border-color: var(--color-brand-main);
+        }
       }
 
       .skill-item p {
         margin: 0;
+        font-weight: var(--text-weight-md);
       }
 
       .skill-item div {
@@ -127,6 +135,7 @@
         img {
           width: 18px;
           height: 18px;
+          opacity: 0.8;
         }
       }
     }
@@ -138,11 +147,11 @@
       display: flex;
       gap: var(--inline-space);
       align-items: center;
-      justify-content: center;
+      justify-content: space-evenly;
 
       .featured-item {
-        width: 56px;
-        height: 56px;
+        width: 50px;
+        height: 50px;
         background-color: var(--color-muted);
         border: 1px solid var(--color-border);
         border-radius: var(--radius-md);
@@ -152,9 +161,14 @@
         align-items: center;
         justify-content: center;
 
-        .img {
-          width: 100%;
-          height: 100%;
+        .featured-item-img {
+          object-fit: cover;
+          image-rendering: pixelated;
+        }
+
+        .featured-item-img--empty {
+          filter: brightness(0) opacity(0.2);
+          /*filter: grayscale(100%) brightness(50%) opacity(0.3);*/
           object-fit: cover;
           image-rendering: pixelated;
         }

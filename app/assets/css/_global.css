@@ -23,6 +23,8 @@
   --text-x-large: 1.8rem;
   --text-xx-large: 2.5rem;
 
+  --text-weight-md: 500;
+
   @media (max-width: 639px) {
     --text-xx-small: 0.65rem;
     --text-x-small: 0.85rem;
