@@ -14,6 +14,7 @@ import (
 	auction "github.com/adriein/tibia-char/internal/auction/controller"
 	"github.com/adriein/tibia-char/internal/health"
 	"github.com/adriein/tibia-char/pkg/middleware"
+	"github.com/adriein/tibia-char/pkg/vendor"
 )
 
 type TibiaChar struct {
@@ -27,7 +28,7 @@ func New(port string) *TibiaChar {
 
 	ginHtmlRenderer := engine.HTMLRender
 
-	engine.HTMLRender = &HTMLTemplRenderer{FallbackHtmlRenderer: ginHtmlRenderer}
+	engine.HTMLRender = &vendor.HTMLTemplRenderer{FallbackHtmlRenderer: ginHtmlRenderer}
 
 	// Disable trusted proxy warning.
 	engine.SetTrustedProxies(nil)

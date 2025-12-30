@@ -1,7 +1,6 @@
 package controller
 
 import (
-	"context"
 	"log"
 	"net/http"
 	"os"
@@ -46,10 +45,8 @@ func NewController(app *internal.App) *Controller {
 }
 
 func (c *Controller) Get() gin.HandlerFunc {
-	return func(gCtx *gin.Context) {
-		traceID, _ := gCtx.Get(middleware.TraceIDKey)
-
-		ctx := context.WithValue(gCtx, middleware.TraceIDKey, traceID)
+	return func(ctx *gin.Context) {
+		traceID, _ := ctx.Get(middleware.TraceIDKey)
 
 		auctions, err := c.service.GetAuctions(ctx)
 
@@ -58,6 +55,8 @@ func (c *Controller) Get() gin.HandlerFunc {
 			c.logger.Printf("TraceID %s Error getting auctions: %s\n", traceID, eris.ToString(err, true))
 		}
 
-		gCtx.HTML(http.StatusOK, "", view.Index(auctions))
+		renderer := vendor.NewTemplRenderer(ctx, http.StatusOK, view.Index(auctions))
+
+		ctx.Render(http.StatusOK, renderer)
 	}
 }
