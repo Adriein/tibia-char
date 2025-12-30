@@ -24,16 +24,15 @@
     display: flex;
     color: var(--card-header-text-ink, var(--color-surface-ink));
     gap: var(--card-header-space, var(--inline-space));
-    align-items: center;
     background-color: var(--card-header-bg, transparent);
   }
 
   .card__title {
-    font-size: var(--text-medium);
+    font-size: var(--text-normal);
   }
 
   .card__subtitle {
-    font-size: var(--text-small);
+    font-size: var(--text-x-small);
   }
 
   .card__header ~ *,
@@ -84,7 +83,7 @@
     .card__subheader-bid-amount {
       display: flex;
       gap: 2px;
-      font-size: var(--text-small);
+      font-size: var(--text-x-small);
       font-weight: 800;
       align-items: center;
 
@@ -99,7 +98,7 @@
     .card__subheader-bid-time {
       display: flex;
       gap: var(--inline-space);
-      font-size: var(--text-small);
+      font-size: var(--text-x-small);
       align-items: center;
 
       svg {
@@ -113,7 +112,7 @@
       align-items: center;
       display: flex;
       gap: var(--inline-space);
-      font-size: var(--text-small);
+      font-size: var(--text-x-small);
 
       p {
         margin: 0;
@@ -153,7 +152,7 @@
         color: var(--color-ink);
         border: 1px solid var(--color-border);
         border-radius: var(--radius-sm);
-        font-size: var(--text-small);
+        font-size: var(--text-x-small);
         padding: var(--block-space-half) var(--inline-space);
         transition: background-color var(--dialog-duration) var(--ease-out-expo);
 
