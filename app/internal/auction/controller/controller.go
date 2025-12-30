@@ -51,7 +51,7 @@ func (c *Controller) Get() gin.HandlerFunc {
 		auctions, err := c.service.GetAuctions(ctx)
 
 		if err != nil {
-			//Temporal logging until I decide what to do
+			//TODO: Temporal logging until I decide what to do
 			c.logger.Printf("TraceID %s Error getting auctions: %s\n", traceID, eris.ToString(err, true))
 		}
 
