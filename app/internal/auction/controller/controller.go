@@ -9,6 +9,7 @@ import (
 	"github.com/adriein/tibia-char/internal"
 	"github.com/adriein/tibia-char/internal/auction"
 	"github.com/adriein/tibia-char/internal/auction/view"
+	"github.com/adriein/tibia-char/pkg/middleware"
 	"github.com/adriein/tibia-char/pkg/vendor"
 	"github.com/gin-gonic/gin"
 	"github.com/rotisserie/eris"
@@ -46,9 +47,9 @@ func NewController(app *internal.App) *Controller {
 
 func (c *Controller) Get() gin.HandlerFunc {
 	return func(gCtx *gin.Context) {
-		traceID, _ := gCtx.Get("traceID")
+		traceID, _ := gCtx.Get(middleware.TraceIDKey)
 
-		ctx := context.WithValue(gCtx, "traceID", traceID)
+		ctx := context.WithValue(gCtx, middleware.TraceIDKey, traceID)
 
 		auctions, err := c.service.GetAuctions(ctx)
 

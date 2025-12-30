@@ -10,6 +10,20 @@ import templruntime "github.com/a-h/templ/runtime"
 
 import "github.com/adriein/tibia-char/internal/auction/model"
 
+func initTimezone() templ.ComponentScript {
+	return templ.ComponentScript{
+		Name: `__templ_initTimezone_4297`,
+		Function: `function __templ_initTimezone_4297(){if (!document.cookie.includes("User_Tz=")) {
+        const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        document.cookie = "User_Tz=" + tz + ";path=/;max-age=31536000;SameSite=Lax";
+        window.location.reload();
+    }
+}`,
+		Call:       templ.SafeScript(`__templ_initTimezone_4297`),
+		CallInline: templ.SafeScriptInline(`__templ_initTimezone_4297`),
+	}
+}
+
 func Index(auctions []*model.Auction) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -31,7 +45,15 @@ func Index(auctions []*model.Auction) templ.Component {
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<html><head><meta charset=\"UTF-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"><title>Tibia Char</title><link rel=\"icon\" type=\"image/x-icon\" href=\"/assets/images/golden_helmet.ico\"><link rel=\"stylesheet\" href=\"/assets/css/main.css\"></head><body><section>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<html><head>")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = initTimezone().Render(ctx, templ_7745c5c3_Buffer)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<meta charset=\"UTF-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"><title>Tibia Char</title><link rel=\"icon\" type=\"image/x-icon\" href=\"/assets/images/golden_helmet.ico\"><link rel=\"stylesheet\" href=\"/assets/css/main.css\"></head><body><section>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -39,7 +61,7 @@ func Index(auctions []*model.Auction) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "</section></body></html>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "</section></body></html>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

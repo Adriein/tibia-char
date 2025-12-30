@@ -2,10 +2,19 @@ package view
 
 import "github.com/adriein/tibia-char/internal/auction/model"
 
+script initTimezone() {
+    if (!document.cookie.includes("User_Tz=")) {
+        const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        document.cookie = "User_Tz=" + tz + ";path=/;max-age=31536000;SameSite=Lax";
+        window.location.reload();
+    }
+}
 
 templ Index(auctions []*model.Auction) {
   <html>
 		<head>
+			@initTimezone()
+
 			<meta charset="UTF-8"/>
 			<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 

@@ -9,6 +9,7 @@ import (
 	"github.com/adriein/tibia-char/internal/auction"
 	"github.com/adriein/tibia-char/pkg/constants"
 	"github.com/adriein/tibia-char/pkg/helper"
+	"github.com/adriein/tibia-char/pkg/middleware"
 	"github.com/adriein/tibia-char/pkg/vendor"
 	"github.com/gocolly/colly/v2"
 	_ "github.com/lib/pq"
@@ -44,7 +45,7 @@ func main() {
 
 	cron := auction.NewService(tibiaAPI, auctionListHtmlParser, auctionHtmlParser, auctionRepository, worldRepository, mapper, logger)
 
-	ctx := context.WithValue(context.Background(), "traceID", helper.TraceID())
+	ctx := context.WithValue(context.Background(), middleware.TraceIDKey, helper.TraceID())
 
 	err := cron.ScrapBazaar(ctx)
 

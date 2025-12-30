@@ -8,6 +8,7 @@ import (
 
 	"github.com/adriein/tibia-char/internal/auction/model"
 	"github.com/adriein/tibia-char/pkg/helper/collections"
+	"github.com/adriein/tibia-char/pkg/middleware"
 	"github.com/adriein/tibia-char/pkg/vendor"
 	"github.com/rotisserie/eris"
 	"golang.org/x/sync/errgroup"
@@ -39,7 +40,7 @@ func NewService(ta *vendor.TibiaApi, lp *AuctionListHtmlParser, ap *AuctionHtmlP
 }
 
 func (s *Service) ScrapBazaar(ctx context.Context) error {
-	traceID := ctx.Value("traceID")
+	traceID := ctx.Value(middleware.TraceIDKey)
 
 	s.logger.Printf("TraceID: %s Start Scrap Bazaar\n", traceID)
 
