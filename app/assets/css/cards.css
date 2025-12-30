@@ -1,57 +1,56 @@
 @layer components {
   .card {
-    --card-header-space: 1ch;
-    --card-header-padding-block: var(--block-space);
-    --card-header-padding-inline: var(--inline-space-double);
-    --card-subheader-space: 1ch;
-    --card-body-padding-block: var(--block-space);
-    --card-body-padding-inline: var(--block-space);
-    --card-body-vertical-space: var(--block-space);
+    --card-padding-inline: var(--inline-space-double);
+    --card-padding-block: var(--block-space);
 
-    background-color: var(--card-background, var(--color-surface));
-    color: var(--card-color, var(--color-surface-ink));
+    background-color: var(--card-bg, var(--color-surface));
+    color: var(--card-text-ink, var(--color-surface-ink));
     border: var(--card-border-size, 1px) solid var(--card-border-color, var(--color-border));
-    border-radius: var(--card-border-radius, var(--radius-md));
+    border-radius: var(--card-radius, var(--radius-md));
     max-width: 400px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .card__header,
+  .card__subheader,
+  .card__body,
+  .card__footer {
+    padding: var(--card-padding-block) var(--card-padding-inline);
   }
 
   .card__header {
     display: flex;
-    background-color: var(--card-header-background, var(--color-surface));
-    color: var(--card-header-color, var(--color-surface-ink));
-    border-radius: inherit;
-    padding: var(--card-header-padding-block) var(--card-header-padding-inline);
-    gap: var(--card-header-space);
+    color: var(--card-header-text-ink, var(--color-surface-ink));
+    gap: var(--card-header-space, var(--inline-space));
     align-items: center;
+    background-color: var(--card-header-bg, transparent);
+  }
 
-    .card__header-title {
-      h1 {
-        font-size: var(--text-medium);
-      }
-    }
+  .card__title {
+    font-size: var(--text-medium);
+  }
 
-    .card__header-subtitle {
-      h2 {
-        font-size: var(--text-small);
-      }
-    }
+  .card__subtitle {
+    font-size: var(--text-small);
+  }
+
+  .card__header ~ *,
+  .card__body ~ *,
+  .card__footer {
+    border-top: 1px solid var(--color-border);
   }
 
   .card__subheader {
-    border-top: 1px solid var(--card-body-border-color, var(--color-border));
     display: flex;
     align-items: center;
-    gap: var(--card-subheader-space);
+    gap: var(--inline-space);
   }
 
-  .card__body {
-    border-top: 1px solid var(--card-body-border-color, var(--color-border));
-  }
 
   .card__footer {
     display: flex;
-    border-top: 1px solid var(--card-body-border-color, var(--color-border));
-    padding: var(--block-space) var(--inline-space-double);
   }
 
   .card--auction {
@@ -142,7 +141,6 @@
     }
 
     .card__body-skills-container {
-      padding: var(--block-space) var(--inline-space-double);
       display: grid;
       grid-template-columns: repeat(2, 1fr);
       gap: var(--inline-space);
@@ -184,9 +182,8 @@
       }
     }
 
-    .card__body-featured-items-container {
+    .card__featured-items {
       padding: var(--block-space) var(--inline-space-double);
-      /* Use the standard border color for the divider */
       border-top: 1px solid var(--color-border);
       display: flex;
       gap: var(--inline-space);

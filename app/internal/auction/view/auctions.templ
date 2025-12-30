@@ -34,12 +34,8 @@ templ AuctionCard(auction *model.Auction) {
 				<img alt="Auction icon" src={auction.Img}/>
 			</div>
 			<div>
-				<div class="card__header-title">
-					<h1>{auction.CharName}</h1>
-				</div>
-				<div class="card__header-subtitle">
-					<h2>{auction.CharLevel} {auction.CharVocation.Name}</h2>
-				</div>
+				<h1 class="card__title">{auction.CharName}</h1>
+				<h2 class="card__subtitle">{auction.CharLevel} {auction.CharVocation.Name}</h2>
 			</div>
 		</div>
 		<div class="card__subheader">
@@ -136,25 +132,25 @@ templ AuctionCard(auction *model.Auction) {
 					<span>{auction.Skills.Sword}</span>
 				</div>
 			</div>
-			<div class="card__body-featured-items-container">
-				for i := range 4 {
-					if i+1 > len(auction.FeaturedItems) {
-						<div class="featured-item">
-							<img
-								class="featured-item-img--empty"
-								src="https://static.tibia.com/images/charactertrade/objects/2865.gif"
-							/>
-						</div>
-					} else {
-						<div class="featured-item">
-							<img
-								class="featured-item-img"
-								src={fmt.Sprintf("https://static.tibia.com/images/charactertrade/objects/%d.gif", auction.FeaturedItems[i].ItemID)}
-							/>
-						</div>
-					}
+		</div>
+		<div class="card__featured-items">
+			for i := range 4 {
+				if i+1 > len(auction.FeaturedItems) {
+					<div class="featured-item">
+						<img
+							class="featured-item-img--empty"
+							src="https://static.tibia.com/images/charactertrade/objects/2865.gif"
+						/>
+					</div>
+				} else {
+					<div class="featured-item">
+						<img
+							class="featured-item-img"
+							src={fmt.Sprintf("https://static.tibia.com/images/charactertrade/objects/%d.gif", auction.FeaturedItems[i].ItemID)}
+						/>
+					</div>
 				}
-			</div>
+			}
 		</div>
 		<div class="card__footer">
 			<a
