@@ -1,8 +1,10 @@
 package auction
 
 import (
+	"context"
 	"fmt"
 	"math/rand"
+	"net/http"
 	"net/url"
 	"strconv"
 	"strings"
@@ -14,9 +16,12 @@ import (
 )
 
 const (
-	BaseAuctionListURL = "https://www.tibia.com/charactertrade/?subtopic=currentcharactertrades"
-	AuctionIDParam     = "auctionid"
+	BaseAuctionListURL        = "https://www.tibia.com/charactertrade/?subtopic=currentcharactertrades"
+	AuctionIDParam            = "auctionid"
+	TibiaDotComForbiddenError = "Forbidden"
 )
+
+var RateLimitError = eris.New("Error rate limit reached")
 
 type AuctionListHtmlParser struct {
 	collector *colly.Collector
@@ -176,34 +181,46 @@ func NewAuctionHtmlParser(c *colly.Collector) *AuctionHtmlParser {
 	}
 }
 
-func (p *AuctionHtmlParser) Parse(auctionId int, link string) (*model.AuctionDTO, error) {
+func (p *AuctionHtmlParser) Parse(ctx context.Context, auctionId int, link string) (*model.AuctionDTO, error) {
 	dto := model.AuctionDTO{
 		AuctionId: auctionId,
 		Link:      fmt.Sprintf("https://www.tibia.com/charactertrade/?subtopic=currentcharactertrades&page=details&auctionid=%d", auctionId),
 		Skills:    &model.SkillsDTO{},
 	}
 
-	var parseErrors []error
+	var parseErr error
 
 	c := p.collector.Clone()
 
 	c.OnError(func(r *colly.Response, err error) {
-		parseErrors = append(parseErrors, eris.Errorf("Failed to fetch %s: status %d", r.Request.URL, r.StatusCode))
+		if r.StatusCode == http.StatusForbidden {
+			parseErr = eris.Wrapf(RateLimitError, "Failed to fetch %s: status %d", r.Request.URL, r.StatusCode)
+
+			return
+		}
+
+		parseErr = eris.Wrapf(err, "Failed to fetch %s: status %d", r.Request.URL, r.StatusCode)
 	})
 
 	c.OnHTML("div[class=Auction]", func(e *colly.HTMLElement) {
-		e.ForEach("div[class]", func(_ int, ch *colly.HTMLElement) {
+		e.ForEachWithBreak("div[class]", func(_ int, ch *colly.HTMLElement) bool {
 			switch ch.Attr("class") {
 			case "AuctionHeader":
 				if err := p.parseAuctionHeader(e, &dto); err != nil {
-					parseErrors = append(parseErrors, err)
+					parseErr = eris.Wrap(err, "Error parsing auction header")
+
+					return false
 				}
 
 			case "AuctionBody":
 				if err := p.parseAuctionBody(e, &dto); err != nil {
-					parseErrors = append(parseErrors, err)
+					parseErr = eris.Wrap(err, "Error parsing auction body")
+
+					return false
 				}
 			}
+
+			return true
 		})
 	})
 
@@ -212,11 +229,15 @@ func (p *AuctionHtmlParser) Parse(auctionId int, link string) (*model.AuctionDTO
 	})
 
 	if err := c.Visit(link); err != nil {
-		parseErrors = append(parseErrors, eris.Wrap(err, "Visit failed"))
+		if err.Error() == TibiaDotComForbiddenError {
+			return nil, eris.Wrapf(RateLimitError, "Error visiting link")
+		}
+
+		return nil, eris.Wrapf(err, "Error visiting link")
 	}
 
-	if len(parseErrors) > 0 {
-		return &dto, eris.Errorf("Parsing failed with %d errors: %v", len(parseErrors), parseErrors)
+	if parseErr != nil {
+		return nil, parseErr
 	}
 
 	return &dto, nil
@@ -243,7 +264,7 @@ func (p *AuctionHtmlParser) parseAuctionHeader(e *colly.HTMLElement, dto *model.
 }
 
 func (p *AuctionHtmlParser) parseAuctionBody(e *colly.HTMLElement, dto *model.AuctionDTO) error {
-	var errors []error
+	var bodyErr error
 
 	e.ForEachWithBreak("div", func(_ int, ch *colly.HTMLElement) bool {
 		classes := strings.Split(ch.Attr("class"), " ")
@@ -276,7 +297,7 @@ func (p *AuctionHtmlParser) parseAuctionBody(e *colly.HTMLElement, dto *model.Au
 					dateCET, err := time.Parse("Jan 02 2006, 15:04 MST", normDate)
 
 					if err != nil {
-						errors = append(errors, eris.Errorf("Error parsing auction date: %s", err.Error()))
+						bodyErr = eris.Wrap(err, "Error parsing auction date")
 
 						return false
 					}
@@ -299,7 +320,7 @@ func (p *AuctionHtmlParser) parseAuctionBody(e *colly.HTMLElement, dto *model.Au
 					bid, err := strconv.Atoi(rawBid)
 
 					if err != nil {
-						errors = append(errors, eris.Errorf("Error converting bid to int: %s", err.Error()))
+						bodyErr = eris.Wrap(err, "Error converting bid to int")
 
 						return false
 					}
@@ -321,8 +342,8 @@ func (p *AuctionHtmlParser) parseAuctionBody(e *colly.HTMLElement, dto *model.Au
 		return true
 	})
 
-	if len(errors) > 0 {
-		return eris.Errorf("Auction body parsing errors: %v", errors)
+	if bodyErr != nil {
+		return eris.Wrap(bodyErr, "Error parsing auction body")
 	}
 
 	return nil
@@ -362,6 +383,7 @@ func (p *AuctionHtmlParser) parseAuctionGeneral(e *colly.HTMLElement, dto *model
 		}
 
 		p.extractWorldTransfer(el, dto)
+
 		return true
 	})
 

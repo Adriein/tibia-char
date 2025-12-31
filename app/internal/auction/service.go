@@ -25,7 +25,7 @@ type Service struct {
 }
 
 const AuctionDetailMaxConcurrency = 5
-const AuctionLinkMaxConcurrency = 2
+const AuctionLinkMaxConcurrency = 5
 
 func NewService(ta *vendor.TibiaApi, lp *AuctionListHtmlParser, ap *AuctionHtmlParser, ar AuctionRepository, wr WorldRepository, m *Mapper, logger *log.Logger) *Service {
 	return &Service{
@@ -140,6 +140,9 @@ func (s *Service) scrapAuctionDetail(auctionLinkSet *model.AuctionLinkSet) error
 
 	semaphore := make(chan struct{}, AuctionDetailMaxConcurrency)
 
+	failed := model.NewAuctionLinkSet()
+	scrapped := 0
+
 	for i, chunk := range links {
 		g, ctx := errgroup.WithContext(context.Background())
 
@@ -150,6 +153,7 @@ func (s *Service) scrapAuctionDetail(auctionLinkSet *model.AuctionLinkSet) error
 		}
 
 		for _, kv := range chunk {
+			scrapped++
 			g.Go(func() error {
 				select {
 				case <-ctx.Done():
@@ -161,10 +165,16 @@ func (s *Service) scrapAuctionDetail(auctionLinkSet *model.AuctionLinkSet) error
 				auctionId := kv.Key
 				linkURL := kv.Value
 
-				dto, err := s.auctionParser.Parse(auctionId, linkURL)
+				dto, err := s.auctionParser.Parse(ctx, auctionId, linkURL)
 
 				if err != nil {
-					return eris.Wrapf(err, "Error parsing auctionId %d", auctionId)
+					if eris.Is(err, RateLimitError) {
+						return eris.Wrapf(err, "Rate limit reached parsing auctionId %d", auctionId)
+					}
+
+					failed.Set(auctionId, linkURL)
+
+					return nil
 				}
 
 				auction, err := s.mapper.FromDTO(dto)
@@ -187,6 +197,8 @@ func (s *Service) scrapAuctionDetail(auctionLinkSet *model.AuctionLinkSet) error
 			return err
 		}
 	}
+
+	s.logger.Printf("Total to scrap: %d, Scrapped: %d, Failed: %d", len(auctionLinkSet.Data), scrapped, len(failed.Data))
 
 	return nil
 }
