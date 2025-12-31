@@ -186,6 +186,7 @@ func (p *AuctionHtmlParser) Parse(ctx context.Context, auctionId int, link strin
 		AuctionId: auctionId,
 		Link:      fmt.Sprintf("https://www.tibia.com/charactertrade/?subtopic=currentcharactertrades&page=details&auctionid=%d", auctionId),
 		Skills:    &model.SkillsDTO{},
+		Charm:     &model.CharmDTO{},
 	}
 
 	var parseErr error
@@ -376,18 +377,23 @@ func (p *AuctionHtmlParser) extractGender(auctionHeader string) string {
 }
 
 func (p *AuctionHtmlParser) parseAuctionGeneral(e *colly.HTMLElement, dto *model.AuctionDTO) error {
+	var auctionGeneralErr error
+
 	e.ForEachWithBreak("span[class=LabelV],td[class=PercentageColumn]", func(_ int, el *colly.HTMLElement) bool {
 		if err := p.extractSkills(el, dto); err != nil {
-			//TODO: propagate errors here i suppose context is needed
+			auctionGeneralErr = err
+
 			return false
 		}
 
 		p.extractWorldTransfer(el, dto)
 
+		p.extractCharmPoints(el, dto)
+
 		return true
 	})
 
-	return nil
+	return auctionGeneralErr
 }
 
 func (p *AuctionHtmlParser) extractWorldTransfer(e *colly.HTMLElement, dto *model.AuctionDTO) {
@@ -442,6 +448,36 @@ func (p *AuctionHtmlParser) extractSkills(e *colly.HTMLElement, dto *model.Aucti
 				dto.Skills.Sword = skill
 			}
 		}
+	}
+
+	return nil
+}
+
+func (p *AuctionHtmlParser) extractCharmPoints(e *colly.HTMLElement, dto *model.AuctionDTO) error {
+	text := e.Text
+
+	switch text {
+	case "Charm Expansion:":
+		charmExpansionText := e.DOM.Siblings().Children().Get(0).Data
+
+		dto.Charm.Expansion = strings.Contains(charmExpansionText, "no")
+
+		return nil
+	case "Available Charm Points:",
+		"Spent Charm Points:",
+		"Available Minor Charm Echoes:",
+		"Spent Minor Charm Echoes:":
+		pointString := e.DOM.Siblings().Get(0).Data
+
+		points, err := strconv.Atoi(pointString)
+
+		if err != nil {
+			return err
+		}
+
+		dto.Charm.Points += points
+
+		return nil
 	}
 
 	return nil

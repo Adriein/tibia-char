@@ -22,6 +22,7 @@ type AuctionDTO struct {
 	CharGender       string
 	CharWorld        string
 	Skills           *SkillsDTO
+	Charm            *CharmDTO
 	WorldTransfer    bool
 	Bid              int
 	AuctionStartTime time.Time
@@ -37,6 +38,11 @@ type SkillsDTO struct {
 	MagicLevel int
 	Shielding  int
 	Sword      int
+}
+
+type CharmDTO struct {
+	Expansion bool
+	Points    int
 }
 
 type Vocation struct {
