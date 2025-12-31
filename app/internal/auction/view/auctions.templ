@@ -30,9 +30,16 @@ import (
 
 templ AuctionCard(auction *model.Auction) {
 	{{
-		loc := ctx.Value(middleware.TimezoneKey).(*time.Location)
+		loc, ok := ctx.Value(middleware.TimezoneKey).(*time.Location)
 
-		auctionEnd := auction.AuctionEnd.In(loc).Format(time.DateTime)
+		if !ok {
+			loc = time.UTC
+		}
+
+		prettyDate := auction.AuctionEnd.In(loc).Format("Jan 02, 2006 at 15:04")
+		abbr, _ := auction.AuctionEnd.In(loc).Zone()
+
+		auctionEnd := fmt.Sprintf("%s (%s)", prettyDate, abbr)
 	}}
 	<div class="card card--auction">
 		<div class="card__header">
