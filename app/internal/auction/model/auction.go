@@ -139,6 +139,43 @@ type Imbuement struct {
 	Name string
 }
 
+var imbuementMap = map[string]*Imbuement{
+	"powerful bash":           {ID: 1, Name: "Powerful Bash"},
+	"powerful blockade":       {ID: 2, Name: "Powerful Blockade"},
+	"powerful chop":           {ID: 3, Name: "Powerful Chop"},
+	"powerful cloud fabric":   {ID: 4, Name: "Powerful Cloud Fabric"},
+	"powerful demon presence": {ID: 5, Name: "Powerful Demon Presence"},
+	"powerful dragon hide":    {ID: 6, Name: "Powerful Dragon Hide"},
+	"powerful electrify":      {ID: 7, Name: "Powerful Electrify"},
+	"powerful epiphany":       {ID: 8, Name: "Powerful Epiphany"},
+	"powerful featherweight":  {ID: 9, Name: "Powerful Featherweight"},
+	"powerful frost":          {ID: 10, Name: "Powerful Frost"},
+	"powerful lich shroud":    {ID: 11, Name: "Powerful Lich Shroud"},
+	"powerful precision":      {ID: 12, Name: "Powerful Precision"},
+	"powerful punch":          {ID: 13, Name: "Powerful Punch"},
+	"powerful quara scale":    {ID: 14, Name: "Powerful Quara Scale"},
+	"powerful reap":           {ID: 15, Name: "Powerful Reap"},
+	"powerful scorch":         {ID: 16, Name: "Powerful Scorch"},
+	"powerful slash":          {ID: 17, Name: "Powerful Slash"},
+	"powerful snake skin":     {ID: 18, Name: "Powerful Snake Skin"},
+	"powerful strike":         {ID: 19, Name: "Powerful Strike"},
+	"powerful swiftness":      {ID: 20, Name: "Powerful Swiftness"},
+	"powerful vampirism":      {ID: 21, Name: "Powerful Vampirism"},
+	"powerful venom":          {ID: 22, Name: "Powerful Venom"},
+	"powerful vibrancy":       {ID: 23, Name: "Powerful Vibrancy"},
+	"powerful void":           {ID: 24, Name: "Powerful Void"},
+}
+
+func NewImbuementFromName(name string) (*Imbuement, error) {
+	lowerCaseImbuement := strings.ToLower(name)
+
+	if imbuement, ok := imbuementMap[lowerCaseImbuement]; ok {
+		return imbuement, nil
+	}
+
+	return nil, eris.Errorf("Imbuement %s not registered", name)
+}
+
 type Auction struct {
 	ID               int64
 	AuctionID        int

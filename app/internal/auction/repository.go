@@ -7,6 +7,7 @@ import (
 
 	"github.com/adriein/tibia-char/internal/auction/model"
 	"github.com/adriein/tibia-char/pkg/enums"
+	"github.com/lib/pq"
 	"github.com/rotisserie/eris"
 )
 
@@ -348,7 +349,7 @@ func (r *PgAuctionRepository) Save(auction *model.Auction) error {
 	_, err = tx.Exec(
 		imbuementsQuery,
 		auction.AuctionID,
-		ids,
+		pq.Array(ids),
 	)
 
 	if err != nil {

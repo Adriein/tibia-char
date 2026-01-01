@@ -61,8 +61,14 @@ func (m *Mapper) FromDTO(dto *model.AuctionDTO) (*model.Auction, error) {
 
 	var imbuements []*model.Imbuement
 
-	for _, imbuement := range dto.Imbuements {
-		imbuements = append(imbuements, &model.Imbuement{Name: imbuement.Name})
+	for _, imbuementDTO := range dto.Imbuements {
+		imbuement, err := model.NewImbuementFromName(imbuementDTO.Name)
+
+		if err != nil {
+			return nil, eris.Wrap(err, "Error converting ImbuementDTO to Imbuement")
+		}
+
+		imbuements = append(imbuements, imbuement)
 	}
 
 	return &model.Auction{
