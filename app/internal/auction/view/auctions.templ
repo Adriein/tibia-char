@@ -90,56 +90,56 @@ templ AuctionCard(auction *model.Auction) {
 			<div class="card__body-skills-container">
 				<div class="skill-item">
 					<div>
-						<img src="/assets/images/stonecutter_axe.png"/>
+						<img alt="axe fighting" src="/assets/images/stonecutter_axe.png"/>
 						<p>Axe</p>
 					</div>
 					<span>{auction.Skills.Axe}</span>
 				</div>
 				<div class="skill-item">
 					<div>
-						<img src="/assets/images/thunder_hammer.png"/>
+						<img alt="club fighting" src="/assets/images/thunder_hammer.png"/>
 						<p>Club</p>
 					</div>
 					<span>{auction.Skills.Club}</span>
 				</div>
 				<div class="skill-item">
 					<div>
-						<img src="/assets/images/soulbleeder.png"/>
+						<img alt="distance fighting" src="/assets/images/soulbleeder.png"/>
 						<p>Distance</p>
 					</div>
 					<span>{auction.Skills.Distance}</span>
 				</div>
 				<div class="skill-item">
 					<div>
-						<img src="/assets/images/fishing_rod.png"/>
+						<img alt="fishing" src="/assets/images/fishing_rod.png"/>
 						<p>Fishing</p>
 					</div>
 					<span>{auction.Skills.Fishing}</span>
 				</div>
 				<div class="skill-item">
 					<div>
-						<img src="/assets/images/grand_sanguine_claws.png"/>
+						<img alt="fist fighting" src="/assets/images/grand_sanguine_claws.png"/>
 						<p>Fist</p>
 					</div>
 					<span>{auction.Skills.Fist}</span>
 				</div>
 				<div class="skill-item">
 					<div>
-						<img src="/assets/images/spell_book.png"/>
+						<img alt="magic level" src="/assets/images/spell_book.png"/>
 						<p>Magic Level</p>
 					</div>
 					<span>{auction.Skills.MagicLevel}</span>
 				</div>
 				<div class="skill-item">
 					<div>
-						<img src="/assets/images/demon_shield.png"/>
+						<img alt="shielding" src="/assets/images/demon_shield.png"/>
 						<p>Shielding</p>
 					</div>
 					<span>{auction.Skills.Shielding}</span>
 				</div>
 				<div class="skill-item">
 					<div>
-						<img src="/assets/images/magic_sword.png"/>
+						<img alt="sword fighting" src="/assets/images/magic_sword.png"/>
 						<p>Sword</p>
 					</div>
 					<span>{auction.Skills.Sword}</span>
@@ -151,6 +151,7 @@ templ AuctionCard(auction *model.Auction) {
 				if i+1 > len(auction.FeaturedItems) {
 					<div class="featured-item">
 						<img
+							alt="empty slot"
 							class="featured-item-img--empty"
 							src="https://static.tibia.com/images/charactertrade/objects/2865.gif"
 						/>
@@ -158,12 +159,20 @@ templ AuctionCard(auction *model.Auction) {
 				} else {
 					<div class="featured-item">
 						<img
+							alt={auction.FeaturedItems[i].ItemID}
 							class="featured-item-img"
 							src={fmt.Sprintf("https://static.tibia.com/images/charactertrade/objects/%d.gif", auction.FeaturedItems[i].ItemID)}
 						/>
 					</div>
 				}
 			}
+		</div>
+		<div class="card__info">
+			<div class="card__info-item">
+				<img alt="Charm point icon" src="https://static.tibia.com/images//charactertrade/charms/icon-charmpoints.png"/>
+				<span>Charm Points:</span>
+				<span>{auction.Charm.Points}</span>
+			</div>
 		</div>
 		<div class="card__footer">
 			<a

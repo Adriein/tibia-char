@@ -215,6 +215,27 @@
       }
     }
 
+    .card__info {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: var(--inline-space);
+      padding: var(--card-padding-block) var(--card-padding-inline);
+    }
+
+    .card__info .card__info-item {
+      display: flex;
+      gap: var(--inline-space);
+      align-items: center;
+      font-size: var(--text-x-small);
+
+      img {
+        width: 18px;
+        height: 18px;
+        object-fit: cover;
+        image-rendering: pixelated;
+      }
+    }
+
     .card__footer a {
       display: block;
       width: 100%;
