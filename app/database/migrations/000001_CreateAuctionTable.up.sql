@@ -65,8 +65,7 @@ CREATE TABLE IF NOT EXISTS tc_auction_recording (
 CREATE INDEX idx_tar_auction_id_time ON tc_auction_recording (tar_auction_id, tar_date_add DESC);
 
 CREATE TABLE IF NOT EXISTS tc_skills (
-    ts_id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    ts_auction_id INT NOT NULL UNIQUE,
+    ts_auction_id INT PRIMARY KEY,
     ts_axe INT NOT NULL,
     ts_club INT NOT NULL,
     ts_distance INT NOT NULL,
