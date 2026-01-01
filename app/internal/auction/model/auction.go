@@ -10,25 +10,6 @@ import (
 	"github.com/rotisserie/eris"
 )
 
-type AuctionDTO struct {
-	AuctionId        int
-	Link             string
-	ImgUrl           string
-	FeaturedItems    []*ImgDisplay
-	Featured         []string
-	CharName         string
-	CharLevel        int
-	CharVocation     string
-	CharGender       string
-	CharWorld        string
-	Skills           *SkillsDTO
-	Charm            *CharmDTO
-	WorldTransfer    bool
-	Bid              int
-	AuctionStartTime time.Time
-	AuctionEndTime   time.Time
-}
-
 type SkillsDTO struct {
 	Axe        int
 	Club       int
@@ -43,6 +24,30 @@ type SkillsDTO struct {
 type CharmDTO struct {
 	Expansion bool
 	Points    int
+}
+
+type ImbuementDTO struct {
+	Name string
+}
+
+type AuctionDTO struct {
+	AuctionId        int
+	Link             string
+	ImgUrl           string
+	FeaturedItems    []*ImgDisplay
+	Featured         []string
+	CharName         string
+	CharLevel        int
+	CharVocation     string
+	CharGender       string
+	CharWorld        string
+	Skills           *SkillsDTO
+	Charm            *CharmDTO
+	Imbuements       []*ImbuementDTO
+	WorldTransfer    bool
+	Bid              int
+	AuctionStartTime time.Time
+	AuctionEndTime   time.Time
 }
 
 type Vocation struct {
@@ -129,6 +134,11 @@ type Charm struct {
 	Points    int
 }
 
+type Imbuement struct {
+	ID   int
+	Name string
+}
+
 type Auction struct {
 	ID               int64
 	AuctionID        int
@@ -143,6 +153,7 @@ type Auction struct {
 	CharWorld        *World
 	Skills           *Skills
 	Charm            *Charm
+	Imbuements       []*Imbuement
 	WorldTransfer    bool
 	Bid              int
 	AuctionStart     time.Time

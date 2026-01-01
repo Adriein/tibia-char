@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/PuerkitoBio/goquery"
 	"github.com/adriein/tibia-char/internal/auction/model"
 	"github.com/gocolly/colly/v2"
 	"github.com/rotisserie/eris"
@@ -228,6 +229,12 @@ func (p *AuctionHtmlParser) Parse(ctx context.Context, auctionId int, link strin
 	c.OnHTML("table[id=CharacterDetails]", func(e *colly.HTMLElement) {
 		if err := p.parseAuctionGeneral(e, &dto); err != nil {
 			parseErr = eris.Wrap(err, "Error parsing auction general")
+		}
+	})
+
+	c.OnHTML("div[id=Imbuements]", func(e *colly.HTMLElement) {
+		if err := p.parseAuctionImbuements(e, &dto); err != nil {
+			parseErr = eris.Wrap(err, "Error parsing imbuements general")
 		}
 	})
 
@@ -485,6 +492,20 @@ func (p *AuctionHtmlParser) extractCharmPoints(e *colly.HTMLElement, dto *model.
 
 		return nil
 	}
+
+	return nil
+}
+
+func (p *AuctionHtmlParser) parseAuctionImbuements(e *colly.HTMLElement, dto *model.AuctionDTO) error {
+	e.DOM.Find("tr[class=LabelH]").Siblings().EachWithBreak(func(i int, s *goquery.Selection) bool {
+		if s.HasClass("IndicateMoreEntries") {
+			return false
+		}
+
+		dto.Imbuements = append(dto.Imbuements, &model.ImbuementDTO{Name: s.Children().Eq(0).Text()})
+
+		return true
+	})
 
 	return nil
 }

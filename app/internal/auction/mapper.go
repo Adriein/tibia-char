@@ -59,6 +59,12 @@ func (m *Mapper) FromDTO(dto *model.AuctionDTO) (*model.Auction, error) {
 		featuredItems = append(featuredItems, &model.FeaturedItem{AuctionID: dto.AuctionId, ItemID: itemID})
 	}
 
+	var imbuements []*model.Imbuement
+
+	for _, imbuement := range dto.Imbuements {
+		imbuements = append(imbuements, &model.Imbuement{Name: imbuement.Name})
+	}
+
 	return &model.Auction{
 		AuctionID:        dto.AuctionId,
 		TibiaAuctionLink: dto.Link,
@@ -91,7 +97,8 @@ func (m *Mapper) FromDTO(dto *model.AuctionDTO) (*model.Auction, error) {
 			Expansion: dto.Charm.Expansion,
 			Points:    dto.Charm.Points,
 		},
-		DateAdd: time.Now(),
-		DateUpd: time.Now(),
+		Imbuements: imbuements,
+		DateAdd:    time.Now(),
+		DateUpd:    time.Now(),
 	}, nil
 }
