@@ -458,16 +458,16 @@ func (p *AuctionHtmlParser) extractCharmPoints(e *colly.HTMLElement, dto *model.
 
 	switch text {
 	case "Charm Expansion:":
-		charmExpansionText := e.DOM.Siblings().Children().Get(0).Data
+		charmExpansionText := e.DOM.Siblings().Children().Get(0).Attr[0].Val
 
-		dto.Charm.Expansion = strings.Contains(charmExpansionText, "no")
+		dto.Charm.Expansion = strings.Contains(charmExpansionText, "icon_yes.png")
 
 		return nil
 	case "Available Charm Points:",
 		"Spent Charm Points:",
 		"Available Minor Charm Echoes:",
 		"Spent Minor Charm Echoes:":
-		pointString := e.DOM.Siblings().Get(0).Data
+		pointString := e.DOM.Siblings().Eq(0).Text()
 
 		points, err := strconv.Atoi(pointString)
 

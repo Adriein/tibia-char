@@ -56,11 +56,11 @@ func (m *Mapper) FromDTO(dto *model.AuctionDTO) (*model.Auction, error) {
 			return nil, eris.Wrap(err, "Error parsing itemIDString to int")
 		}
 
-		featuredItems = append(featuredItems, &model.FeaturedItem{AuctionID: int64(dto.AuctionId), ItemID: itemID})
+		featuredItems = append(featuredItems, &model.FeaturedItem{AuctionID: dto.AuctionId, ItemID: itemID})
 	}
 
 	return &model.Auction{
-		AuctionID:        int64(dto.AuctionId),
+		AuctionID:        dto.AuctionId,
 		TibiaAuctionLink: dto.Link,
 		Img:              dto.ImgUrl,
 		FeaturedItems:    featuredItems,
@@ -76,7 +76,7 @@ func (m *Mapper) FromDTO(dto *model.AuctionDTO) (*model.Auction, error) {
 		AuctionEnd:       dto.AuctionEndTime,
 		Status:           enums.RecordableActive,
 		Skills: &model.Skills{
-			AuctionID:  int64(dto.AuctionId),
+			AuctionID:  dto.AuctionId,
 			Axe:        dto.Skills.Axe,
 			Club:       dto.Skills.Club,
 			Distance:   dto.Skills.Distance,
@@ -85,6 +85,11 @@ func (m *Mapper) FromDTO(dto *model.AuctionDTO) (*model.Auction, error) {
 			MagicLevel: dto.Skills.MagicLevel,
 			Shielding:  dto.Skills.Shielding,
 			Sword:      dto.Skills.Sword,
+		},
+		Charm: &model.Charm{
+			AuctionID: dto.AuctionId,
+			Expansion: dto.Charm.Expansion,
+			Points:    dto.Charm.Points,
 		},
 		DateAdd: time.Now(),
 		DateUpd: time.Now(),

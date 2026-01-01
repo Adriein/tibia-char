@@ -306,6 +306,30 @@ func (r *PgAuctionRepository) Save(auction *model.Auction) error {
 		}
 	}
 
+	charmQuery := `
+		INSERT INTO tc_charm (
+			tc_auction_id,
+			tc_expansion,
+			tc_points
+		)
+		VALUES ($1, $2, $3)
+		ON CONFLICT (tc_auction_id) DO NOTHING
+		;
+	`
+
+	_, err = tx.Exec(
+		charmQuery,
+		auction.Charm.AuctionID,
+		auction.Charm.Expansion,
+		auction.Charm.Points,
+	)
+
+	if err != nil {
+		tx.Rollback()
+
+		return eris.Wrap(err, "Error in insert on tc_charm")
+	}
+
 	return tx.Commit()
 }
 
@@ -323,6 +347,7 @@ func (r *PgAuctionRepository) GetActiveAuctions(ctx context.Context) ([]*model.A
 			w.*,
 			ts.*,
 			tfi.*,
+			ch.*,
 			a.ta_world_transfer,
 			a.ta_current_bid,
 			a.ta_auction_start,
@@ -341,9 +366,11 @@ func (r *PgAuctionRepository) GetActiveAuctions(ctx context.Context) ([]*model.A
 		INNER JOIN
 			tc_auction_recording tar ON a.ta_id = tar.tar_recordable_id
 		INNER JOIN
-			tc_skills ts ON tar.tar_auction_id = ts_auction_id
+			tc_skills ts ON tar.tar_auction_id = ts.ts_auction_id
 		LEFT JOIN
-			tc_featured_items tfi ON tar_auction_id = tfi_auction_id
+			tc_featured_items tfi ON tar_auction_id = tfi.tfi_auction_id
+		INNER JOIN
+			tc_charm ch ON tar_auction_id = ch.tc_auction_id
 		WHERE
 			tar.tar_status = 'active'
 		ORDER BY a.ta_auction_end ASC;
@@ -361,8 +388,8 @@ func (r *PgAuctionRepository) GetActiveAuctions(ctx context.Context) ([]*model.A
 
 	defer rows.Close()
 
-	auctionMap := make(map[int64]*model.Auction)
-	var orderedIDs []int64
+	auctionMap := make(map[int]*model.Auction)
+	var orderedIDs []int
 
 	for rows.Next() {
 		var (
@@ -375,8 +402,9 @@ func (r *PgAuctionRepository) GetActiveAuctions(ctx context.Context) ([]*model.A
 			statusString    string
 			skills          model.Skills
 			tfiID           sql.NullInt64
-			tfiAuctionID    sql.NullInt64
+			tfiAuctionID    sql.NullInt32
 			tfiItemID       sql.NullInt32
+			charm           model.Charm
 		)
 
 		err := rows.Scan(
@@ -395,7 +423,6 @@ func (r *PgAuctionRepository) GetActiveAuctions(ctx context.Context) ([]*model.A
 			&world.Location,
 			&battleEyeString,
 			&world.Pvp,
-			&skills.ID,
 			&skills.AuctionID,
 			&skills.Axe,
 			&skills.Club,
@@ -408,6 +435,9 @@ func (r *PgAuctionRepository) GetActiveAuctions(ctx context.Context) ([]*model.A
 			&tfiID,
 			&tfiAuctionID,
 			&tfiItemID,
+			&charm.AuctionID,
+			&charm.Expansion,
+			&charm.Points,
 			&auction.WorldTransfer,
 			&auction.Bid,
 			&auction.AuctionStart,
@@ -425,7 +455,7 @@ func (r *PgAuctionRepository) GetActiveAuctions(ctx context.Context) ([]*model.A
 
 		if exists && tfiID.Valid {
 			featuredItem.ID = tfiID.Int64
-			featuredItem.AuctionID = tfiAuctionID.Int64
+			featuredItem.AuctionID = int(tfiAuctionID.Int32)
 			featuredItem.ItemID = int(tfiItemID.Int32)
 
 			existingAuction.FeaturedItems = append(existingAuction.FeaturedItems, &featuredItem)
@@ -451,10 +481,11 @@ func (r *PgAuctionRepository) GetActiveAuctions(ctx context.Context) ([]*model.A
 		world.BattleEye = battleEyeEnum
 		auction.CharWorld = &world
 		auction.Skills = &skills
+		auction.Charm = &charm
 
 		if tfiID.Valid {
 			featuredItem.ID = tfiID.Int64
-			featuredItem.AuctionID = tfiAuctionID.Int64
+			featuredItem.AuctionID = int(tfiAuctionID.Int32)
 			featuredItem.ItemID = int(tfiItemID.Int32)
 
 			auction.FeaturedItems = append(auction.FeaturedItems, &featuredItem)

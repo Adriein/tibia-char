@@ -106,8 +106,7 @@ type World struct {
 }
 
 type Skills struct {
-	ID         int64
-	AuctionID  int64
+	AuctionID  int
 	Axe        int
 	Club       int
 	Distance   int
@@ -120,13 +119,19 @@ type Skills struct {
 
 type FeaturedItem struct {
 	ID        int64
-	AuctionID int64
+	AuctionID int
 	ItemID    int
+}
+
+type Charm struct {
+	AuctionID int
+	Expansion bool
+	Points    int
 }
 
 type Auction struct {
 	ID               int64
-	AuctionID        int64
+	AuctionID        int
 	TibiaAuctionLink string
 	Img              string
 	FeaturedItems    []*FeaturedItem
@@ -137,6 +142,7 @@ type Auction struct {
 	CharGender       *Gender
 	CharWorld        *World
 	Skills           *Skills
+	Charm            *Charm
 	WorldTransfer    bool
 	Bid              int
 	AuctionStart     time.Time

@@ -66,7 +66,7 @@ CREATE INDEX idx_tar_auction_id_time ON tc_auction_recording (tar_auction_id, ta
 
 CREATE TABLE IF NOT EXISTS tc_skills (
     ts_id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    ts_auction_id BIGINT NOT NULL UNIQUE,
+    ts_auction_id INT NOT NULL UNIQUE,
     ts_axe INT NOT NULL,
     ts_club INT NOT NULL,
     ts_distance INT NOT NULL,
@@ -83,7 +83,7 @@ CREATE TABLE IF NOT EXISTS tc_skills (
 
 CREATE TABLE IF NOT EXISTS tc_featured_items (
     tfi_id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    tfi_auction_id BIGINT NOT NULL,
+    tfi_auction_id INT NOT NULL,
     tfi_item_id INT,
 
     CONSTRAINT fk_featured_items_auction_recording
@@ -92,6 +92,16 @@ CREATE TABLE IF NOT EXISTS tc_featured_items (
 
     CONSTRAINT unique_auction_item
         UNIQUE (tfi_auction_id, tfi_item_id)
+);
+
+CREATE TABLE IF NOT EXISTS tc_charm (
+    tc_auction_id INT PRIMARY KEY,
+    tc_expansion BOOLEAN,
+    tc_points INT,
+
+    CONSTRAINT fk_charm_auction_recording
+        FOREIGN KEY (tc_auction_id)
+        REFERENCES tc_auction_recording (tar_auction_id)
 );
 
 INSERT INTO tc_vocation (tv_name) VALUES ('Knight'), ('Paladin'), ('Sorcerer'), ('Druid'), ('Monk'), ('None');
