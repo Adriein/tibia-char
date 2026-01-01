@@ -226,7 +226,9 @@ func (p *AuctionHtmlParser) Parse(ctx context.Context, auctionId int, link strin
 	})
 
 	c.OnHTML("table[id=CharacterDetails]", func(e *colly.HTMLElement) {
-		p.parseAuctionGeneral(e, &dto)
+		if err := p.parseAuctionGeneral(e, &dto); err != nil {
+			parseErr = eris.Wrap(err, "Error parsing auction general")
+		}
 	})
 
 	if err := c.Visit(link); err != nil {
@@ -388,7 +390,11 @@ func (p *AuctionHtmlParser) parseAuctionGeneral(e *colly.HTMLElement, dto *model
 
 		p.extractWorldTransfer(el, dto)
 
-		p.extractCharmPoints(el, dto)
+		if err := p.extractCharmPoints(el, dto); err != nil {
+			auctionGeneralErr = err
+
+			return false
+		}
 
 		return true
 	})
@@ -469,7 +475,7 @@ func (p *AuctionHtmlParser) extractCharmPoints(e *colly.HTMLElement, dto *model.
 		"Spent Minor Charm Echoes:":
 		pointString := e.DOM.Siblings().Eq(0).Text()
 
-		points, err := strconv.Atoi(pointString)
+		points, err := strconv.Atoi(strings.ReplaceAll(pointString, ",", ""))
 
 		if err != nil {
 			return err
