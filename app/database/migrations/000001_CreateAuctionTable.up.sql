@@ -103,6 +103,53 @@ CREATE TABLE IF NOT EXISTS tc_charm (
         REFERENCES tc_auction_recording (tar_auction_id)
 );
 
+CREATE TABLE IF NOT EXISTS tc_imbuements (
+    ti_id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    ti_name VARCHAR
+);
+
+CREATE TABLE IF NOT EXISTS tc_auction_imbuements (
+    tai_auction_id INT NOT NULL,
+    tai_imbuement_id INT NOT NULL,
+    PRIMARY KEY (tai_auction_id, tai_imbuement_id),
+
+    CONSTRAINT fk_auction_imbuements_auction_recording
+        FOREIGN KEY (tai_auction_id)
+        REFERENCES tc_auction_recording (tar_auction_id),
+
+    CONSTRAINT fk_auction_imbuements_imbuements
+        FOREIGN KEY (tai_imbuement_id)
+        REFERENCES tc_imbuements (ti_id)
+);
+
+CREATE INDEX idx_tai_imbuement ON tc_auction_imbuements (tai_imbuement_id);
+
 INSERT INTO tc_vocation (tv_name) VALUES ('Knight'), ('Paladin'), ('Sorcerer'), ('Druid'), ('Monk'), ('None');
 
 INSERT INTO tc_gender (tg_name) VALUES ('Male'), ('Female');
+
+INSERT INTO tc_imbuements (ti_name) VALUES
+('Powerful Bash'),
+('Powerful Blockade'),
+('Powerful Chop'),
+('Powerful Cloud Fabric'),
+('Powerful Demon Presence'),
+('Powerful Dragon Hide'),
+('Powerful Electrify'),
+('Powerful Epiphany'),
+('Powerful Featherweight'),
+('Powerful Frost'),
+('Powerful Lich Shroud'),
+('Powerful Precision'),
+('Powerful Punch'),
+('Powerful Quara Scale'),
+('Powerful Reap'),
+('Powerful Scorch'),
+('Powerful Slash'),
+('Powerful Snake Skin'),
+('Powerful Strike'),
+('Powerful Swiftness'),
+('Powerful Vampirism'),
+('Powerful Venom'),
+('Powerful Vibrancy'),
+('Powerful Void');
