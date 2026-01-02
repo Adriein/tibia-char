@@ -366,6 +366,7 @@ func (r *PgAuctionRepository) Save(auction *model.Auction) error {
 }
 
 func (r *PgAuctionRepository) GetActiveAuctions(ctx context.Context) ([]*model.Auction, error) {
+	// Query 1: Fetch main auction data with 1:1 relationships
 	query := `
 		SELECT
 			a.ta_id,
@@ -378,9 +379,7 @@ func (r *PgAuctionRepository) GetActiveAuctions(ctx context.Context) ([]*model.A
 			g.*,
 			w.*,
 			ts.*,
-			tfi.*,
 			ch.*,
-			ti.*,
 			a.ta_world_transfer,
 			a.ta_current_bid,
 			a.ta_auction_start,
@@ -400,20 +399,15 @@ func (r *PgAuctionRepository) GetActiveAuctions(ctx context.Context) ([]*model.A
 			tc_auction_recording tar ON a.ta_id = tar.tar_recordable_id
 		INNER JOIN
 			tc_skills ts ON a.ta_auction_id = ts.ts_auction_id
-		LEFT JOIN
-			tc_featured_items tfi ON a.ta_auction_id = tfi.tfi_auction_id
 		INNER JOIN
 			tc_charm ch ON a.ta_auction_id = ch.tc_auction_id
-		LEFT JOIN
-			tc_auction_imbuements tai ON a.ta_auction_id = tai.tai_auction_id
-		LEFT JOIN
-			tc_imbuements ti ON tai.tai_imbuement_id = ti.ti_id
 		WHERE
 			tar.tar_status = 'active'
-		ORDER BY a.ta_auction_end ASC;
+		ORDER BY
+			a.ta_auction_end ASC;
 	`
 
-	ctxTimeout, cancel := context.WithTimeout(ctx, time.Second*1000000000)
+	ctxTimeout, cancel := context.WithTimeout(ctx, time.Second*10)
 
 	defer cancel()
 
@@ -426,6 +420,7 @@ func (r *PgAuctionRepository) GetActiveAuctions(ctx context.Context) ([]*model.A
 	defer rows.Close()
 
 	auctionMap := make(map[int]*model.Auction)
+
 	var orderedIDs []int
 
 	for rows.Next() {
@@ -434,17 +429,10 @@ func (r *PgAuctionRepository) GetActiveAuctions(ctx context.Context) ([]*model.A
 			vocation        model.Vocation
 			gender          model.Gender
 			world           model.World
-			featuredItem    model.FeaturedItem
+			skills          model.Skills
+			charm           model.Charm
 			battleEyeString string
 			statusString    string
-			skills          model.Skills
-			tfiID           sql.NullInt64
-			tfiAuctionID    sql.NullInt32
-			tfiItemID       sql.NullInt32
-			charm           model.Charm
-			tiID            sql.NullInt32
-			tiName          sql.NullString
-			imbuement       model.Imbuement
 		)
 
 		err := rows.Scan(
@@ -472,14 +460,9 @@ func (r *PgAuctionRepository) GetActiveAuctions(ctx context.Context) ([]*model.A
 			&skills.MagicLevel,
 			&skills.Shielding,
 			&skills.Sword,
-			&tfiID,
-			&tfiAuctionID,
-			&tfiItemID,
 			&charm.AuctionID,
 			&charm.Expansion,
 			&charm.Points,
-			&tiID,
-			&tiName,
 			&auction.WorldTransfer,
 			&auction.Bid,
 			&auction.AuctionStart,
@@ -491,27 +474,6 @@ func (r *PgAuctionRepository) GetActiveAuctions(ctx context.Context) ([]*model.A
 
 		if err != nil {
 			return nil, eris.Wrap(err, "Failed to scan auction")
-		}
-
-		existingAuction, exists := auctionMap[auction.AuctionID]
-
-		if exists {
-			if tfiID.Valid {
-				featuredItem.ID = tfiID.Int64
-				featuredItem.AuctionID = int(tfiAuctionID.Int32)
-				featuredItem.ItemID = int(tfiItemID.Int32)
-
-				existingAuction.FeaturedItems = append(existingAuction.FeaturedItems, &featuredItem)
-			}
-
-			if tiID.Valid {
-				imbuement.ID = int(tiID.Int32)
-				imbuement.Name = tiName.String
-
-				existingAuction.Imbuements = append(existingAuction.Imbuements, &imbuement)
-			}
-
-			continue
 		}
 
 		status, err := enums.GetAuctionRecordableStatusFromString(statusString)
@@ -533,28 +495,92 @@ func (r *PgAuctionRepository) GetActiveAuctions(ctx context.Context) ([]*model.A
 		auction.CharWorld = &world
 		auction.Skills = &skills
 		auction.Charm = &charm
+		auction.FeaturedItems = make([]*model.FeaturedItem, 0)
+		auction.Imbuements = make([]*model.Imbuement, 0)
 
-		if tfiID.Valid {
-			featuredItem.ID = tfiID.Int64
-			featuredItem.AuctionID = int(tfiAuctionID.Int32)
-			featuredItem.ItemID = int(tfiItemID.Int32)
-
-			auction.FeaturedItems = append(auction.FeaturedItems, &featuredItem)
-		}
-
-		if tiID.Valid {
-			imbuement.ID = int(tiID.Int32)
-			imbuement.Name = tiName.String
-
-			auction.Imbuements = append(auction.Imbuements, &imbuement)
-		}
+		auctionMap[auction.AuctionID] = &auction
 
 		orderedIDs = append(orderedIDs, auction.AuctionID)
-		auctionMap[auction.AuctionID] = &auction
 	}
 
 	if err = rows.Err(); err != nil {
-		return nil, eris.Wrap(err, "Failed iterating rows")
+		return nil, eris.Wrap(err, "Failed iterating auction rows")
+	}
+
+	if len(orderedIDs) == 0 {
+		return []*model.Auction{}, nil
+	}
+
+	itemsQuery := `
+		SELECT
+			tfi.tfi_id,
+			fi.tfi_auction_id,
+			tfi.tfi_item_id
+		FROM
+			tc_featured_items tfi
+		WHERE
+			tfi.tfi_auction_id = ANY($1);
+	`
+
+	itemRows, err := r.connection.QueryContext(ctx, itemsQuery, pq.Array(orderedIDs))
+
+	if err != nil {
+		return nil, eris.Wrap(err, "Failed to query featured items")
+	}
+
+	defer itemRows.Close()
+
+	for itemRows.Next() {
+		var item model.FeaturedItem
+
+		if err := itemRows.Scan(&item.ID, &item.AuctionID, &item.ItemID); err != nil {
+			return nil, eris.Wrap(err, "Failed to scan featured item")
+		}
+
+		if auction, ok := auctionMap[item.AuctionID]; ok {
+			auction.FeaturedItems = append(auction.FeaturedItems, &item)
+		}
+	}
+
+	if err = itemRows.Err(); err != nil {
+		return nil, eris.Wrap(err, "Failed iterating featured item rows")
+	}
+
+	imbuementsQuery := `
+		SELECT
+			tai.tai_auction_id,
+			ti.ti_id,
+			ti.ti_name
+		FROM
+			tc_auction_imbuements tai
+		INNER JOIN
+			tc_imbuements ti ON tai.tai_imbuement_id = ti.ti_id
+		WHERE
+			tai.tai_auction_id = ANY($1);
+	`
+	imbuementRows, err := r.connection.QueryContext(ctx, imbuementsQuery, pq.Array(orderedIDs))
+
+	if err != nil {
+		return nil, eris.Wrap(err, "Failed to query imbuements")
+	}
+
+	defer imbuementRows.Close()
+
+	for imbuementRows.Next() {
+		var imbuement model.Imbuement
+		var auctionID int
+
+		if err := imbuementRows.Scan(&auctionID, &imbuement.ID, &imbuement.Name); err != nil {
+			return nil, eris.Wrap(err, "Failed to scan imbuement")
+		}
+
+		if auction, ok := auctionMap[auctionID]; ok {
+			auction.Imbuements = append(auction.Imbuements, &imbuement)
+		}
+	}
+
+	if err = imbuementRows.Err(); err != nil {
+		return nil, eris.Wrap(err, "Failed iterating imbuement rows")
 	}
 
 	auctions := make([]*model.Auction, 0, len(orderedIDs))
