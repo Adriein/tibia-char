@@ -27,6 +27,7 @@ CREATE TABLE IF NOT EXISTS tc_auction (
     ta_char_gender SMALLINT NOT NULL,
     ta_char_world INT NOT NULL,
     ta_world_transfer BOOLEAN NOT NULL,
+    ta_boss_points INT NOT NULL,
     ta_current_bid INT NOT NULL,
     ta_auction_start TIMESTAMP(0) WITHOUT TIME ZONE NOT NULL,
     ta_auction_end TIMESTAMP(0) WITHOUT TIME ZONE NOT NULL,

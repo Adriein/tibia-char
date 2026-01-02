@@ -45,6 +45,7 @@ type AuctionDTO struct {
 	Charm            *CharmDTO
 	Imbuements       []*ImbuementDTO
 	WorldTransfer    bool
+	BossPoints       int
 	Bid              int
 	AuctionStartTime time.Time
 	AuctionEndTime   time.Time
@@ -192,6 +193,7 @@ type Auction struct {
 	Charm            *Charm
 	Imbuements       []*Imbuement
 	WorldTransfer    bool
+	BossPoints       int
 	Bid              int
 	AuctionStart     time.Time
 	AuctionEnd       time.Time

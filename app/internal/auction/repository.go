@@ -175,13 +175,14 @@ func (r *PgAuctionRepository) Save(auction *model.Auction) error {
 			ta_char_gender,
 			ta_char_world,
 			ta_world_transfer,
+			ta_boss_points,
 			ta_current_bid,
 			ta_auction_start,
 			ta_auction_end,
 			ta_date_add,
 			ta_date_upd
 		)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
 		RETURNING ta_id;
 	`
 
@@ -198,6 +199,7 @@ func (r *PgAuctionRepository) Save(auction *model.Auction) error {
 		auction.CharGender.Id,
 		auction.CharWorld.Id,
 		auction.WorldTransfer,
+		auction.BossPoints,
 		auction.Bid,
 		auction.AuctionStart,
 		auction.AuctionEnd,
@@ -381,6 +383,7 @@ func (r *PgAuctionRepository) GetActiveAuctions(ctx context.Context) ([]*model.A
 			ts.*,
 			ch.*,
 			a.ta_world_transfer,
+			a.ta_boss_points,
 			a.ta_current_bid,
 			a.ta_auction_start,
 			a.ta_auction_end,
@@ -464,6 +467,7 @@ func (r *PgAuctionRepository) GetActiveAuctions(ctx context.Context) ([]*model.A
 			&charm.Expansion,
 			&charm.Points,
 			&auction.WorldTransfer,
+			&auction.BossPoints,
 			&auction.Bid,
 			&auction.AuctionStart,
 			&auction.AuctionEnd,
@@ -514,7 +518,7 @@ func (r *PgAuctionRepository) GetActiveAuctions(ctx context.Context) ([]*model.A
 	itemsQuery := `
 		SELECT
 			tfi.tfi_id,
-			fi.tfi_auction_id,
+			tfi.tfi_auction_id,
 			tfi.tfi_item_id
 		FROM
 			tc_featured_items tfi

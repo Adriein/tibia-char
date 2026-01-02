@@ -403,6 +403,12 @@ func (p *AuctionHtmlParser) parseAuctionGeneral(e *colly.HTMLElement, dto *model
 			return false
 		}
 
+		if err := p.extractBossPoints(el, dto); err != nil {
+			auctionGeneralErr = err
+
+			return false
+		}
+
 		return true
 	})
 
@@ -491,6 +497,24 @@ func (p *AuctionHtmlParser) extractCharmPoints(e *colly.HTMLElement, dto *model.
 		dto.Charm.Points += points
 
 		return nil
+	}
+
+	return nil
+}
+
+func (p *AuctionHtmlParser) extractBossPoints(e *colly.HTMLElement, dto *model.AuctionDTO) error {
+	text := e.Text
+
+	if text == "Boss Points:" {
+		bossPointsString := e.DOM.Siblings().Eq(0).Text()
+
+		bossPoints, err := strconv.Atoi(bossPointsString)
+
+		if err != nil {
+			return eris.Wrap(err, "Error converting boss points to int")
+		}
+
+		dto.BossPoints = bossPoints
 	}
 
 	return nil

@@ -83,6 +83,7 @@ func (m *Mapper) FromDTO(dto *model.AuctionDTO) (*model.Auction, error) {
 		CharGender:       gender,
 		CharWorld:        world,
 		WorldTransfer:    dto.WorldTransfer,
+		BossPoints:       dto.BossPoints,
 		Bid:              dto.Bid,
 		AuctionStart:     dto.AuctionStartTime,
 		AuctionEnd:       dto.AuctionEndTime,
