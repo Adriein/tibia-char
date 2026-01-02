@@ -380,6 +380,7 @@ func (r *PgAuctionRepository) GetActiveAuctions(ctx context.Context) ([]*model.A
 			ts.*,
 			tfi.*,
 			ch.*,
+			ti.*,
 			a.ta_world_transfer,
 			a.ta_current_bid,
 			a.ta_auction_start,
@@ -398,11 +399,15 @@ func (r *PgAuctionRepository) GetActiveAuctions(ctx context.Context) ([]*model.A
 		INNER JOIN
 			tc_auction_recording tar ON a.ta_id = tar.tar_recordable_id
 		INNER JOIN
-			tc_skills ts ON tar.tar_auction_id = ts.ts_auction_id
+			tc_skills ts ON a.ta_auction_id = ts.ts_auction_id
 		LEFT JOIN
-			tc_featured_items tfi ON tar_auction_id = tfi.tfi_auction_id
+			tc_featured_items tfi ON a.ta_auction_id = tfi.tfi_auction_id
 		INNER JOIN
-			tc_charm ch ON tar_auction_id = ch.tc_auction_id
+			tc_charm ch ON a.ta_auction_id = ch.tc_auction_id
+		LEFT JOIN
+			tc_auction_imbuements tai ON a.ta_auction_id = tai.tai_auction_id
+		LEFT JOIN
+			tc_imbuements ti ON tai.tai_imbuement_id = ti.ti_id
 		WHERE
 			tar.tar_status = 'active'
 		ORDER BY a.ta_auction_end ASC;
@@ -437,6 +442,9 @@ func (r *PgAuctionRepository) GetActiveAuctions(ctx context.Context) ([]*model.A
 			tfiAuctionID    sql.NullInt32
 			tfiItemID       sql.NullInt32
 			charm           model.Charm
+			tiID            sql.NullInt32
+			tiName          sql.NullString
+			imbuement       model.Imbuement
 		)
 
 		err := rows.Scan(
@@ -470,6 +478,8 @@ func (r *PgAuctionRepository) GetActiveAuctions(ctx context.Context) ([]*model.A
 			&charm.AuctionID,
 			&charm.Expansion,
 			&charm.Points,
+			&tiID,
+			&tiName,
 			&auction.WorldTransfer,
 			&auction.Bid,
 			&auction.AuctionStart,
@@ -485,12 +495,21 @@ func (r *PgAuctionRepository) GetActiveAuctions(ctx context.Context) ([]*model.A
 
 		existingAuction, exists := auctionMap[auction.AuctionID]
 
-		if exists && tfiID.Valid {
-			featuredItem.ID = tfiID.Int64
-			featuredItem.AuctionID = int(tfiAuctionID.Int32)
-			featuredItem.ItemID = int(tfiItemID.Int32)
+		if exists {
+			if tfiID.Valid {
+				featuredItem.ID = tfiID.Int64
+				featuredItem.AuctionID = int(tfiAuctionID.Int32)
+				featuredItem.ItemID = int(tfiItemID.Int32)
 
-			existingAuction.FeaturedItems = append(existingAuction.FeaturedItems, &featuredItem)
+				existingAuction.FeaturedItems = append(existingAuction.FeaturedItems, &featuredItem)
+			}
+
+			if tiID.Valid {
+				imbuement.ID = int(tiID.Int32)
+				imbuement.Name = tiName.String
+
+				existingAuction.Imbuements = append(existingAuction.Imbuements, &imbuement)
+			}
 
 			continue
 		}
@@ -521,10 +540,13 @@ func (r *PgAuctionRepository) GetActiveAuctions(ctx context.Context) ([]*model.A
 			featuredItem.ItemID = int(tfiItemID.Int32)
 
 			auction.FeaturedItems = append(auction.FeaturedItems, &featuredItem)
-			orderedIDs = append(orderedIDs, auction.AuctionID)
-			auctionMap[auction.AuctionID] = &auction
+		}
 
-			continue
+		if tiID.Valid {
+			imbuement.ID = int(tiID.Int32)
+			imbuement.Name = tiName.String
+
+			auction.Imbuements = append(auction.Imbuements, &imbuement)
 		}
 
 		orderedIDs = append(orderedIDs, auction.AuctionID)
