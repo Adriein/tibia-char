@@ -284,27 +284,31 @@ func (r *PgAuctionRepository) Save(auction *model.Auction) error {
 		return eris.Wrap(err, "Error in upsert on tc_skills")
 	}
 
-	for _, fi := range auction.FeaturedItems {
-		featuredItemsQuery := `
-			INSERT INTO tc_featured_items (
-				tfi_auction_id,
-				tfi_item_id
-			)
-			VALUES ($1, $2)
-			ON CONFLICT DO NOTHING;
-		`
-
-		_, err = tx.Exec(
-			featuredItemsQuery,
-			fi.AuctionID,
-			fi.ItemID,
+	featuredItemsQuery := `
+		INSERT INTO tc_featured_items (
+			tfi_auction_id,
+			tfi_item_id
 		)
+		SELECT $1, unnest($2::int[])
+		ON CONFLICT DO NOTHING;
+	`
 
-		if err != nil {
-			tx.Rollback()
+	featuredItemIDS := make([]int, len(auction.FeaturedItems))
 
-			return eris.Wrap(err, "Error in insert on tc_featued_items")
-		}
+	for i, item := range auction.FeaturedItems {
+		featuredItemIDS[i] = item.ItemID
+	}
+
+	_, err = tx.Exec(
+		featuredItemsQuery,
+		auction.AuctionID,
+		pq.Array(featuredItemIDS),
+	)
+
+	if err != nil {
+		tx.Rollback()
+
+		return eris.Wrap(err, "Error in insert on tc_featured_items")
 	}
 
 	charmQuery := `
@@ -332,24 +336,24 @@ func (r *PgAuctionRepository) Save(auction *model.Auction) error {
 	}
 
 	imbuementsQuery := `
-			INSERT INTO tc_auction_imbuements (
-				tai_auction_id,
-				tai_imbuement_id
-			)
-			SELECT $1, unnest($2::int[])
-			ON CONFLICT DO NOTHING;
-		`
+		INSERT INTO tc_auction_imbuements (
+			tai_auction_id,
+			tai_imbuement_id
+		)
+		SELECT $1, unnest($2::int[])
+		ON CONFLICT DO NOTHING;
+	`
 
-	ids := make([]int, len(auction.Imbuements))
+	imbuementIDS := make([]int, len(auction.Imbuements))
 
 	for i, imbuement := range auction.Imbuements {
-		ids[i] = imbuement.ID
+		imbuementIDS[i] = imbuement.ID
 	}
 
 	_, err = tx.Exec(
 		imbuementsQuery,
 		auction.AuctionID,
-		pq.Array(ids),
+		pq.Array(imbuementIDS),
 	)
 
 	if err != nil {
