@@ -173,6 +173,11 @@ templ AuctionCard(auction *model.Auction) {
 				<span>Charm Points:</span>
 				<span>{auction.Charm.Points}</span>
 			</div>
+			<div class="card__info-item">
+				<img alt="Imbuement icon" src="/assets/images/imbuement_icon.png"/>
+				<span>Imbuements:</span>
+				<span>{fmt.Sprintf("%d/24", len(auction.Imbuements))}</span>
+			</div>
 		</div>
 		<div class="card__footer">
 			<a
