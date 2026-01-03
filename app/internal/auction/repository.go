@@ -325,7 +325,7 @@ func (r *PgAuctionRepository) Save(auction *model.Auction) error {
 			tac_charm_id,
 			tac_grade
 		)
-		SELECT $1, unnest($2::int[]), unnest($3::varchar[])
+		SELECT $1, unnest($2::int[]), unnest($3::smallint[])
 		ON CONFLICT DO NOTHING;
 	`
 
