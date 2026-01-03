@@ -174,9 +174,17 @@ SEED DATA
 ================================================================================
 */
 
-INSERT INTO tc_vocation (tv_name) VALUES ('Knight'), ('Paladin'), ('Sorcerer'), ('Druid'), ('Monk'), ('None');
+INSERT INTO tc_vocation (tv_name) VALUES
+('Knight'),
+('Paladin'),
+('Sorcerer'),
+('Druid'),
+('Monk'),
+('None');
 
-INSERT INTO tc_gender (tg_name) VALUES ('Male'), ('Female');
+INSERT INTO tc_gender (tg_name) VALUES
+('Male'),
+('Female');
 
 INSERT INTO tc_imbuements (ti_name) VALUES
 ('Powerful Bash'),
@@ -203,3 +211,47 @@ INSERT INTO tc_imbuements (ti_name) VALUES
 ('Powerful Venom'),
 ('Powerful Vibrancy'),
 ('Powerful Void');
+
+INSERT INTO tc_quests (tq_name) VALUES
+('The Postman Missions'),
+('The Djinn War (blue)'),
+('The Djinn War (green)'),
+('The Travelling Trader (Rashid)'),
+('The Thieves Guild'),
+('Shadows of Yalahar'),
+('The Pits of Inferno'),
+('The Inquisition'),
+('Barbarian Test'),
+('Lion''s Rock'),
+('The Shattered Isles'),
+('The Ice Islands'),
+('Twenty Miles Beneath the Sea'),
+('The Explorer Society'),
+('Blood Brothers'),
+('The New Frontier'),
+('Wrath of the Emperor'),
+('The Ape City'),
+('Rathleton (Citzen)'),
+('Dark Trails'),
+('Asura Palace'),
+('The Dream Courts'),
+('The Secret Library'),
+('Soul War'),
+('Primal Ordeal'),
+('Rotten Blood'),
+('Hero of Rathleton'),
+('Cults of Tibia'),
+('The Curse Spreads'),
+('Grimvale'),
+('Bigfoot''s Burden (Rank IV)'),
+('Bigfoot''s Burden (Free boss access)'),
+('Kilmaresh'),
+('Heart of Destruction'),
+('Feaster of Souls'),
+('Dangerous Depths (Warzone 4)'),
+('Dangerous Depths (Warzone 5)'),
+('Dangerous Depths (Warzone 6)'),
+('Ferumbras'' Ascendant'),
+('The Order of the Cobra'),
+('The Order of the Lion'),
+('The Order of the Falcon');

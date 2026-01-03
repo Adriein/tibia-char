@@ -1,27 +1,13 @@
-
-ALTER TABLE tc_auction DROP CONSTRAINT fk_vocation_auction;
-ALTER TABLE tc_auction DROP CONSTRAINT fk_gender_auction;
-ALTER TABLE tc_auction DROP CONSTRAINT fk_world_auction;
-
-ALTER TABLE tc_auction_recording DROP CONSTRAINT fk_recording_auction;
-ALTER TABLE tc_skills DROP CONSTRAINT fk_skills_auction_recording;
-ALTER TABLE tc_charm DROP CONSTRAINT fk_charm_auction_recording;
-ALTER TABLE tc_featured_items DROP CONSTRAINT fk_featured_items_auction_recording;
-
-ALTER TABLE tc_auction_imbuements DROP CONSTRAINT fk_auction_imbuements_auction_recording;
-ALTER TABLE tc_auction_imbuements DROP CONSTRAINT fk_auction_imbuements_imbuements;
-
-DROP TABLE tc_charm;
-DROP TABLE tc_skills;
-DROP TABLE tc_featured_items;
-DROP TABLE tc_auction_imbuements;
-DROP TABLE tc_imbuements;
-DROP TABLE tc_auction_recording;
-
-DROP TABLE tc_world;
-DROP TABLE tc_vocation;
-DROP TABLE tc_gender;
-
-DROP TABLE tc_auction;
-
-
+DROP TABLE IF EXISTS tc_auction_quests;
+DROP TABLE IF EXISTS tc_quests;
+DROP TABLE IF EXISTS tc_auction_charms;
+DROP TABLE IF EXISTS tc_charms;
+DROP TABLE IF EXISTS tc_auction_imbuements;
+DROP TABLE IF EXISTS tc_imbuements;
+DROP TABLE IF EXISTS tc_featured_items;
+DROP TABLE IF EXISTS tc_skills;
+DROP TABLE IF EXISTS tc_auction_recording;
+DROP TABLE IF EXISTS tc_auction;
+DROP TABLE IF EXISTS tc_world;
+DROP TABLE IF EXISTS tc_vocation;
+DROP TABLE IF EXISTS tc_gender;
