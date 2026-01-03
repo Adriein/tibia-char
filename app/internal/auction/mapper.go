@@ -80,6 +80,8 @@ func (m *Mapper) FromDTO(dto *model.AuctionDTO) (*model.Auction, error) {
 			return nil, eris.Wrap(err, "Error converting CharmDTO to Charm")
 		}
 
+		charm.Grade = charmDTO.Grade
+
 		charms = append(charms, charm)
 	}
 

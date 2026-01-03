@@ -330,7 +330,7 @@ func (r *PgAuctionRepository) Save(auction *model.Auction) error {
 	`
 
 	charmsIDS := make([]int, len(auction.Charms))
-	grades := make([]string, len(auction.Charms))
+	grades := make([]int, len(auction.Charms))
 
 	for i, charm := range auction.Charms {
 		charmsIDS[i] = charm.ID

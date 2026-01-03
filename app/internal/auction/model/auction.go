@@ -140,7 +140,7 @@ type Charm struct {
 	ID    int
 	Type  string
 	Name  string
-	Grade string
+	Grade int
 }
 
 var charmMap = map[string]*Charm{
