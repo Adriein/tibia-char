@@ -256,6 +256,12 @@ func (p *AuctionHtmlParser) Parse(ctx context.Context, auctionId int, link strin
 		}
 	})
 
+	c.OnHTML("div[id=CompletedQuestLines]", func(e *colly.HTMLElement) {
+		if err := p.parseAuctionQuests(e, &dto); err != nil {
+			parseErr = eris.Wrap(err, "Error parsing quests")
+		}
+	})
+
 	if err := c.Visit(link); err != nil {
 		if err.Error() == TibiaDotComForbiddenError {
 			return nil, eris.Wrapf(RateLimitError, "Error visiting link")
@@ -582,6 +588,22 @@ func (p *AuctionHtmlParser) parseAuctionCharms(e *colly.HTMLElement, dto *model.
 
 	if charmErr != nil {
 		return charmErr
+	}
+
+	return nil
+}
+
+func (p *AuctionHtmlParser) parseAuctionQuests(e *colly.HTMLElement, dto *model.AuctionDTO) error {
+	relevantHTML := e.DOM.Find("tr[class=LabelH]")
+
+	if strings.Contains(relevantHTML.Children().Text(), "Quest Line Name") {
+		relevantHTML.Siblings().EachWithBreak(func(i int, s *goquery.Selection) bool {
+			quest := s.Children().Text()
+
+			dto.Quests = append(dto.Quests, &model.QuestDTO{Name: quest})
+
+			return true
+		})
 	}
 
 	return nil

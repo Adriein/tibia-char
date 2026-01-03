@@ -377,6 +377,33 @@ func (r *PgAuctionRepository) Save(auction *model.Auction) error {
 		return eris.Wrap(err, "Error in insert on tc_auction_imbuements")
 	}
 
+	questsQuery := `
+		INSERT INTO tc_auction_quests (
+			taq_auction_id,
+			taq_quest_id
+		)
+		SELECT $1, unnest($2::int[])
+		ON CONFLICT DO NOTHING;
+	`
+
+	questIDS := make([]int, len(auction.Quests))
+
+	for i, quest := range auction.Quests {
+		questIDS[i] = quest.ID
+	}
+
+	_, err = tx.Exec(
+		questsQuery,
+		auction.AuctionID,
+		pq.Array(questIDS),
+	)
+
+	if err != nil {
+		tx.Rollback()
+
+		return eris.Wrap(err, "Error in insert on tc_auction_quests")
+	}
+
 	return tx.Commit()
 }
 

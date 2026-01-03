@@ -36,6 +36,10 @@ type ImbuementDTO struct {
 	Name string
 }
 
+type QuestDTO struct {
+	Name string
+}
+
 type AuctionDTO struct {
 	AuctionId        int
 	Link             string
@@ -51,6 +55,7 @@ type AuctionDTO struct {
 	CharmPoints      *CharmPointsDTO
 	Charms           []*CharmDTO
 	Imbuements       []*ImbuementDTO
+	Quests           []*QuestDTO
 	WorldTransfer    bool
 	BossPoints       int
 	Bid              int
@@ -225,6 +230,68 @@ func NewImbuementFromName(name string) (*Imbuement, error) {
 	return nil, eris.Errorf("Imbuement %s not registered", name)
 }
 
+type Quest struct {
+	ID   int
+	Name string
+}
+
+var questMap = map[string]*Quest{
+	"the postman missions":                {ID: 1, Name: "The Postman Missions"},
+	"the djinn war (blue)":                {ID: 2, Name: "The Djinn War (blue)"},
+	"the djinn war (green)":               {ID: 3, Name: "The Djinn War (green)"},
+	"the travelling trader (rashid)":      {ID: 4, Name: "The Travelling Trader (Rashid)"},
+	"the thieves guild":                   {ID: 5, Name: "The Thieves Guild"},
+	"shadows of yalahar":                  {ID: 6, Name: "Shadows of Yalahar"},
+	"the pits of inferno":                 {ID: 7, Name: "The Pits of Inferno"},
+	"the inquisition":                     {ID: 8, Name: "The Inquisition"},
+	"barbarian test":                      {ID: 9, Name: "Barbarian Test"},
+	"lion's rock":                         {ID: 10, Name: "Lion's Rock"},
+	"the shattered isles":                 {ID: 11, Name: "The Shattered Isles"},
+	"the ice islands":                     {ID: 12, Name: "The Ice Islands"},
+	"twenty miles beneath the sea":        {ID: 13, Name: "Twenty Miles Beneath the Sea"},
+	"the explorer society":                {ID: 14, Name: "The Explorer Society"},
+	"blood brothers":                      {ID: 15, Name: "Blood Brothers"},
+	"the new frontier":                    {ID: 16, Name: "The New Frontier"},
+	"wrath of the emperor":                {ID: 17, Name: "Wrath of the Emperor"},
+	"the ape city":                        {ID: 18, Name: "The Ape City"},
+	"rathleton (citzen)":                  {ID: 19, Name: "Rathleton (Citzen)"},
+	"dark trails":                         {ID: 20, Name: "Dark Trails"},
+	"asura palace":                        {ID: 21, Name: "Asura Palace"},
+	"the dream courts":                    {ID: 22, Name: "The Dream Courts"},
+	"the secret library":                  {ID: 23, Name: "The Secret Library"},
+	"soul war":                            {ID: 24, Name: "Soul War"},
+	"primal ordeal":                       {ID: 25, Name: "Primal Ordeal"},
+	"rotten blood":                        {ID: 26, Name: "Rotten Blood"},
+	"hero of rathleton":                   {ID: 27, Name: "Hero of Rathleton"},
+	"cults of tibia":                      {ID: 28, Name: "Cults of Tibia"},
+	"the curse spreads":                   {ID: 29, Name: "The Curse Spreads"},
+	"grimvale":                            {ID: 30, Name: "Grimvale"},
+	"bigfoot's burden (rank iv)":          {ID: 31, Name: "Bigfoot's Burden (Rank IV)"},
+	"bigfoot's burden (free boss access)": {ID: 32, Name: "Bigfoot's Burden (Free boss access)"},
+	"kilmaresh":                           {ID: 33, Name: "Kilmaresh"},
+	"heart of destruction":                {ID: 34, Name: "Heart of Destruction"},
+	"feaster of souls":                    {ID: 35, Name: "Feaster of Souls"},
+	"dangerous depths (warzone 4)":        {ID: 36, Name: "Dangerous Depths (Warzone 4)"},
+	"dangerous depths (warzone 5)":        {ID: 37, Name: "Dangerous Depths (Warzone 5)"},
+	"dangerous depths (warzone 6)":        {ID: 38, Name: "Dangerous Depths (Warzone 6)"},
+	"ferumbras' ascendant":                {ID: 39, Name: "Ferumbras' Ascendant"},
+	"the order of the cobra":              {ID: 40, Name: "The Order of the Cobra"},
+	"the order of the lion":               {ID: 41, Name: "The Order of the Lion"},
+	"the order of the falcon":             {ID: 42, Name: "The Order of the Falcon"},
+}
+
+func NewQuestFromName(name string) (*Quest, error) {
+	lowerCaseQuest := strings.ToLower(name)
+
+	sanitizedQuest := strings.ReplaceAll(lowerCaseQuest, "'", "")
+
+	if quest, ok := questMap[sanitizedQuest]; ok {
+		return quest, nil
+	}
+
+	return nil, eris.Errorf("Quest %s not registered", name)
+}
+
 type Auction struct {
 	ID               int64
 	AuctionID        int
@@ -240,6 +307,7 @@ type Auction struct {
 	Skills           *Skills
 	Charms           []*Charm
 	Imbuements       []*Imbuement
+	Quests           []*Quest
 	WorldTransfer    bool
 	BossPoints       int
 	CharmExpansion   bool

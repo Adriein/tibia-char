@@ -85,6 +85,19 @@ func (m *Mapper) FromDTO(dto *model.AuctionDTO) (*model.Auction, error) {
 		charms = append(charms, charm)
 	}
 
+	var quests []*model.Quest
+
+	for _, questDTO := range dto.Quests {
+		quest, err := model.NewQuestFromName(questDTO.Name)
+
+		if err != nil {
+			//TODO: right now we ignore the quest not found because we are not interested in all of them
+			continue
+		}
+
+		quests = append(quests, quest)
+	}
+
 	return &model.Auction{
 		AuctionID:        dto.AuctionId,
 		TibiaAuctionLink: dto.Link,
@@ -116,6 +129,7 @@ func (m *Mapper) FromDTO(dto *model.AuctionDTO) (*model.Auction, error) {
 			Sword:      dto.Skills.Sword,
 		},
 		Charms:     charms,
+		Quests:     quests,
 		Imbuements: imbuements,
 		DateAdd:    time.Now(),
 		DateUpd:    time.Now(),
