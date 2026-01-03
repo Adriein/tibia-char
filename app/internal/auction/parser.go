@@ -24,6 +24,12 @@ const (
 
 var RateLimitError = eris.New("Error rate limit reached")
 
+/*
+================================================================================
+LINK PARSER
+================================================================================
+*/
+
 type AuctionListHtmlParser struct {
 	collector *colly.Collector
 }
@@ -172,6 +178,12 @@ func (p *AuctionListHtmlParser) extractAuctionID(link string) (int, error) {
 	return auctionID, nil
 }
 
+/*
+================================================================================
+DETAIL PARSER
+================================================================================
+*/
+
 type AuctionHtmlParser struct {
 	collector *colly.Collector
 }
@@ -184,10 +196,10 @@ func NewAuctionHtmlParser(c *colly.Collector) *AuctionHtmlParser {
 
 func (p *AuctionHtmlParser) Parse(ctx context.Context, auctionId int, link string) (*model.AuctionDTO, error) {
 	dto := model.AuctionDTO{
-		AuctionId: auctionId,
-		Link:      fmt.Sprintf("https://www.tibia.com/charactertrade/?subtopic=currentcharactertrades&page=details&auctionid=%d", auctionId),
-		Skills:    &model.SkillsDTO{},
-		Charm:     &model.CharmDTO{},
+		AuctionId:   auctionId,
+		Link:        fmt.Sprintf("https://www.tibia.com/charactertrade/?subtopic=currentcharactertrades&page=details&auctionid=%d", auctionId),
+		Skills:      &model.SkillsDTO{},
+		CharmPoints: &model.CharmPointsDTO{},
 	}
 
 	var parseErr error
@@ -234,7 +246,13 @@ func (p *AuctionHtmlParser) Parse(ctx context.Context, auctionId int, link strin
 
 	c.OnHTML("div[id=Imbuements]", func(e *colly.HTMLElement) {
 		if err := p.parseAuctionImbuements(e, &dto); err != nil {
-			parseErr = eris.Wrap(err, "Error parsing imbuements general")
+			parseErr = eris.Wrap(err, "Error parsing imbuements")
+		}
+	})
+
+	c.OnHTML("div[id=Charms]", func(e *colly.HTMLElement) {
+		if err := p.parseAuctionCharms(e, &dto); err != nil {
+			parseErr = eris.Wrap(err, "Error parsing charms")
 		}
 	})
 
@@ -479,7 +497,7 @@ func (p *AuctionHtmlParser) extractCharmPoints(e *colly.HTMLElement, dto *model.
 	case "Charm Expansion:":
 		charmExpansionText := e.DOM.Siblings().Children().Get(0).Attr[0].Val
 
-		dto.Charm.Expansion = strings.Contains(charmExpansionText, "icon_yes.png")
+		dto.CharmPoints.Expansion = strings.Contains(charmExpansionText, "icon_yes.png")
 
 		return nil
 	case "Available Charm Points:",
@@ -494,7 +512,7 @@ func (p *AuctionHtmlParser) extractCharmPoints(e *colly.HTMLElement, dto *model.
 			return err
 		}
 
-		dto.Charm.Points += points
+		dto.CharmPoints.Points += points
 
 		return nil
 	}
@@ -530,6 +548,41 @@ func (p *AuctionHtmlParser) parseAuctionImbuements(e *colly.HTMLElement, dto *mo
 
 		return true
 	})
+
+	return nil
+}
+
+func (p *AuctionHtmlParser) parseAuctionCharms(e *colly.HTMLElement, dto *model.AuctionDTO) error {
+	var charmErr error
+	relevantHTML := e.DOM.Find("tr[class=LabelH]")
+
+	sanitizedTextContent := strings.ReplaceAll(relevantHTML.Children().Text(), " ", "")
+
+	if strings.Contains(sanitizedTextContent, "CostsTypeCharmNameGrade") {
+		relevantHTML.Siblings().EachWithBreak(func(i int, s *goquery.Selection) bool {
+			children := s.Children()
+
+			charmType := children.Eq(1).Text()
+			charmName := children.Eq(2).Text()
+			charmGradeString := children.Eq(3).Text()
+
+			charmGrade, err := strconv.Atoi(charmGradeString)
+
+			if err != nil {
+				charmErr = eris.Wrap(err, "Error parsing charm grade to int")
+
+				return false
+			}
+
+			dto.Charms = append(dto.Charms, &model.CharmDTO{Type: charmType, Name: charmName, Grade: charmGrade})
+
+			return true
+		})
+	}
+
+	if charmErr != nil {
+		return charmErr
+	}
 
 	return nil
 }

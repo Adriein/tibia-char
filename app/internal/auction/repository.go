@@ -176,13 +176,16 @@ func (r *PgAuctionRepository) Save(auction *model.Auction) error {
 			ta_char_world,
 			ta_world_transfer,
 			ta_boss_points,
+			ta_charm_expansion,
+			ta_charm_points,
+			ta_task_expansion,
 			ta_current_bid,
 			ta_auction_start,
 			ta_auction_end,
 			ta_date_add,
 			ta_date_upd
 		)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)
 		RETURNING ta_id;
 	`
 
@@ -200,6 +203,9 @@ func (r *PgAuctionRepository) Save(auction *model.Auction) error {
 		auction.CharWorld.Id,
 		auction.WorldTransfer,
 		auction.BossPoints,
+		auction.CharmExpansion,
+		auction.CharmPoints,
+		false,
 		auction.Bid,
 		auction.AuctionStart,
 		auction.AuctionEnd,
@@ -314,21 +320,28 @@ func (r *PgAuctionRepository) Save(auction *model.Auction) error {
 	}
 
 	charmQuery := `
-		INSERT INTO tc_charm (
-			tc_auction_id,
-			tc_expansion,
-			tc_points
+		INSERT INTO tc_auction_charms (
+			tac_auction_id,
+			tac_charm_id,
+			tac_grade
 		)
-		VALUES ($1, $2, $3)
-		ON CONFLICT (tc_auction_id) DO NOTHING
-		;
+		SELECT $1, unnest($2::int[]), unnest($3::varchar[])
+		ON CONFLICT DO NOTHING;
 	`
+
+	charmsIDS := make([]int, len(auction.Charms))
+	grades := make([]string, len(auction.Charms))
+
+	for i, charm := range auction.Charms {
+		charmsIDS[i] = charm.ID
+		grades[i] = charm.Grade
+	}
 
 	_, err = tx.Exec(
 		charmQuery,
-		auction.Charm.AuctionID,
-		auction.Charm.Expansion,
-		auction.Charm.Points,
+		auction.AuctionID,
+		pq.Array(charmsIDS),
+		pq.Array(grades),
 	)
 
 	if err != nil {
@@ -368,7 +381,6 @@ func (r *PgAuctionRepository) Save(auction *model.Auction) error {
 }
 
 func (r *PgAuctionRepository) GetActiveAuctions(ctx context.Context) ([]*model.Auction, error) {
-	// Query 1: Fetch main auction data with 1:1 relationships
 	query := `
 		SELECT
 			a.ta_id,
@@ -381,9 +393,11 @@ func (r *PgAuctionRepository) GetActiveAuctions(ctx context.Context) ([]*model.A
 			g.*,
 			w.*,
 			ts.*,
-			ch.*,
 			a.ta_world_transfer,
 			a.ta_boss_points,
+			a.ta_charm_expansion,
+			a.ta_charm_points,
+			a.ta_task_expansion,
 			a.ta_current_bid,
 			a.ta_auction_start,
 			a.ta_auction_end,
@@ -402,8 +416,6 @@ func (r *PgAuctionRepository) GetActiveAuctions(ctx context.Context) ([]*model.A
 			tc_auction_recording tar ON a.ta_id = tar.tar_recordable_id
 		INNER JOIN
 			tc_skills ts ON a.ta_auction_id = ts.ts_auction_id
-		INNER JOIN
-			tc_charm ch ON a.ta_auction_id = ch.tc_auction_id
 		WHERE
 			tar.tar_status = 'active'
 		ORDER BY
@@ -433,7 +445,6 @@ func (r *PgAuctionRepository) GetActiveAuctions(ctx context.Context) ([]*model.A
 			gender          model.Gender
 			world           model.World
 			skills          model.Skills
-			charm           model.Charm
 			battleEyeString string
 			statusString    string
 		)
@@ -463,11 +474,11 @@ func (r *PgAuctionRepository) GetActiveAuctions(ctx context.Context) ([]*model.A
 			&skills.MagicLevel,
 			&skills.Shielding,
 			&skills.Sword,
-			&charm.AuctionID,
-			&charm.Expansion,
-			&charm.Points,
 			&auction.WorldTransfer,
 			&auction.BossPoints,
+			&auction.CharmExpansion,
+			&auction.CharmPoints,
+			&auction.TaskExpansion,
 			&auction.Bid,
 			&auction.AuctionStart,
 			&auction.AuctionEnd,
@@ -498,7 +509,7 @@ func (r *PgAuctionRepository) GetActiveAuctions(ctx context.Context) ([]*model.A
 		world.BattleEye = battleEyeEnum
 		auction.CharWorld = &world
 		auction.Skills = &skills
-		auction.Charm = &charm
+		auction.Charms = make([]*model.Charm, 0)
 		auction.FeaturedItems = make([]*model.FeaturedItem, 0)
 		auction.Imbuements = make([]*model.Imbuement, 0)
 
@@ -515,7 +526,7 @@ func (r *PgAuctionRepository) GetActiveAuctions(ctx context.Context) ([]*model.A
 		return []*model.Auction{}, nil
 	}
 
-	itemsQuery := `
+	featuredItemsQuery := `
 		SELECT
 			tfi.tfi_id,
 			tfi.tfi_auction_id,
@@ -526,18 +537,18 @@ func (r *PgAuctionRepository) GetActiveAuctions(ctx context.Context) ([]*model.A
 			tfi.tfi_auction_id = ANY($1);
 	`
 
-	itemRows, err := r.connection.QueryContext(ctx, itemsQuery, pq.Array(orderedIDs))
+	featuredItemsRows, err := r.connection.QueryContext(ctx, featuredItemsQuery, pq.Array(orderedIDs))
 
 	if err != nil {
 		return nil, eris.Wrap(err, "Failed to query featured items")
 	}
 
-	defer itemRows.Close()
+	defer featuredItemsRows.Close()
 
-	for itemRows.Next() {
+	for featuredItemsRows.Next() {
 		var item model.FeaturedItem
 
-		if err := itemRows.Scan(&item.ID, &item.AuctionID, &item.ItemID); err != nil {
+		if err := featuredItemsRows.Scan(&item.ID, &item.AuctionID, &item.ItemID); err != nil {
 			return nil, eris.Wrap(err, "Failed to scan featured item")
 		}
 
@@ -546,7 +557,7 @@ func (r *PgAuctionRepository) GetActiveAuctions(ctx context.Context) ([]*model.A
 		}
 	}
 
-	if err = itemRows.Err(); err != nil {
+	if err = featuredItemsRows.Err(); err != nil {
 		return nil, eris.Wrap(err, "Failed iterating featured item rows")
 	}
 
@@ -585,6 +596,45 @@ func (r *PgAuctionRepository) GetActiveAuctions(ctx context.Context) ([]*model.A
 
 	if err = imbuementRows.Err(); err != nil {
 		return nil, eris.Wrap(err, "Failed iterating imbuement rows")
+	}
+
+	charmsQuery := `
+		SELECT
+			tac.tac_auction_id,
+			tac.tac_charm_id,
+			tac.tac_grade
+			tc.tc_name
+			tc.tc_type
+		FROM
+			tc_auction_charms tac
+		INNER JOIN
+			tc_charms tc ON tac.tac_charm_id = tc.tc_id
+		WHERE
+			tac.tac_auction_id = ANY($1);
+	`
+	charmsRows, err := r.connection.QueryContext(ctx, charmsQuery, pq.Array(orderedIDs))
+
+	if err != nil {
+		return nil, eris.Wrap(err, "Failed to query charms")
+	}
+
+	defer charmsRows.Close()
+
+	for charmsRows.Next() {
+		var charm model.Charm
+		var auctionID int
+
+		if err := charmsRows.Scan(&auctionID, &charm.ID, &charm.Grade, &charm.Name, &charm.Type); err != nil {
+			return nil, eris.Wrap(err, "Failed to scan charm")
+		}
+
+		if auction, ok := auctionMap[auctionID]; ok {
+			auction.Charms = append(auction.Charms, &charm)
+		}
+	}
+
+	if err = charmsRows.Err(); err != nil {
+		return nil, eris.Wrap(err, "Failed iterating charms rows")
 	}
 
 	auctions := make([]*model.Auction, 0, len(orderedIDs))

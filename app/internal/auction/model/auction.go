@@ -21,9 +21,15 @@ type SkillsDTO struct {
 	Sword      int
 }
 
-type CharmDTO struct {
+type CharmPointsDTO struct {
 	Expansion bool
 	Points    int
+}
+
+type CharmDTO struct {
+	Type  string
+	Name  string
+	Grade int
 }
 
 type ImbuementDTO struct {
@@ -42,7 +48,8 @@ type AuctionDTO struct {
 	CharGender       string
 	CharWorld        string
 	Skills           *SkillsDTO
-	Charm            *CharmDTO
+	CharmPoints      *CharmPointsDTO
+	Charms           []*CharmDTO
 	Imbuements       []*ImbuementDTO
 	WorldTransfer    bool
 	BossPoints       int
@@ -130,9 +137,50 @@ type FeaturedItem struct {
 }
 
 type Charm struct {
-	AuctionID int
-	Expansion bool
-	Points    int
+	ID    int
+	Type  string
+	Name  string
+	Grade string
+}
+
+var charmMap = map[string]*Charm{
+	"adrenaline burst": {ID: 1, Type: "Minor", Name: "Adrenaline Burst"},
+	"bless":            {ID: 2, Type: "Minor", Name: "Bless"},
+	"carnage":          {ID: 3, Type: "Major", Name: "Carnage"},
+	"cleanse":          {ID: 4, Type: "Minor", Name: "Cleanse"},
+	"cripple":          {ID: 5, Type: "Minor", Name: "Cripple"},
+	"curse (charm)":    {ID: 6, Type: "Major", Name: "Curse (Charm)"},
+	"divine wrath":     {ID: 7, Type: "Major", Name: "Divine Wrath"},
+	"dodge":            {ID: 8, Type: "Major", Name: "Dodge"},
+	"enflame":          {ID: 9, Type: "Major", Name: "Enflame"},
+	"fatal hold":       {ID: 10, Type: "Minor", Name: "Fatal Hold"},
+	"freeze":           {ID: 11, Type: "Major", Name: "Freeze"},
+	"gut":              {ID: 12, Type: "Minor", Name: "Gut"},
+	"low blow":         {ID: 13, Type: "Major", Name: "Low Blow"},
+	"numb":             {ID: 14, Type: "Minor", Name: "Numb"},
+	"overflux":         {ID: 15, Type: "Major", Name: "Overflux"},
+	"overpower":        {ID: 16, Type: "Major", Name: "Overpower"},
+	"parry":            {ID: 17, Type: "Major", Name: "Parry"},
+	"poison":           {ID: 18, Type: "Major", Name: "Poison"},
+	"savage blow":      {ID: 19, Type: "Major", Name: "Savage Blow"},
+	"scavenge":         {ID: 20, Type: "Minor", Name: "Scavenge"},
+	"vampiric embrace": {ID: 21, Type: "Minor", Name: "Vampiric Embrace"},
+	"void inversion":   {ID: 22, Type: "Minor", Name: "Void Inversion"},
+	"voids call":       {ID: 23, Type: "Minor", Name: "Voids Call"},
+	"wound":            {ID: 24, Type: "Major", Name: "Wound"},
+	"zap":              {ID: 25, Type: "Major", Name: "Zap"},
+}
+
+func NewCharmFromName(name string) (*Charm, error) {
+	lowerCaseCharm := strings.ToLower(name)
+
+	sanitizedCharm := strings.ReplaceAll(lowerCaseCharm, "'", "")
+
+	if charm, ok := charmMap[sanitizedCharm]; ok {
+		return charm, nil
+	}
+
+	return nil, eris.Errorf("Charm %s not registered", name)
 }
 
 type Imbuement struct {
@@ -190,10 +238,13 @@ type Auction struct {
 	CharGender       *Gender
 	CharWorld        *World
 	Skills           *Skills
-	Charm            *Charm
+	Charms           []*Charm
 	Imbuements       []*Imbuement
 	WorldTransfer    bool
 	BossPoints       int
+	CharmExpansion   bool
+	CharmPoints      int
+	TaskExpansion    bool
 	Bid              int
 	AuctionStart     time.Time
 	AuctionEnd       time.Time

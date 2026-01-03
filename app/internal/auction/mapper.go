@@ -71,6 +71,18 @@ func (m *Mapper) FromDTO(dto *model.AuctionDTO) (*model.Auction, error) {
 		imbuements = append(imbuements, imbuement)
 	}
 
+	var charms []*model.Charm
+
+	for _, charmDTO := range dto.Charms {
+		charm, err := model.NewCharmFromName(charmDTO.Name)
+
+		if err != nil {
+			return nil, eris.Wrap(err, "Error converting CharmDTO to Charm")
+		}
+
+		charms = append(charms, charm)
+	}
+
 	return &model.Auction{
 		AuctionID:        dto.AuctionId,
 		TibiaAuctionLink: dto.Link,
@@ -84,6 +96,8 @@ func (m *Mapper) FromDTO(dto *model.AuctionDTO) (*model.Auction, error) {
 		CharWorld:        world,
 		WorldTransfer:    dto.WorldTransfer,
 		BossPoints:       dto.BossPoints,
+		CharmExpansion:   dto.CharmPoints.Expansion,
+		CharmPoints:      dto.CharmPoints.Points,
 		Bid:              dto.Bid,
 		AuctionStart:     dto.AuctionStartTime,
 		AuctionEnd:       dto.AuctionEndTime,
@@ -99,11 +113,7 @@ func (m *Mapper) FromDTO(dto *model.AuctionDTO) (*model.Auction, error) {
 			Shielding:  dto.Skills.Shielding,
 			Sword:      dto.Skills.Sword,
 		},
-		Charm: &model.Charm{
-			AuctionID: dto.AuctionId,
-			Expansion: dto.Charm.Expansion,
-			Points:    dto.Charm.Points,
-		},
+		Charms:     charms,
 		Imbuements: imbuements,
 		DateAdd:    time.Now(),
 		DateUpd:    time.Now(),
