@@ -1,3 +1,9 @@
+/*
+================================================================================
+TABLES
+================================================================================
+*/
+
 CREATE TABLE IF NOT EXISTS tc_world (
     tw_id SMALLINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     tw_name VARCHAR UNIQUE NOT NULL,
@@ -28,6 +34,9 @@ CREATE TABLE IF NOT EXISTS tc_auction (
     ta_char_world INT NOT NULL,
     ta_world_transfer BOOLEAN NOT NULL,
     ta_boss_points INT NOT NULL,
+    ta_charm_expansion BOOLEAN NOT NULL,
+    ta_charm_points INT NOT NULL,
+    ta_task_expansion BOOLEAN NOT NULL,
     ta_current_bid INT NOT NULL,
     ta_auction_start TIMESTAMP(0) WITHOUT TIME ZONE NOT NULL,
     ta_auction_end TIMESTAMP(0) WITHOUT TIME ZONE NOT NULL,
@@ -47,10 +56,6 @@ CREATE TABLE IF NOT EXISTS tc_auction (
         REFERENCES tc_world (tw_id)
 );
 
-CREATE INDEX idx_ta_fk_vocation ON tc_auction (ta_char_vocation);
-CREATE INDEX idx_ta_fk_gender ON tc_auction (ta_char_gender);
-CREATE INDEX idx_ta_fk_world ON tc_auction (ta_char_world);
-
 CREATE TABLE IF NOT EXISTS tc_auction_recording (
     tar_auction_id INT PRIMARY KEY,
     tar_recordable_id BIGINT NOT NULL,
@@ -62,8 +67,6 @@ CREATE TABLE IF NOT EXISTS tc_auction_recording (
         FOREIGN KEY (tar_recordable_id)
         REFERENCES tc_auction (ta_id)
 );
-
-CREATE INDEX idx_tar_auction_id_time ON tc_auction_recording (tar_auction_id, tar_date_add DESC);
 
 CREATE TABLE IF NOT EXISTS tc_skills (
     ts_auction_id INT PRIMARY KEY,
@@ -94,14 +97,24 @@ CREATE TABLE IF NOT EXISTS tc_featured_items (
         UNIQUE (tfi_auction_id, tfi_item_id)
 );
 
-CREATE TABLE IF NOT EXISTS tc_charm (
-    tc_auction_id INT PRIMARY KEY,
-    tc_expansion BOOLEAN,
-    tc_points INT,
+CREATE TABLE IF NOT EXISTS tc_charms (
+    tc_id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    tc_type VARCHAR NOT NULL,
+    tc_name VARCHAR NOT NULL
+);
 
-    CONSTRAINT fk_charm_auction_recording
-        FOREIGN KEY (tc_auction_id)
-        REFERENCES tc_auction_recording (tar_auction_id)
+CREATE TABLE IF NOT EXISTS tc_auction_charms (
+    tac_auction_id INT NOT NULL,
+    tac_charm_id INT NOT NULL,
+    PRIMARY KEY (tac_auction_id, tac_charm_id),
+
+    CONSTRAINT fk_auction_charms_auction_recording
+        FOREIGN KEY (tac_auction_id)
+        REFERENCES tc_auction_recording (tar_auction_id),
+
+    CONSTRAINT fk_auction_charms_charms
+        FOREIGN KEY (tac_charm_id)
+        REFERENCES tc_charms (tc_id)
 );
 
 CREATE TABLE IF NOT EXISTS tc_imbuements (
@@ -123,7 +136,43 @@ CREATE TABLE IF NOT EXISTS tc_auction_imbuements (
         REFERENCES tc_imbuements (ti_id)
 );
 
-CREATE INDEX idx_tai_imbuement ON tc_auction_imbuements (tai_imbuement_id);
+CREATE TABLE IF NOT EXISTS tc_quests (
+    tq_id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    tq_name VARCHAR NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS tc_auction_quests (
+    taq_auction_id INT NOT NULL,
+    taq_quest_id INT NOT NULL,
+    PRIMARY KEY (taq_auction_id, taq_quest_id),
+
+    CONSTRAINT fk_auction_quests_auction_recording
+        FOREIGN KEY (taq_auction_id)
+        REFERENCES tc_auction_recording (tar_auction_id),
+
+    CONSTRAINT fk_auction_quests_quests
+        FOREIGN KEY (taq_quest_id)
+        REFERENCES tc_quests (tq_id)
+);
+
+/*
+================================================================================
+INDEX
+================================================================================
+*/
+
+CREATE INDEX idx_ta_fk_vocation ON tc_auction (ta_char_vocation);
+CREATE INDEX idx_ta_fk_gender ON tc_auction (ta_char_gender);
+CREATE INDEX idx_ta_fk_world ON tc_auction (ta_char_world);
+CREATE INDEX idx_tar_auction_id_time ON tc_auction_recording (tar_auction_id, tar_date_add DESC);
+CREATE INDEX idx_tai_imbuement_id ON tc_auction_imbuements (tai_imbuement_id);
+CREATE INDEX idx_taq_quest_id ON tc_auction_quests (taq_quest_id);
+
+/*
+================================================================================
+SEED DATA
+================================================================================
+*/
 
 INSERT INTO tc_vocation (tv_name) VALUES ('Knight'), ('Paladin'), ('Sorcerer'), ('Druid'), ('Monk'), ('None');
 
