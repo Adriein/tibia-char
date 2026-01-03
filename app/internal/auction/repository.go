@@ -602,8 +602,8 @@ func (r *PgAuctionRepository) GetActiveAuctions(ctx context.Context) ([]*model.A
 		SELECT
 			tac.tac_auction_id,
 			tac.tac_charm_id,
-			tac.tac_grade
-			tc.tc_name
+			tac.tac_grade,
+			tc.tc_name,
 			tc.tc_type
 		FROM
 			tc_auction_charms tac
