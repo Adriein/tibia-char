@@ -106,6 +106,7 @@ CREATE TABLE IF NOT EXISTS tc_charms (
 CREATE TABLE IF NOT EXISTS tc_auction_charms (
     tac_auction_id INT NOT NULL,
     tac_charm_id INT NOT NULL,
+    tac_grade SMALLINT NOT NULL,
     PRIMARY KEY (tac_auction_id, tac_charm_id),
 
     CONSTRAINT fk_auction_charms_auction_recording
@@ -255,3 +256,30 @@ INSERT INTO tc_quests (tq_name) VALUES
 ('The Order of the Cobra'),
 ('The Order of the Lion'),
 ('The Order of the Falcon');
+
+INSERT INTO tc_charms (tc_type, tc_name) VALUES
+('Minor', 'Adrenaline Burst'),
+('Minor', 'Bless'),
+('Major', 'Carnage'),
+('Minor', 'Cleanse'),
+('Minor', 'Cripple'),
+('Major', 'Curse (Charm)'),
+('Major', 'Divine Wrath'),
+('Major', 'Dodge'),
+('Major', 'Enflame'),
+('Minor', 'Fatal Hold'),
+('Major', 'Freeze'),
+('Minor', 'Gut'),
+('Major', 'Low Blow'),
+('Minor', 'Numb'),
+('Major', 'Overflux'),
+('Major', 'Overpower'),
+('Major', 'Parry'),
+('Major', 'Poison'),
+('Major', 'Savage Blow'),
+('Minor', 'Scavenge'),
+('Minor', 'Vampiric Embrace'),
+('Minor', 'Void Inversion'),
+('Minor', 'Voids Call'),
+('Major', 'Wound'),
+('Major', 'Zap');
