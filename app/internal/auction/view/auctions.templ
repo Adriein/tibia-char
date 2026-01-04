@@ -183,6 +183,11 @@ templ AuctionCard(auction *model.Auction) {
 				<span>Boss points:</span>
 				<span>{auction.BossPoints}</span>
 			</div>
+			<div class="card__info-item">
+				<img alt="Quest log icon" src="/assets/images/quest_log_icon.png"/>
+				<span>Quests:</span>
+				<span>{fmt.Sprintf("%d/42", len(auction.Quests))}</span>
+			</div>
 		</div>
 		<div class="card__footer">
 			<a

@@ -664,6 +664,43 @@ func (r *PgAuctionRepository) GetActiveAuctions(ctx context.Context) ([]*model.A
 		return nil, eris.Wrap(err, "Failed iterating charms rows")
 	}
 
+	questsQuery := `
+		SELECT
+			taq.taq_auction_id,
+			taq.taq_quest_id,
+			tq.tq_name
+		FROM
+			tc_auction_quests taq
+		INNER JOIN
+			tc_quests tq ON taq.taq_quest_id = tq.tq_id
+		WHERE
+			taq.taq_auction_id = ANY($1);
+	`
+	questsRows, err := r.connection.QueryContext(ctx, questsQuery, pq.Array(orderedIDs))
+
+	if err != nil {
+		return nil, eris.Wrap(err, "Failed to query quests")
+	}
+
+	defer questsRows.Close()
+
+	for questsRows.Next() {
+		var quest model.Quest
+		var auctionID int
+
+		if err := questsRows.Scan(&auctionID, &quest.ID, &quest.Name); err != nil {
+			return nil, eris.Wrap(err, "Failed to scan quest")
+		}
+
+		if auction, ok := auctionMap[auctionID]; ok {
+			auction.Quests = append(auction.Quests, &quest)
+		}
+	}
+
+	if err = questsRows.Err(); err != nil {
+		return nil, eris.Wrap(err, "Failed iterating quests rows")
+	}
+
 	auctions := make([]*model.Auction, 0, len(orderedIDs))
 
 	for _, auctionID := range orderedIDs {
