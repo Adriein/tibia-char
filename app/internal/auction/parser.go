@@ -12,6 +12,7 @@ import (
 
 	"github.com/PuerkitoBio/goquery"
 	"github.com/adriein/tibia-char/internal/auction/model"
+	"github.com/adriein/tibia-char/pkg/enums"
 	"github.com/gocolly/colly/v2"
 	"github.com/rotisserie/eris"
 )
@@ -348,6 +349,17 @@ func (p *AuctionHtmlParser) parseAuctionBody(e *colly.HTMLElement, dto *model.Au
 
 				case "ShortAuctionDataBidRow":
 					selector := sAuctionDataCh.DOM.Children()
+
+					stage := selector.Filter("div[class=ShortAuctionDataLabel]").Text()
+
+					switch stage {
+					case "Minimum Bid:":
+						dto.Stage = enums.StageInitial
+					case "Current Bid:":
+						dto.Stage = enums.StageCurrent
+					case "Winning Bid:":
+						dto.Stage = enums.StageWinning
+					}
 
 					rawBid := strings.ReplaceAll(selector.Find("b").Text(), ",", "")
 

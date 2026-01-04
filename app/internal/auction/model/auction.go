@@ -59,6 +59,7 @@ type AuctionDTO struct {
 	WorldTransfer    bool
 	BossPoints       int
 	Bid              int
+	Stage            enums.AuctionStage
 	AuctionStartTime time.Time
 	AuctionEndTime   time.Time
 }
@@ -314,6 +315,7 @@ type Auction struct {
 	CharmPoints      int
 	TaskExpansion    bool
 	Bid              int
+	Stage            enums.AuctionStage
 	AuctionStart     time.Time
 	AuctionEnd       time.Time
 	Status           enums.AuctionRecordableStatus

@@ -62,3 +62,20 @@ func GetBattleEyeFromString(battleEye string) (BattleEye, error) {
 
 	return 0, eris.Errorf("Unknown BattleEye: %s", battleEye)
 }
+
+type AuctionStage string
+
+const (
+	StageInitial AuctionStage = "initial"
+	StageCurrent AuctionStage = "current"
+	StageWinning AuctionStage = "winning"
+)
+
+func (s AuctionStage) Valid() bool {
+	switch s {
+	case StageInitial, StageCurrent, StageWinning:
+		return true
+	}
+
+	return false
+}

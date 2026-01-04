@@ -114,6 +114,7 @@ func (m *Mapper) FromDTO(dto *model.AuctionDTO) (*model.Auction, error) {
 		CharmExpansion:   dto.CharmPoints.Expansion,
 		CharmPoints:      dto.CharmPoints.Points,
 		Bid:              dto.Bid,
+		Stage:            dto.Stage,
 		AuctionStart:     dto.AuctionStartTime,
 		AuctionEnd:       dto.AuctionEndTime,
 		Status:           enums.RecordableActive,
