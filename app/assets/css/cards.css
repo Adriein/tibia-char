@@ -87,10 +87,6 @@
       --badge-block-space: 4px;
       --badge-font-size: var(--text-xx-small);
       margin-left: var(--inline-space);
-      /*padding: 2px 4px;*/
-
-
-
     }
 
     .card__bid-badge--current {
