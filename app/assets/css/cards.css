@@ -69,6 +69,67 @@
       }
     }
 
+    .card__bid {
+      padding: var(--card-padding-block) var(--card-padding-inline);
+      display: flex;
+      font-size: var(--text-x-small);
+      justify-content: space-between;
+    }
+
+    .card__bid-section {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .card__bid-badge--initial {
+      padding: 2px 4px;
+      display: inline-block;
+      background-color: var(--color-brand-main);
+      color: var(--color-brand-ink);
+      border-radius: var(--radius-sm);
+      font-size: var(--text-xx-small);
+      font-weight: var(--text-weight-normal);
+      margin-left: var(--inline-space);
+    }
+
+    .card__bid-badge--current {
+      display: inline-block;
+      padding: var(--block-space-half) var(--inline-space-double);
+      background-color: var(--color-success);
+    }
+
+    .card__bid-badge--winning {
+      padding: var(--block-space-half) var(--inline-space-double);
+      background-color: var(--color-muted);
+    }
+
+    .card__bid-amount {
+      display: flex;
+      gap: 2px;
+      font-weight: 800;
+      align-items: center;
+
+      img {
+        width: 25px;
+        height: 25px;
+        transform: translate(-16%, 0%);
+        flex-shrink: 0;
+      }
+    }
+
+    .card__bid-time {
+      display: flex;
+      gap: var(--inline-space);
+      align-items: center;
+
+      svg {
+        width: 20px;
+        height: 20px;
+        flex-shrink: 0;
+      }
+    }
+
     .card__subheader {
       padding: var(--block-space-half) var(--inline-space-double);
       justify-content: space-between;

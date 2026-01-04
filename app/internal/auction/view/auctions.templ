@@ -36,10 +36,24 @@ templ AuctionCard(auction *model.Auction) {
 			loc = time.UTC
 		}
 
-		prettyDate := auction.AuctionEnd.In(loc).Format("Jan 02, 2006 at 15:04")
+		formattedAuctionEnd := auction.AuctionEnd.In(loc).Format("Jan 02, 2006 at 15:04")
+		formattedAuctionStart := auction.AuctionStart.In(loc).Format("Jan 02, 2006 at 15:04")
+
 		abbr, _ := auction.AuctionEnd.In(loc).Zone()
 
-		auctionEnd := fmt.Sprintf("%s (%s)", prettyDate, abbr)
+		auctionStart := fmt.Sprintf("%s (%s)", formattedAuctionStart, abbr)
+		auctionEnd := fmt.Sprintf("%s (%s)", formattedAuctionEnd, abbr)
+
+		var auctionStage string
+
+		switch auction.Stage {
+		case enums.StageInitial:
+			auctionStage = "Initial Bid"
+		case enums.StageCurrent:
+			auctionStage = "Current Bid"
+		case enums.StageWinning:
+			auctionStage = "Winning Bid"
+		}
 	}}
 	<div class="card card--auction">
 		<div class="card__header">
@@ -49,6 +63,30 @@ templ AuctionCard(auction *model.Auction) {
 			<div>
 				<h1 class="card__title">{auction.CharName}</h1>
 				<h2 class="card__subtitle">{auction.CharLevel} {auction.CharVocation.Name}</h2>
+			</div>
+		</div>
+		<div class="card__bid">
+			<div class="card__bid-section">
+				<div class="card__bid-amount">
+					<img src="https://static.tibia.com/images/charactertrade/objects/37317.gif"/>
+					<span>{auction.Bid} TC</span>
+					<span class="card__bid-badge--initial">{auctionStage}</span>
+				</div>
+				<div class="card__bid-item">
+					<div class="card__bid-amount">
+						<span>150€</span>
+					</div>
+				</div>
+			</div>
+			<div class="card__bid-section">
+				<div class="card__bid-time">
+					<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-clock"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0" /><path d="M12 7v5l3 3" /></svg>
+					<span>{auctionStart}</span>
+				</div>
+				<div class="card__bid-time">
+					<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-clock"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0" /><path d="M12 7v5l3 3" /></svg>
+					<span>{auctionEnd}</span>
+				</div>
 			</div>
 		</div>
 		<div class="card__subheader">
