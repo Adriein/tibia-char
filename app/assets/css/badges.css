@@ -1,0 +1,16 @@
+@layer components {
+  .badge {
+    display: inline-block;
+    padding: var(--badge-inline-space, var(--inline-space)) var(--badge-block-space, var(--block-space));
+    background-color: var(--badge-bg, var(--color-muted));
+    color: var(--badge-color, var(--color-muted-ink));
+    border-radius: var(--radius-sm);
+    font-size: var(--badge-font-size, var(--text-small));
+    font-weight: var(--badge-font-weight, var(--text-weight-normal));
+  }
+
+  .badge--primary {
+    --badge-bg: var(--color-brand-main);
+    --badge-color: var(--color-brand-ink);
+  }
+}

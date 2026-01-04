@@ -83,14 +83,14 @@
     }
 
     .card__bid-badge--initial {
-      padding: 2px 4px;
-      display: inline-block;
-      background-color: var(--color-brand-main);
-      color: var(--color-brand-ink);
-      border-radius: var(--radius-sm);
-      font-size: var(--text-xx-small);
-      font-weight: var(--text-weight-normal);
+      --badge-inline-space: 2px;
+      --badge-block-space: 4px;
+      --badge-font-size: var(--text-xx-small);
       margin-left: var(--inline-space);
+      /*padding: 2px 4px;*/
+
+
+
     }
 
     .card__bid-badge--current {
@@ -115,6 +115,11 @@
         height: 25px;
         transform: translate(-16%, 0%);
         flex-shrink: 0;
+      }
+
+      svg {
+        width: 20px;
+        height: 20px;
       }
     }
 
