@@ -6,7 +6,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/adriein/tibia-char/internal/auction/model"
 	"github.com/adriein/tibia-char/pkg/enums"
 	"github.com/rotisserie/eris"
 )
@@ -21,26 +20,26 @@ func NewMapper(wr WorldRepository) *Mapper {
 	}
 }
 
-func (m *Mapper) FromDTO(dto *model.AuctionDTO) (*model.Auction, error) {
-	vocation, err := model.NewVocationFromName(dto.CharVocation)
+func (m *Mapper) FromDTO(dto *AuctionDTO) (*Auction, error) {
+	vocation, err := NewVocationFromName(dto.CharVocation)
 
 	if err != nil {
 		return nil, err
 	}
 
-	gender, err := model.NewGenderFromName(dto.CharGender)
+	gender, err := NewGenderFromName(dto.CharGender)
 
 	if err != nil {
 		return nil, err
 	}
 
-	world, err := m.worldRepository.GetOrCreate(&model.World{Name: dto.CharWorld})
+	world, err := m.worldRepository.GetOrCreate(&World{Name: dto.CharWorld})
 
 	if err != nil {
 		return nil, err
 	}
 
-	var featuredItems []*model.FeaturedItem
+	var featuredItems []*FeaturedItem
 
 	for _, item := range dto.FeaturedItems {
 		if item.Link == "" {
@@ -56,13 +55,13 @@ func (m *Mapper) FromDTO(dto *model.AuctionDTO) (*model.Auction, error) {
 			return nil, eris.Wrap(err, "Error parsing itemIDString to int")
 		}
 
-		featuredItems = append(featuredItems, &model.FeaturedItem{AuctionID: dto.AuctionId, ItemID: itemID})
+		featuredItems = append(featuredItems, &FeaturedItem{AuctionID: dto.AuctionId, ItemID: itemID})
 	}
 
-	var imbuements []*model.Imbuement
+	var imbuements []*Imbuement
 
 	for _, imbuementDTO := range dto.Imbuements {
-		imbuement, err := model.NewImbuementFromName(imbuementDTO.Name)
+		imbuement, err := NewImbuementFromName(imbuementDTO.Name)
 
 		if err != nil {
 			return nil, eris.Wrap(err, "Error converting ImbuementDTO to Imbuement")
@@ -71,10 +70,10 @@ func (m *Mapper) FromDTO(dto *model.AuctionDTO) (*model.Auction, error) {
 		imbuements = append(imbuements, imbuement)
 	}
 
-	var charms []*model.Charm
+	var charms []*Charm
 
 	for _, charmDTO := range dto.Charms {
-		charm, err := model.NewCharmFromName(charmDTO.Name)
+		charm, err := NewCharmFromName(charmDTO.Name)
 
 		if err != nil {
 			return nil, eris.Wrap(err, "Error converting CharmDTO to Charm")
@@ -85,10 +84,10 @@ func (m *Mapper) FromDTO(dto *model.AuctionDTO) (*model.Auction, error) {
 		charms = append(charms, charm)
 	}
 
-	var quests []*model.Quest
+	var quests []*Quest
 
 	for _, questDTO := range dto.Quests {
-		quest, err := model.NewQuestFromName(questDTO.Name)
+		quest, err := NewQuestFromName(questDTO.Name)
 
 		if err != nil {
 			//TODO: right now we ignore the quest not found because we are not interested in all of them
@@ -98,7 +97,7 @@ func (m *Mapper) FromDTO(dto *model.AuctionDTO) (*model.Auction, error) {
 		quests = append(quests, quest)
 	}
 
-	return &model.Auction{
+	return &Auction{
 		AuctionID:        dto.AuctionId,
 		TibiaAuctionLink: dto.Link,
 		Img:              dto.ImgUrl,
@@ -118,7 +117,7 @@ func (m *Mapper) FromDTO(dto *model.AuctionDTO) (*model.Auction, error) {
 		AuctionStart:     dto.AuctionStartTime,
 		AuctionEnd:       dto.AuctionEndTime,
 		Status:           enums.RecordableActive,
-		Skills: &model.Skills{
+		Skills: &Skills{
 			AuctionID:  dto.AuctionId,
 			Axe:        dto.Skills.Axe,
 			Club:       dto.Skills.Club,

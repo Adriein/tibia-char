@@ -5,14 +5,13 @@ import (
 	"database/sql"
 	"time"
 
-	"github.com/adriein/tibia-char/internal/auction/model"
 	"github.com/adriein/tibia-char/pkg/enums"
 	"github.com/lib/pq"
 	"github.com/rotisserie/eris"
 )
 
 type VocationRepository interface {
-	GetOrCreate(vocation string) (*model.Vocation, error)
+	GetOrCreate(vocation string) (*Vocation, error)
 }
 
 type PgVocationReository struct {
@@ -23,7 +22,7 @@ func NewPgVocationRepository(c *sql.DB) *PgVocationReository {
 	return &PgVocationReository{connection: c}
 }
 
-func (vr *PgVocationReository) GetOrCreate(vocation string) (*model.Vocation, error) {
+func (vr *PgVocationReository) GetOrCreate(vocation string) (*Vocation, error) {
 	query := `
 		WITH ins AS (
 			INSERT INTO tc_vocation (tv_name)
@@ -37,7 +36,7 @@ func (vr *PgVocationReository) GetOrCreate(vocation string) (*model.Vocation, er
 		LIMIT 1;
 	`
 
-	var dto model.Vocation
+	var dto Vocation
 
 	err := vr.connection.QueryRow(query, vocation).Scan(&dto.Id, &dto.Name)
 
@@ -49,7 +48,7 @@ func (vr *PgVocationReository) GetOrCreate(vocation string) (*model.Vocation, er
 }
 
 type GenderRepository interface {
-	GetOrCreate(gender string) (*model.Gender, error)
+	GetOrCreate(gender string) (*Gender, error)
 }
 
 type PgGenderRepository struct {
@@ -60,7 +59,7 @@ func NewPgGenderRepository(c *sql.DB) *PgGenderRepository {
 	return &PgGenderRepository{connection: c}
 }
 
-func (gr *PgGenderRepository) GetOrCreate(gender string) (*model.Gender, error) {
+func (gr *PgGenderRepository) GetOrCreate(gender string) (*Gender, error) {
 	query := `
 		WITH ins AS (
 			INSERT INTO tc_gender (tg_name)
@@ -74,7 +73,7 @@ func (gr *PgGenderRepository) GetOrCreate(gender string) (*model.Gender, error) 
 		LIMIT 1;
 	`
 
-	var dto model.Gender
+	var dto Gender
 
 	err := gr.connection.QueryRow(query, gender).Scan(&dto.Id, &dto.Name)
 
@@ -86,7 +85,7 @@ func (gr *PgGenderRepository) GetOrCreate(gender string) (*model.Gender, error) 
 }
 
 type WorldRepository interface {
-	GetOrCreate(world *model.World) (*model.World, error)
+	GetOrCreate(world *World) (*World, error)
 }
 
 type PgWorldRepository struct {
@@ -97,7 +96,7 @@ func NewPgWorldRepository(c *sql.DB) *PgWorldRepository {
 	return &PgWorldRepository{connection: c}
 }
 
-func (wr *PgWorldRepository) GetOrCreate(world *model.World) (*model.World, error) {
+func (wr *PgWorldRepository) GetOrCreate(world *World) (*World, error) {
 	query := `
 		WITH ins AS (
 			INSERT INTO tc_world (tw_name, tw_location, tw_battle_eye, tw_pvp)
@@ -111,7 +110,7 @@ func (wr *PgWorldRepository) GetOrCreate(world *model.World) (*model.World, erro
 		LIMIT 1;
 	`
 
-	var dto model.World
+	var dto World
 
 	var battleEye string
 
@@ -143,8 +142,8 @@ func (wr *PgWorldRepository) GetOrCreate(world *model.World) (*model.World, erro
 }
 
 type AuctionRepository interface {
-	Save(auction *model.Auction) error
-	GetActiveAuctions(ctx context.Context) ([]*model.Auction, error)
+	Save(auction *Auction) error
+	GetActiveAuctions(ctx context.Context) ([]*Auction, error)
 }
 
 type PgAuctionRepository struct {
@@ -157,7 +156,7 @@ func NewPgAuctionRepository(connection *sql.DB) *PgAuctionRepository {
 	}
 }
 
-func (r *PgAuctionRepository) Save(auction *model.Auction) error {
+func (r *PgAuctionRepository) Save(auction *Auction) error {
 	tx, err := r.connection.Begin()
 
 	if err != nil {
@@ -409,7 +408,7 @@ func (r *PgAuctionRepository) Save(auction *model.Auction) error {
 	return tx.Commit()
 }
 
-func (r *PgAuctionRepository) GetActiveAuctions(ctx context.Context) ([]*model.Auction, error) {
+func (r *PgAuctionRepository) GetActiveAuctions(ctx context.Context) ([]*Auction, error) {
 	query := `
 		SELECT
 			a.ta_id,
@@ -464,17 +463,17 @@ func (r *PgAuctionRepository) GetActiveAuctions(ctx context.Context) ([]*model.A
 
 	defer rows.Close()
 
-	auctionMap := make(map[int]*model.Auction)
+	auctionMap := make(map[int]*Auction)
 
 	var orderedIDs []int
 
 	for rows.Next() {
 		var (
-			auction         model.Auction
-			vocation        model.Vocation
-			gender          model.Gender
-			world           model.World
-			skills          model.Skills
+			auction         Auction
+			vocation        Vocation
+			gender          Gender
+			world           World
+			skills          Skills
 			battleEyeString string
 			statusString    string
 		)
@@ -540,9 +539,9 @@ func (r *PgAuctionRepository) GetActiveAuctions(ctx context.Context) ([]*model.A
 		world.BattleEye = battleEyeEnum
 		auction.CharWorld = &world
 		auction.Skills = &skills
-		auction.Charms = make([]*model.Charm, 0)
-		auction.FeaturedItems = make([]*model.FeaturedItem, 0)
-		auction.Imbuements = make([]*model.Imbuement, 0)
+		auction.Charms = make([]*Charm, 0)
+		auction.FeaturedItems = make([]*FeaturedItem, 0)
+		auction.Imbuements = make([]*Imbuement, 0)
 
 		auctionMap[auction.AuctionID] = &auction
 
@@ -554,7 +553,7 @@ func (r *PgAuctionRepository) GetActiveAuctions(ctx context.Context) ([]*model.A
 	}
 
 	if len(orderedIDs) == 0 {
-		return []*model.Auction{}, nil
+		return []*Auction{}, nil
 	}
 
 	featuredItemsQuery := `
@@ -577,7 +576,7 @@ func (r *PgAuctionRepository) GetActiveAuctions(ctx context.Context) ([]*model.A
 	defer featuredItemsRows.Close()
 
 	for featuredItemsRows.Next() {
-		var item model.FeaturedItem
+		var item FeaturedItem
 
 		if err := featuredItemsRows.Scan(&item.ID, &item.AuctionID, &item.ItemID); err != nil {
 			return nil, eris.Wrap(err, "Failed to scan featured item")
@@ -613,7 +612,7 @@ func (r *PgAuctionRepository) GetActiveAuctions(ctx context.Context) ([]*model.A
 	defer imbuementRows.Close()
 
 	for imbuementRows.Next() {
-		var imbuement model.Imbuement
+		var imbuement Imbuement
 		var auctionID int
 
 		if err := imbuementRows.Scan(&auctionID, &imbuement.ID, &imbuement.Name); err != nil {
@@ -652,7 +651,7 @@ func (r *PgAuctionRepository) GetActiveAuctions(ctx context.Context) ([]*model.A
 	defer charmsRows.Close()
 
 	for charmsRows.Next() {
-		var charm model.Charm
+		var charm Charm
 		var auctionID int
 
 		if err := charmsRows.Scan(&auctionID, &charm.ID, &charm.Grade, &charm.Name, &charm.Type); err != nil {
@@ -689,7 +688,7 @@ func (r *PgAuctionRepository) GetActiveAuctions(ctx context.Context) ([]*model.A
 	defer questsRows.Close()
 
 	for questsRows.Next() {
-		var quest model.Quest
+		var quest Quest
 		var auctionID int
 
 		if err := questsRows.Scan(&auctionID, &quest.ID, &quest.Name); err != nil {
@@ -705,7 +704,7 @@ func (r *PgAuctionRepository) GetActiveAuctions(ctx context.Context) ([]*model.A
 		return nil, eris.Wrap(err, "Failed iterating quests rows")
 	}
 
-	auctions := make([]*model.Auction, 0, len(orderedIDs))
+	auctions := make([]*Auction, 0, len(orderedIDs))
 
 	for _, auctionID := range orderedIDs {
 		auctions = append(auctions, auctionMap[auctionID])

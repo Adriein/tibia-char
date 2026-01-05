@@ -6,7 +6,6 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/adriein/tibia-char/internal/auction/model"
 	"github.com/adriein/tibia-char/pkg/enums"
 	"github.com/adriein/tibia-char/pkg/helper/collections"
 	"github.com/adriein/tibia-char/pkg/middleware"
@@ -59,7 +58,7 @@ func (s *Service) ScrapBazaar(ctx context.Context) error {
 		return eris.Wrap(err, "Failed to fetch worlds from Tibia API")
 	}*/
 
-	worlds := []*model.World{{Id: 1, Name: "Calmera", Location: "North America", BattleEye: enums.BattleEyeYellow, Pvp: "Optional Pvp"}}
+	worlds := []*World{{Id: 1, Name: "Calmera", Location: "North America", BattleEye: enums.BattleEyeYellow, Pvp: "Optional Pvp"}}
 
 	for _, world := range worlds {
 		_, err := s.worldRepository.GetOrCreate(world)
@@ -90,7 +89,7 @@ func (s *Service) ScrapBazaar(ctx context.Context) error {
 	return nil
 }
 
-func (s *Service) GetAuctions(ctx context.Context) ([]*model.Auction, error) {
+func (s *Service) GetAuctions(ctx context.Context) ([]*Auction, error) {
 	auctions, err := s.auctionRepository.GetActiveAuctions(ctx)
 
 	if err != nil {
@@ -100,12 +99,12 @@ func (s *Service) GetAuctions(ctx context.Context) ([]*model.Auction, error) {
 	return auctions, nil
 }
 
-func (s *Service) scrapAuctionLinks(worlds []*model.World) (*model.AuctionLinkSet, error) {
+func (s *Service) scrapAuctionLinks(worlds []*World) (*AuctionLinkSet, error) {
 	semaphore := make(chan struct{}, AuctionLinkMaxConcurrency)
 
 	worldsChunk := collections.Chunk(worlds, AuctionLinkMaxConcurrency)
 
-	auctionLinkSet := model.NewAuctionLinkSet()
+	auctionLinkSet := NewAuctionLinkSet()
 
 	for _, chunk := range worldsChunk {
 		g, ctx := errgroup.WithContext(context.Background())
@@ -136,12 +135,12 @@ func (s *Service) scrapAuctionLinks(worlds []*model.World) (*model.AuctionLinkSe
 	return auctionLinkSet, nil
 }
 
-func (s *Service) scrapAuctionDetail(auctionLinkSet *model.AuctionLinkSet) error {
+func (s *Service) scrapAuctionDetail(auctionLinkSet *AuctionLinkSet) error {
 	links := collections.ChunkMap(auctionLinkSet.Data, AuctionDetailMaxConcurrency)
 
 	semaphore := make(chan struct{}, AuctionDetailMaxConcurrency)
 
-	failed := model.NewAuctionLinkSet()
+	failed := NewAuctionLinkSet()
 	scrapped := 0
 
 	for i, chunk := range links {

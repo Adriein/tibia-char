@@ -11,7 +11,6 @@ import (
 	"time"
 
 	"github.com/PuerkitoBio/goquery"
-	"github.com/adriein/tibia-char/internal/auction/model"
 	"github.com/adriein/tibia-char/pkg/enums"
 	"github.com/gocolly/colly/v2"
 	"github.com/rotisserie/eris"
@@ -88,7 +87,7 @@ func (p *AuctionListHtmlParser) GetTotalCurrentAuctions() (int, error) {
 	return totalCurrentAuctions, nil
 }
 
-func (p *AuctionListHtmlParser) ScrapeWorld(world string, set *model.AuctionLinkSet) error {
+func (p *AuctionListHtmlParser) ScrapeWorld(world string, set *AuctionLinkSet) error {
 	for page := 1; ; page++ {
 		randDelay := time.Duration(2+rand.Intn(5)) * time.Second
 
@@ -195,12 +194,12 @@ func NewAuctionHtmlParser(c *colly.Collector) *AuctionHtmlParser {
 	}
 }
 
-func (p *AuctionHtmlParser) Parse(ctx context.Context, auctionId int, link string) (*model.AuctionDTO, error) {
-	dto := model.AuctionDTO{
+func (p *AuctionHtmlParser) Parse(ctx context.Context, auctionId int, link string) (*AuctionDTO, error) {
+	dto := AuctionDTO{
 		AuctionId:   auctionId,
 		Link:        fmt.Sprintf("https://www.tibia.com/charactertrade/?subtopic=currentcharactertrades&page=details&auctionid=%d", auctionId),
-		Skills:      &model.SkillsDTO{},
-		CharmPoints: &model.CharmPointsDTO{},
+		Skills:      &SkillsDTO{},
+		CharmPoints: &CharmPointsDTO{},
 	}
 
 	var parseErr error
@@ -278,7 +277,7 @@ func (p *AuctionHtmlParser) Parse(ctx context.Context, auctionId int, link strin
 	return &dto, nil
 }
 
-func (p *AuctionHtmlParser) parseAuctionHeader(e *colly.HTMLElement, dto *model.AuctionDTO) error {
+func (p *AuctionHtmlParser) parseAuctionHeader(e *colly.HTMLElement, dto *AuctionDTO) error {
 	dto.CharName = e.ChildText("div[class=AuctionCharacterName]")
 	dto.CharWorld = e.ChildText("a[href]")
 
@@ -298,7 +297,7 @@ func (p *AuctionHtmlParser) parseAuctionHeader(e *colly.HTMLElement, dto *model.
 	return nil
 }
 
-func (p *AuctionHtmlParser) parseAuctionBody(e *colly.HTMLElement, dto *model.AuctionDTO) error {
+func (p *AuctionHtmlParser) parseAuctionBody(e *colly.HTMLElement, dto *AuctionDTO) error {
 	var bodyErr error
 
 	e.ForEachWithBreak("div", func(_ int, ch *colly.HTMLElement) bool {
@@ -316,7 +315,7 @@ func (p *AuctionHtmlParser) parseAuctionBody(e *colly.HTMLElement, dto *model.Au
 				imgTitle := itemViewBoxCh.Attr("title")
 				imgLink := itemViewBoxCh.ChildAttr("img", "src")
 
-				dto.FeaturedItems = append(dto.FeaturedItems, &model.ImgDisplay{Name: imgTitle, Link: imgLink})
+				dto.FeaturedItems = append(dto.FeaturedItems, &ImgDisplay{Name: imgTitle, Link: imgLink})
 			})
 
 		case "ShortAuctionData":
@@ -421,7 +420,7 @@ func (p *AuctionHtmlParser) extractGender(auctionHeader string) string {
 	return strings.TrimSpace(headerParts[2])
 }
 
-func (p *AuctionHtmlParser) parseAuctionGeneral(e *colly.HTMLElement, dto *model.AuctionDTO) error {
+func (p *AuctionHtmlParser) parseAuctionGeneral(e *colly.HTMLElement, dto *AuctionDTO) error {
 	var auctionGeneralErr error
 
 	e.ForEachWithBreak("span[class=LabelV],td[class=PercentageColumn]", func(_ int, el *colly.HTMLElement) bool {
@@ -451,7 +450,7 @@ func (p *AuctionHtmlParser) parseAuctionGeneral(e *colly.HTMLElement, dto *model
 	return auctionGeneralErr
 }
 
-func (p *AuctionHtmlParser) extractWorldTransfer(e *colly.HTMLElement, dto *model.AuctionDTO) {
+func (p *AuctionHtmlParser) extractWorldTransfer(e *colly.HTMLElement, dto *AuctionDTO) {
 	if e.Text == "Regular World Transfer:" {
 		divSibling := e.DOM.Siblings().Contents()
 
@@ -466,7 +465,7 @@ func (p *AuctionHtmlParser) extractWorldTransfer(e *colly.HTMLElement, dto *mode
 	}
 }
 
-func (p *AuctionHtmlParser) extractSkills(e *colly.HTMLElement, dto *model.AuctionDTO) error {
+func (p *AuctionHtmlParser) extractSkills(e *colly.HTMLElement, dto *AuctionDTO) error {
 	skillComponents := e.DOM.Siblings().AndSelf().Nodes
 
 	if len(skillComponents) == 3 {
@@ -508,7 +507,7 @@ func (p *AuctionHtmlParser) extractSkills(e *colly.HTMLElement, dto *model.Aucti
 	return nil
 }
 
-func (p *AuctionHtmlParser) extractCharmPoints(e *colly.HTMLElement, dto *model.AuctionDTO) error {
+func (p *AuctionHtmlParser) extractCharmPoints(e *colly.HTMLElement, dto *AuctionDTO) error {
 	text := e.Text
 
 	switch text {
@@ -538,7 +537,7 @@ func (p *AuctionHtmlParser) extractCharmPoints(e *colly.HTMLElement, dto *model.
 	return nil
 }
 
-func (p *AuctionHtmlParser) extractBossPoints(e *colly.HTMLElement, dto *model.AuctionDTO) error {
+func (p *AuctionHtmlParser) extractBossPoints(e *colly.HTMLElement, dto *AuctionDTO) error {
 	text := e.Text
 
 	if text == "Boss Points:" {
@@ -556,13 +555,13 @@ func (p *AuctionHtmlParser) extractBossPoints(e *colly.HTMLElement, dto *model.A
 	return nil
 }
 
-func (p *AuctionHtmlParser) parseAuctionImbuements(e *colly.HTMLElement, dto *model.AuctionDTO) error {
+func (p *AuctionHtmlParser) parseAuctionImbuements(e *colly.HTMLElement, dto *AuctionDTO) error {
 	e.DOM.Find("tr[class=LabelH]").Siblings().EachWithBreak(func(i int, s *goquery.Selection) bool {
 		if s.HasClass("IndicateMoreEntries") {
 			return false
 		}
 
-		dto.Imbuements = append(dto.Imbuements, &model.ImbuementDTO{Name: s.Children().Eq(0).Text()})
+		dto.Imbuements = append(dto.Imbuements, &ImbuementDTO{Name: s.Children().Eq(0).Text()})
 
 		return true
 	})
@@ -570,7 +569,7 @@ func (p *AuctionHtmlParser) parseAuctionImbuements(e *colly.HTMLElement, dto *mo
 	return nil
 }
 
-func (p *AuctionHtmlParser) parseAuctionCharms(e *colly.HTMLElement, dto *model.AuctionDTO) error {
+func (p *AuctionHtmlParser) parseAuctionCharms(e *colly.HTMLElement, dto *AuctionDTO) error {
 	var charmErr error
 	relevantHTML := e.DOM.Find("tr[class=LabelH]")
 
@@ -592,7 +591,7 @@ func (p *AuctionHtmlParser) parseAuctionCharms(e *colly.HTMLElement, dto *model.
 				return false
 			}
 
-			dto.Charms = append(dto.Charms, &model.CharmDTO{Type: charmType, Name: charmName, Grade: charmGrade})
+			dto.Charms = append(dto.Charms, &CharmDTO{Type: charmType, Name: charmName, Grade: charmGrade})
 
 			return true
 		})
@@ -605,14 +604,14 @@ func (p *AuctionHtmlParser) parseAuctionCharms(e *colly.HTMLElement, dto *model.
 	return nil
 }
 
-func (p *AuctionHtmlParser) parseAuctionQuests(e *colly.HTMLElement, dto *model.AuctionDTO) error {
+func (p *AuctionHtmlParser) parseAuctionQuests(e *colly.HTMLElement, dto *AuctionDTO) error {
 	relevantHTML := e.DOM.Find("tr[class=LabelH]")
 
 	if strings.Contains(relevantHTML.Children().Text(), "Quest Line Name") {
 		relevantHTML.Siblings().EachWithBreak(func(i int, s *goquery.Selection) bool {
 			quest := s.Children().Text()
 
-			dto.Quests = append(dto.Quests, &model.QuestDTO{Name: quest})
+			dto.Quests = append(dto.Quests, &QuestDTO{Name: quest})
 
 			return true
 		})

@@ -11,7 +11,7 @@ import (
 	"github.com/rotisserie/eris"
 
 	"github.com/adriein/tibia-char/internal"
-	auction "github.com/adriein/tibia-char/internal/auction/controller"
+	"github.com/adriein/tibia-char/internal/auction"
 	"github.com/adriein/tibia-char/internal/health"
 	"github.com/adriein/tibia-char/pkg/middleware"
 	"github.com/adriein/tibia-char/pkg/vendor"

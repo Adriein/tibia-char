@@ -1,4 +1,4 @@
-package controller
+package auction
 
 import (
 	"log"
@@ -6,8 +6,6 @@ import (
 	"os"
 
 	"github.com/adriein/tibia-char/internal"
-	"github.com/adriein/tibia-char/internal/auction"
-	"github.com/adriein/tibia-char/internal/auction/view"
 	"github.com/adriein/tibia-char/pkg/middleware"
 	"github.com/adriein/tibia-char/pkg/vendor"
 	"github.com/gin-gonic/gin"
@@ -15,28 +13,28 @@ import (
 )
 
 type Controller struct {
-	service *auction.Service
+	service *Service
 	logger  *log.Logger
 }
 
 func NewController(app *internal.App) *Controller {
 	logger := log.New(os.Stderr, "[Auction] ", log.LstdFlags|log.LUTC)
 
-	auctionRepository := auction.NewPgAuctionRepository(app.Databse)
-	worldRepository := auction.NewPgWorldRepository(app.Databse)
+	auctionRepository := NewPgAuctionRepository(app.Databse)
+	worldRepository := NewPgWorldRepository(app.Databse)
 
-	linkScrapper := auction.NewScrapper("CollectAuctionLinks")
+	linkScrapper := NewScrapper("CollectAuctionLinks")
 
-	detailScrapper := auction.NewScrapper("CollectAuctionDetails")
+	detailScrapper := NewScrapper("CollectAuctionDetails")
 
 	tibiaAPI := vendor.NewTibiaApi()
 
-	auctionListHtmlParser := auction.NewAuctionListHtmlParser(linkScrapper.Collector)
-	auctionHtmlParser := auction.NewAuctionHtmlParser(detailScrapper.Collector)
+	auctionListHtmlParser := NewAuctionListHtmlParser(linkScrapper.Collector)
+	auctionHtmlParser := NewAuctionHtmlParser(detailScrapper.Collector)
 
-	mapper := auction.NewMapper(worldRepository)
+	mapper := NewMapper(worldRepository)
 
-	service := auction.NewService(tibiaAPI, auctionListHtmlParser, auctionHtmlParser, auctionRepository, worldRepository, mapper, logger)
+	service := NewService(tibiaAPI, auctionListHtmlParser, auctionHtmlParser, auctionRepository, worldRepository, mapper, logger)
 
 	return &Controller{
 		service: service,
@@ -55,7 +53,7 @@ func (c *Controller) Get() gin.HandlerFunc {
 			c.logger.Printf("TraceID %s Error getting auctions: %s\n", traceID, eris.ToString(err, true))
 		}
 
-		renderer := vendor.NewTemplRenderer(ctx, http.StatusOK, view.Index(auctions))
+		renderer := vendor.NewTemplRenderer(ctx, http.StatusOK, AuctionsView(auctions))
 
 		ctx.Render(http.StatusOK, renderer)
 	}

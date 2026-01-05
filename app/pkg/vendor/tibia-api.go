@@ -4,8 +4,6 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/adriein/tibia-char/internal/auction/model"
-	"github.com/adriein/tibia-char/pkg/enums"
 	"github.com/rotisserie/eris"
 )
 
@@ -26,7 +24,7 @@ func NewTibiaApi() *TibiaApi {
 	return &TibiaApi{}
 }
 
-func (t *TibiaApi) GetWorlds() ([]*model.World, error) {
+func (t *TibiaApi) GetWorlds() (*TibiaApiWorlds, error) {
 	httpRes, err := http.Get("https://api.tibiadata.com/v4/worlds")
 
 	if err != nil {
@@ -47,23 +45,5 @@ func (t *TibiaApi) GetWorlds() ([]*model.World, error) {
 		return nil, eris.Errorf("Error parsing json: %s", err.Error())
 	}
 
-	regularWorlds := apiWorldsResponse.Worlds.RegularWorlds
-
-	results := make([]*model.World, 0, len(regularWorlds))
-
-	for _, world := range regularWorlds {
-		name := world.Name
-		location := world.Location
-		pvp := world.PvpType
-
-		if world.BattleEyeDate == "release" {
-			results = append(results, &model.World{Name: name, Location: location, BattleEye: enums.BattleEyeGreen, Pvp: pvp})
-
-			continue
-		}
-
-		results = append(results, &model.World{Name: name, Location: location, BattleEye: enums.BattleEyeYellow, Pvp: pvp})
-	}
-
-	return results, nil
+	return &apiWorldsResponse, nil
 }

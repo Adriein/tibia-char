@@ -1,17 +1,45 @@
-package view
+package auction
 
 import (
 	"strings"
 	"fmt"
+  "time"
+	"math"
 
-	"github.com/adriein/tibia-char/internal/auction/model"
 	"github.com/adriein/tibia-char/pkg/enums"
 	"github.com/adriein/tibia-char/pkg/helper/str"
 	"github.com/adriein/tibia-char/pkg/middleware"
-	"time"
-	"math"
 	"github.com/adriein/tibia-char/pkg/constants"
 )
+
+script initTimezone() {
+    if (!document.cookie.includes("User_Tz=")) {
+        const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        document.cookie = "User_Tz=" + tz + ";path=/;max-age=31536000;SameSite=Lax";
+        window.location.reload();
+    }
+}
+
+templ AuctionsView(auctions []*Auction) {
+  <html>
+		<head>
+			@initTimezone()
+
+			<meta charset="UTF-8"/>
+			<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+			<title>Tibia Char</title>
+
+			<link rel="icon" type="image/x-icon" href="/assets/images/golden_helmet.ico">
+			<link rel="stylesheet" href="/assets/css/main.css">
+		</head>
+		<body>
+			<section>
+				@Auctions(auctions)
+			</section>
+		</body>
+	</html>
+}
 
 /**
 +-------------+-----------------------------------+---------------------------------------------------------+
@@ -30,7 +58,7 @@ import (
 +-------------+-----------------------------------+---------------------------------------------------------+
 */
 
-templ AuctionCard(auction *model.Auction) {
+templ AuctionCard(auction *Auction) {
 	{{
 		const (
 			MaxImbuements = 24
@@ -255,7 +283,7 @@ templ AuctionCard(auction *model.Auction) {
 	</div>
 }
 
-templ Auctions(auctions []*model.Auction) {
+templ Auctions(auctions []*Auction) {
 	<div>
 		for _, auction := range auctions {
     	@AuctionCard(auction)
