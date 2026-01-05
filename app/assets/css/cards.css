@@ -71,15 +71,15 @@
 
     .card__bid {
       padding: var(--card-padding-block) var(--card-padding-inline);
-      display: flex;
+      display: grid;
+      grid-template-columns: repeat(2, auto);
       font-size: var(--text-x-small);
-      justify-content: space-between;
     }
 
     .card__bid-section {
       display: flex;
       flex-direction: column;
-      justify-content: space-between;
+      gap: var(--block-space);
     }
 
     .card__bid-badge--initial {
@@ -102,15 +102,24 @@
 
     .card__bid-amount {
       display: flex;
-      gap: 2px;
+      gap: 3px;
       font-weight: 800;
       align-items: center;
 
       img {
-        width: 25px;
-        height: 25px;
-        transform: translate(-16%, 0%);
+        width: 26px;
+        height: 26px;
+        object-fit: contain;
         flex-shrink: 0;
+
+        margin-top: -4px;
+        margin-bottom: -4px;
+
+        margin-left: -3px;
+        margin-right: -2px;
+
+        /* 4. Fine-tune the vertical position if it still looks "high" */
+        vertical-align: middle;
       }
 
       svg {

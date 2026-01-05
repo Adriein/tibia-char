@@ -9,6 +9,7 @@ import (
 	"github.com/adriein/tibia-char/pkg/helper/str"
 	"github.com/adriein/tibia-char/pkg/middleware"
 	"time"
+	"math"
 )
 
 /**
@@ -37,12 +38,31 @@ templ AuctionCard(auction *model.Auction) {
 		}
 
 		formattedAuctionEnd := auction.AuctionEnd.In(loc).Format("Jan 02, 2006 at 15:04")
-		formattedAuctionStart := auction.AuctionStart.In(loc).Format("Jan 02, 2006 at 15:04")
 
 		abbr, _ := auction.AuctionEnd.In(loc).Zone()
 
-		auctionStart := fmt.Sprintf("%s (%s)", formattedAuctionStart, abbr)
 		auctionEnd := fmt.Sprintf("%s (%s)", formattedAuctionEnd, abbr)
+
+		var timeLeft string
+
+		duration := time.Until(auction.AuctionEnd)
+
+		if duration <= 0 {
+			timeLeft = "Finished"
+		} else {
+			days := int(duration.Hours() / 24)
+			hours := int(math.Mod(duration.Hours(), 24))
+			minutes := int(math.Mod(duration.Minutes(), 60))
+
+			if days > 0 {
+				timeLeft = fmt.Sprintf("%dd %dh", days, hours)
+			}
+			if hours > 0 {
+				timeLeft =  fmt.Sprintf("%dh %dm", hours, minutes)
+			}
+
+			timeLeft = fmt.Sprintf("%dm", minutes)
+		}
 
 		var auctionStage string
 
@@ -80,11 +100,11 @@ templ AuctionCard(auction *model.Auction) {
 			<div class="card__bid-section">
 				<div class="card__bid-time">
 					<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-clock"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0" /><path d="M12 7v5l3 3" /></svg>
-					<span>{auctionStart}</span>
+					<span>{auctionEnd}</span>
 				</div>
 				<div class="card__bid-time">
-					<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-clock"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0" /><path d="M12 7v5l3 3" /></svg>
-					<span>{auctionEnd}</span>
+					<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-hourglass-high"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M6.5 7h11" /><path d="M6 20v-2a6 6 0 1 1 12 0v2a1 1 0 0 1 -1 1h-10a1 1 0 0 1 -1 -1" /><path d="M6 4v2a6 6 0 1 0 12 0v-2a1 1 0 0 0 -1 -1h-10a1 1 0 0 0 -1 1" /></svg>
+					<span>{timeLeft}</span>
 				</div>
 			</div>
 		</div>
