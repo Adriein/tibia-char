@@ -82,23 +82,24 @@
       gap: var(--inline-space);
     }
 
-    .card__bid-badge--initial {
+    .card__bid-badge {
       --badge-inline-space: 2px;
       --badge-block-space: 4px;
       --badge-font-size: var(--text-xx-small);
       margin-left: var(--inline-space);
+
+      &.card__bid-badge--current {
+        --badge-bg: oklch(from var(--color-success) l c h / 20%);;
+        --badge-color: var(--color-success);
+      }
+
+      &.card__bid-badge--winning {
+        --badge-bg: var(--color-muted);
+        --badge-color: var(--color-muted-ink);
+      }
     }
 
-    .card__bid-badge--current {
-      display: inline-block;
-      padding: var(--block-space-half) var(--inline-space-double);
-      background-color: var(--color-success);
-    }
 
-    .card__bid-badge--winning {
-      padding: var(--block-space-half) var(--inline-space-double);
-      background-color: var(--color-muted);
-    }
 
     .card__bid-amount {
       display: flex;
@@ -122,10 +123,10 @@
         width: 20px;
         height: 20px;
       }
-    }
 
-    .card__bid-amount .card__bid-amount-fiat {
-      --card__bid-amount-text-w: var(--text-weight-normal);
+      &.card__bid-amount-fiat {
+        --card__bid-amount-text-w: var(--text-weight-normal);
+      }
     }
 
     .card__bid-time {
