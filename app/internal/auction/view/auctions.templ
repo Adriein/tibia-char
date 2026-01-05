@@ -92,9 +92,22 @@ templ AuctionCard(auction *model.Auction) {
 					<span>{auction.Bid} TC</span>
 					<span class="badge badge--primary card__bid-badge--initial">{auctionStage}</span>
 				</div>
-				<div class="card__bid-amount">
+				<div class="card__bid-amount card__bid-amount-fiat">
 					<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-pig-money"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M15 11v.01" /><path d="M5.173 8.378a3 3 0 1 1 4.656 -1.377" /><path d="M16 4v3.803a6.019 6.019 0 0 1 2.658 3.197h1.341a1 1 0 0 1 1 1v2a1 1 0 0 1 -1 1h-1.342c-.336 .95 -.907 1.8 -1.658 2.473v2.027a1.5 1.5 0 0 1 -3 0v-.583a6.04 6.04 0 0 1 -1 .083h-4a6.04 6.04 0 0 1 -1 -.083v.583a1.5 1.5 0 0 1 -3 0v-2l0 -.027a6 6 0 0 1 4 -10.473h2.5l4.5 -3" /></svg>
 					<span>150€</span>
+				</div>
+				<div class="car__bid-world">
+					<img
+						class="card__bid-country-flag"
+						alt="Country flag"
+						src={fmt.Sprintf("/assets/images/%s.png", str.CamelToSnake(strings.ReplaceAll(auction.CharWorld.Location, " ", "")))}
+					/>
+					<p>{auction.CharWorld.Name}</p>
+					if auction.WorldTransfer {
+						<svg class="card__bid-transfer--allowed" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-world-check"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M20.946 12.99a9 9 0 1 0 -9.46 7.995" /><path d="M3.6 9h16.8" /><path d="M3.6 15h13.9" /><path d="M11.5 3a17 17 0 0 0 0 18" /><path d="M12.5 3a16.997 16.997 0 0 1 2.311 12.001" /><path d="M15 19l2 2l4 -4" /></svg>
+					} else {
+						<svg class="card__bid-transfer--forbidden" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-world-cancel"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M21 12a9 9 0 1 0 -8.985 9" /><path d="M3.6 9h16.8" /><path d="M3.6 15h9.9" /><path d="M11.5 3a17 17 0 0 0 0 18" /><path d="M12.5 3a16.991 16.991 0 0 1 2.53 10.275" /><path d="M19 19m-3 0a3 3 0 1 0 6 0a3 3 0 1 0 -6 0" /><path d="M17 21l4 -4" /></svg>
+					}
 				</div>
 			</div>
 			<div class="card__bid-section">
@@ -106,35 +119,7 @@ templ AuctionCard(auction *model.Auction) {
 					<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-hourglass-high"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M6.5 7h11" /><path d="M6 20v-2a6 6 0 1 1 12 0v2a1 1 0 0 1 -1 1h-10a1 1 0 0 1 -1 -1" /><path d="M6 4v2a6 6 0 1 0 12 0v-2a1 1 0 0 0 -1 -1h-10a1 1 0 0 0 -1 1" /></svg>
 					<span>{timeLeft}</span>
 				</div>
-			</div>
-		</div>
-		<div class="card__subheader">
-			<div class="card__subheader-section">
-				<div class="card__subheader-bid-amount">
-					<img src="https://static.tibia.com/images/charactertrade/objects/37317.gif"/>
-					<span>{auction.Bid} TC</span>
-					<span class="badge badge--primary card__bid-badge--initial">{auctionStage}</span>
-				</div>
-				<div class="world">
-					<img
-						class="card__subheader-country-flag"
-						alt="Country flag"
-						src={fmt.Sprintf("/assets/images/%s.png", str.CamelToSnake(strings.ReplaceAll(auction.CharWorld.Location, " ", "")))}
-					/>
-					<p>{auction.CharWorld.Name}</p>
-					if auction.WorldTransfer {
-						<svg class="card__subheader-transfer--allowed" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-world-check"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M20.946 12.99a9 9 0 1 0 -9.46 7.995" /><path d="M3.6 9h16.8" /><path d="M3.6 15h13.9" /><path d="M11.5 3a17 17 0 0 0 0 18" /><path d="M12.5 3a16.997 16.997 0 0 1 2.311 12.001" /><path d="M15 19l2 2l4 -4" /></svg>
-					} else {
-						<svg class="card__subheader-transfer--forbidden" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-world-cancel"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M21 12a9 9 0 1 0 -8.985 9" /><path d="M3.6 9h16.8" /><path d="M3.6 15h9.9" /><path d="M11.5 3a17 17 0 0 0 0 18" /><path d="M12.5 3a16.991 16.991 0 0 1 2.53 10.275" /><path d="M19 19m-3 0a3 3 0 1 0 6 0a3 3 0 1 0 -6 0" /><path d="M17 21l4 -4" /></svg>
-					}
-				</div>
-			</div>
-			<div class="card__subheader-section">
-				<div class="card__subheader-bid-time">
-					<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-clock"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0" /><path d="M12 7v5l3 3" /></svg>
-					<span>{auctionEnd}</span>
-				</div>
-				<div class="world">
+				<div class="car__bid-world">
 					if auction.CharWorld.BattleEye == enums.BattleEyeGreen {
 						<img alt="Green battle eye" src="https://static.tibia.com/images/global/content/icon_battleyeinitial.gif"/>
 					} else {

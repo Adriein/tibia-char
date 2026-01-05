@@ -79,7 +79,7 @@
     .card__bid-section {
       display: flex;
       flex-direction: column;
-      gap: var(--block-space);
+      gap: var(--inline-space);
     }
 
     .card__bid-badge--initial {
@@ -103,7 +103,7 @@
     .card__bid-amount {
       display: flex;
       gap: 3px;
-      font-weight: 800;
+      font-weight: var(--card__bid-amount-text-w, var(--text-weight-xl));
       align-items: center;
 
       img {
@@ -111,14 +111,10 @@
         height: 26px;
         object-fit: contain;
         flex-shrink: 0;
-
         margin-top: -4px;
         margin-bottom: -4px;
-
         margin-left: -3px;
         margin-right: -2px;
-
-        /* 4. Fine-tune the vertical position if it still looks "high" */
         vertical-align: middle;
       }
 
@@ -126,6 +122,10 @@
         width: 20px;
         height: 20px;
       }
+    }
+
+    .card__bid-amount .card__bid-amount-fiat {
+      --card__bid-amount-text-w: var(--text-weight-normal);
     }
 
     .card__bid-time {
@@ -140,46 +140,7 @@
       }
     }
 
-    .card__subheader {
-      padding: var(--block-space-half) var(--inline-space-double);
-      justify-content: space-between;
-    }
-
-    .card__subheader-section {
-      display: flex;
-      flex-direction: column;
-      gap: var(--inline-space);
-    }
-
-    .card__subheader-bid-amount {
-      display: flex;
-      gap: 2px;
-      font-size: var(--text-x-small);
-      font-weight: 800;
-      align-items: center;
-
-      img {
-        width: 25px;
-        height: 25px;
-        transform: translate(-16%, 0%);
-        flex-shrink: 0;
-      }
-    }
-
-    .card__subheader-bid-time {
-      display: flex;
-      gap: var(--inline-space);
-      font-size: var(--text-x-small);
-      align-items: center;
-
-      svg {
-        width: 20px;
-        height: 20px;
-        flex-shrink: 0;
-      }
-    }
-
-    .world {
+    .car__bid-world {
       align-items: center;
       display: flex;
       gap: var(--inline-space);
@@ -190,23 +151,23 @@
       }
     }
 
-    .world img,
-    .world svg {
+    .car__bid-world img,
+    .car__bid-world svg {
       block-size: 18px;
       inline-size: 18px;
       flex-shrink: 0;
     }
 
-    .world .card__subheader-country-flag {
+    .car__bid-world .card__bid-country-flag {
       width: 16px;
       height: 10px;
     }
 
-    .card__subheader-transfer--allowed {
+    .card__bid-transfer--allowed {
       color: var(--color-success);
     }
 
-    .card__subheader-transfer--forbidden {
+    .card__bid-transfer--forbidden {
       color: var(--color-error);
     }
 
