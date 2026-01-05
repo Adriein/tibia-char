@@ -92,7 +92,7 @@
       --badge-inline-space: 2px;
       --badge-block-space: 4px;
       --badge-font-size: var(--text-xx-small);
-      margin-left: var(--inline-space);
+      margin-left: var(--inline-space-half);
 
       &.card__bid-badge--current {
         --badge-bg: oklch(from var(--color-success) l c h / 20%);;
@@ -107,7 +107,7 @@
 
     .card__bid-amount {
       display: flex;
-      gap: 3px;
+      gap: 4px;
       font-weight: var(--card__bid-amount-text-w, var(--text-weight-xl));
       align-items: center;
 

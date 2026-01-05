@@ -48,6 +48,10 @@ const (
 )
 
 const (
+	TibiaCoinEuroEquivalence = 0.04
+)
+
+const (
 	Male     = "male"
 	Female   = "female"
 	Knight   = "knight"
