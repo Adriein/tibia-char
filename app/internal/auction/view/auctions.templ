@@ -31,6 +31,11 @@ import (
 
 templ AuctionCard(auction *model.Auction) {
 	{{
+		const (
+			MaxImbuements = 24
+			MaxQuests = 42
+		)
+
 		loc, ok := ctx.Value(middleware.TimezoneKey).(*time.Location)
 
 		if !ok {
@@ -223,7 +228,7 @@ templ AuctionCard(auction *model.Auction) {
 			<div class="card__info-item">
 				<img alt="Imbuement icon" src="/assets/images/imbuement_icon.png"/>
 				<span>Imbuements:</span>
-				<span>{fmt.Sprintf("%d/24", len(auction.Imbuements))}</span>
+				<span>{fmt.Sprintf("%d/%d", len(auction.Imbuements), MaxImbuements)}</span>
 			</div>
 			<div class="card__info-item">
 				<img alt="Bosstiary icon" src="/assets/images/bosstiary_icon.png"/>
@@ -233,7 +238,7 @@ templ AuctionCard(auction *model.Auction) {
 			<div class="card__info-item">
 				<img alt="Quest log icon" src="/assets/images/quest_log_icon.png"/>
 				<span>Quests:</span>
-				<span>{fmt.Sprintf("%d/42", len(auction.Quests))}</span>
+				<span>{fmt.Sprintf("%d/%d", len(auction.Quests), MaxQuests)}</span>
 			</div>
 		</div>
 		<div class="card__footer">
