@@ -6,7 +6,7 @@ TABLES
 
 CREATE TABLE IF NOT EXISTS tc_currency_rates (
     tcr_id SMALLINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    tcr_usd NUMERIC(4, 3) NOT NULL
+    tcr_usd NUMERIC(4, 3) NOT NULL,
     tcr_eur NUMERIC(4, 3) NOT NULL,
     tcr_aud NUMERIC(4, 3) NOT NULL,
     tcr_gbp NUMERIC(4, 3) NOT NULL,
