@@ -1,11 +1,13 @@
 package auction
 
 import (
+	"math"
 	"path"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/adriein/tibia-char/pkg/constants"
 	"github.com/adriein/tibia-char/pkg/enums"
 	"github.com/rotisserie/eris"
 )
@@ -97,6 +99,8 @@ func (m *Mapper) FromDTO(dto *AuctionDTO) (*Auction, error) {
 		quests = append(quests, quest)
 	}
 
+	eurBidEquivalence := int(math.Round(float64(dto.Bid) * constants.TibiaCoinEuroEquivalence))
+
 	return &Auction{
 		AuctionID:        dto.AuctionId,
 		TibiaAuctionLink: dto.Link,
@@ -113,6 +117,7 @@ func (m *Mapper) FromDTO(dto *AuctionDTO) (*Auction, error) {
 		CharmExpansion:   dto.CharmPoints.Expansion,
 		CharmPoints:      dto.CharmPoints.Points,
 		Bid:              dto.Bid,
+		BidEUR:           eurBidEquivalence,
 		Stage:            dto.Stage,
 		AuctionStart:     dto.AuctionStartTime,
 		AuctionEnd:       dto.AuctionEndTime,

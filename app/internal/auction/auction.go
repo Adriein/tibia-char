@@ -315,6 +315,7 @@ type Auction struct {
 	CharmPoints      int
 	TaskExpansion    bool
 	Bid              int
+	BidEUR           int
 	Stage            enums.AuctionStage
 	AuctionStart     time.Time
 	AuctionEnd       time.Time

@@ -49,6 +49,7 @@ CREATE TABLE IF NOT EXISTS tc_auction (
     ta_charm_points INT NOT NULL,
     ta_task_expansion BOOLEAN NOT NULL,
     ta_current_bid INT NOT NULL,
+    ta_current_bid_eur INT NOT NULL,
     ta_auction_stage VARCHAR NOT NULL,
     ta_auction_start TIMESTAMP(0) WITHOUT TIME ZONE NOT NULL,
     ta_auction_end TIMESTAMP(0) WITHOUT TIME ZONE NOT NULL,
