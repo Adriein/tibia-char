@@ -7,6 +7,8 @@ TABLES
 CREATE TABLE IF NOT EXISTS tc_currency_rates (
     tcr_currency VARCHAR(3) PRIMARY KEY,
     tcr_exchange_rate NUMERIC(4, 3) NOT NULL
+    tcr_date_add TIMESTAMP(0) WITHOUT TIME ZONE NOT NULL,
+    tcr_date_upd TIMESTAMP(0) WITHOUT TIME ZONE NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS tc_world (
