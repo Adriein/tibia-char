@@ -149,9 +149,9 @@ func AuctionCard(auction *Auction) templ.Component {
 			}
 			if hours > 0 {
 				timeLeft = fmt.Sprintf("%dh %dm", hours, minutes)
+			} else {
+				timeLeft = fmt.Sprintf("%dm", minutes)
 			}
-
-			timeLeft = fmt.Sprintf("%dm", minutes)
 		}
 
 		var auctionStage string
@@ -327,9 +327,9 @@ func AuctionCard(auction *Auction) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var14 string
-		templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d (%s)", auction.BidFiat, auction.BidCurrency))
+		templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d %s", auction.BidFiat, auction.BidCurrency))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/internal/auction/view.templ`, Line: 153, Col: 72}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/internal/auction/view.templ`, Line: 153, Col: 70}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var14))
 		if templ_7745c5c3_Err != nil {
