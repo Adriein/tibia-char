@@ -90,7 +90,8 @@ templ AuctionCard(auction *Auction) {
 			if days > 0 {
 				timeLeft = fmt.Sprintf("%dd %dh", days, hours)
 			}
-			if hours > 0 {
+
+			if days <= 0 && hours > 0 {
 				timeLeft =  fmt.Sprintf("%dh %dm", hours, minutes)
 			} else {
 				timeLeft = fmt.Sprintf("%dm", minutes)
