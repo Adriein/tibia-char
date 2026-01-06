@@ -21,7 +21,7 @@ type CurrencyConversionRates struct {
 		GBP float64 `json:"GBP"`
 		PLN float64 `json:"PLN"`
 		BRL float64 `json:"BRL"`
-	} `json:"conversion_rates"`
+	} `json:"rates"`
 }
 
 type OpenCurrencyAPI struct{}
