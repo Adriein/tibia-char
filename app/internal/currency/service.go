@@ -3,6 +3,7 @@ package currency
 import (
 	"context"
 	"log"
+	"time"
 
 	"github.com/adriein/tibia-char/pkg/middleware"
 	"github.com/adriein/tibia-char/pkg/vendor"
@@ -32,15 +33,16 @@ func (s *Service) StoreDailyRates(ctx context.Context) error {
 	}
 
 	currencyRate := CurrencyRate{
-		USD: conRatesDTO.Rates.USD,
-		EUR: conRatesDTO.Rates.EUR,
-		AUD: conRatesDTO.Rates.AUD,
-		GBP: conRatesDTO.Rates.GBP,
-		PLN: conRatesDTO.Rates.PLN,
-		BRL: conRatesDTO.Rates.BRL,
+		USD:     conRatesDTO.Rates.USD,
+		EUR:     conRatesDTO.Rates.EUR,
+		AUD:     conRatesDTO.Rates.AUD,
+		GBP:     conRatesDTO.Rates.GBP,
+		PLN:     conRatesDTO.Rates.PLN,
+		BRL:     conRatesDTO.Rates.BRL,
+		DateUpd: time.Now().In(time.UTC),
 	}
 
-	if err := s.repository.Save(&currencyRate); err != nil {
+	if err := s.repository.Save(ctx, &currencyRate); err != nil {
 		s.logger.Printf("TraceID: %s Finish Currency Cron with error\n", traceID)
 
 		return err

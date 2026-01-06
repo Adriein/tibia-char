@@ -5,9 +5,13 @@ TABLES
 */
 
 CREATE TABLE IF NOT EXISTS tc_currency_rates (
-    tcr_currency VARCHAR(3) PRIMARY KEY,
-    tcr_exchange_rate NUMERIC(4, 3) NOT NULL
-    tcr_date_add TIMESTAMP(0) WITHOUT TIME ZONE NOT NULL,
+    tcr_id SMALLINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    tcr_usd NUMERIC(4, 3) NOT NULL
+    tcr_eur NUMERIC(4, 3) NOT NULL,
+    tcr_aud NUMERIC(4, 3) NOT NULL,
+    tcr_gbp NUMERIC(4, 3) NOT NULL,
+    tcr_pln NUMERIC(4, 3) NOT NULL,
+    tcr_brl NUMERIC(4, 3) NOT NULL,
     tcr_date_upd TIMESTAMP(0) WITHOUT TIME ZONE NOT NULL
 );
 
