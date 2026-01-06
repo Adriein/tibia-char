@@ -24,6 +24,16 @@
       "cwd": "${workspaceFolder}/app",
       "env": {},
       "args": []
+    },
+    {
+      "name": "currency-cron",
+      "type": "go",
+      "request": "launch",
+      "mode": "debug",
+      "program": "${workspaceFolder}/app/cmd/cron/currency/main.go",
+      "cwd": "${workspaceFolder}/app",
+      "env": {},
+      "args": []
     }
   ]
 }
