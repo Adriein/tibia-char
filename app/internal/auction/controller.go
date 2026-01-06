@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/adriein/tibia-char/internal"
+	"github.com/adriein/tibia-char/internal/currency"
 	"github.com/adriein/tibia-char/pkg/middleware"
 	"github.com/adriein/tibia-char/pkg/vendor"
 	"github.com/gin-gonic/gin"
@@ -22,6 +23,7 @@ func NewController(app *internal.App) *Controller {
 
 	auctionRepository := NewPgAuctionRepository(app.Databse)
 	worldRepository := NewPgWorldRepository(app.Databse)
+	currencyRepository := currency.NewPgCurrencyRepository(app.Databse)
 
 	linkScrapper := NewScrapper("CollectAuctionLinks")
 
@@ -34,7 +36,7 @@ func NewController(app *internal.App) *Controller {
 
 	mapper := NewMapper(worldRepository)
 
-	service := NewService(tibiaAPI, auctionListHtmlParser, auctionHtmlParser, auctionRepository, worldRepository, mapper, logger)
+	service := NewService(tibiaAPI, auctionListHtmlParser, auctionHtmlParser, auctionRepository, worldRepository, currencyRepository, mapper, logger)
 
 	return &Controller{
 		service: service,

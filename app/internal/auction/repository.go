@@ -179,14 +179,15 @@ func (r *PgAuctionRepository) Save(auction *Auction) error {
 			ta_charm_points,
 			ta_task_expansion,
 			ta_current_bid,
-			ta_current_bid_eur,
+			ta_current_bid_fiat,
+			ta_current_bid_currency,
 			ta_auction_stage,
 			ta_auction_start,
 			ta_auction_end,
 			ta_date_add,
 			ta_date_upd
 		)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21)
 		RETURNING ta_id;
 	`
 
@@ -208,7 +209,8 @@ func (r *PgAuctionRepository) Save(auction *Auction) error {
 		auction.CharmPoints,
 		false,
 		auction.Bid,
-		auction.BidEUR,
+		auction.BidFiat,
+		auction.BidCurrency,
 		auction.Stage,
 		auction.AuctionStart,
 		auction.AuctionEnd,
@@ -429,7 +431,8 @@ func (r *PgAuctionRepository) GetActiveAuctions(ctx context.Context) ([]*Auction
 			a.ta_charm_points,
 			a.ta_task_expansion,
 			a.ta_current_bid,
-			a.ta_current_bid_eur,
+			a.ta_current_bid_fiat,
+			a.ta_current_bid_currency,
 			a.ta_auction_stage,
 			a.ta_auction_start,
 			a.ta_auction_end,
@@ -512,7 +515,8 @@ func (r *PgAuctionRepository) GetActiveAuctions(ctx context.Context) ([]*Auction
 			&auction.CharmPoints,
 			&auction.TaskExpansion,
 			&auction.Bid,
-			&auction.BidEUR,
+			&auction.BidFiat,
+			&auction.BidCurrency,
 			&auction.Stage,
 			&auction.AuctionStart,
 			&auction.AuctionEnd,

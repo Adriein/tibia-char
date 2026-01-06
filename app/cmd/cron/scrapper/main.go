@@ -7,6 +7,7 @@ import (
 
 	"github.com/adriein/tibia-char/internal"
 	"github.com/adriein/tibia-char/internal/auction"
+	"github.com/adriein/tibia-char/internal/currency"
 	"github.com/adriein/tibia-char/pkg/constants"
 	"github.com/adriein/tibia-char/pkg/helper"
 	"github.com/adriein/tibia-char/pkg/middleware"
@@ -23,6 +24,7 @@ func main() {
 
 	auctionRepository := auction.NewPgAuctionRepository(app.Databse)
 	worldRepository := auction.NewPgWorldRepository(app.Databse)
+	currencyRepository := currency.NewPgCurrencyRepository(app.Databse)
 
 	linkScrapper := auction.NewScrapper("CollectAuctionLinks")
 
@@ -43,7 +45,7 @@ func main() {
 
 	mapper := auction.NewMapper(worldRepository)
 
-	cron := auction.NewService(tibiaAPI, auctionListHtmlParser, auctionHtmlParser, auctionRepository, worldRepository, mapper, logger)
+	cron := auction.NewService(tibiaAPI, auctionListHtmlParser, auctionHtmlParser, auctionRepository, worldRepository, currencyRepository, mapper, logger)
 
 	ctx := context.WithValue(context.Background(), middleware.TraceIDKey, helper.TraceID())
 

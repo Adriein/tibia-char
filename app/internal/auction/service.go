@@ -6,6 +6,7 @@ import (
 	"math/rand"
 	"time"
 
+	"github.com/adriein/tibia-char/internal/currency"
 	"github.com/adriein/tibia-char/pkg/enums"
 	"github.com/adriein/tibia-char/pkg/helper/collections"
 	"github.com/adriein/tibia-char/pkg/middleware"
@@ -15,27 +16,38 @@ import (
 )
 
 type Service struct {
-	tibiaAPI          *vendor.TibiaApi
-	linkParser        *AuctionListHtmlParser
-	auctionParser     *AuctionHtmlParser
-	auctionRepository AuctionRepository
-	worldRepository   WorldRepository
-	mapper            *Mapper
-	logger            *log.Logger
+	tibiaAPI           *vendor.TibiaApi
+	linkParser         *AuctionListHtmlParser
+	auctionParser      *AuctionHtmlParser
+	auctionRepository  AuctionRepository
+	worldRepository    WorldRepository
+	currencyRepository currency.CurrencyRepository
+	mapper             *Mapper
+	logger             *log.Logger
 }
 
 const AuctionDetailMaxConcurrency = 5
 const AuctionLinkMaxConcurrency = 5
 
-func NewService(ta *vendor.TibiaApi, lp *AuctionListHtmlParser, ap *AuctionHtmlParser, ar AuctionRepository, wr WorldRepository, m *Mapper, logger *log.Logger) *Service {
+func NewService(
+	ta *vendor.TibiaApi,
+	lp *AuctionListHtmlParser,
+	ap *AuctionHtmlParser,
+	ar AuctionRepository,
+	wr WorldRepository,
+	cr currency.CurrencyRepository,
+	m *Mapper,
+	logger *log.Logger,
+) *Service {
 	return &Service{
-		tibiaAPI:          ta,
-		linkParser:        lp,
-		auctionParser:     ap,
-		auctionRepository: ar,
-		worldRepository:   wr,
-		mapper:            m,
-		logger:            logger,
+		tibiaAPI:           ta,
+		linkParser:         lp,
+		auctionParser:      ap,
+		auctionRepository:  ar,
+		worldRepository:    wr,
+		currencyRepository: cr,
+		mapper:             m,
+		logger:             logger,
 	}
 }
 
@@ -94,6 +106,25 @@ func (s *Service) GetAuctions(ctx context.Context) ([]*Auction, error) {
 
 	if err != nil {
 		return nil, err
+	}
+
+	loc, ok := ctx.Value(middleware.TimezoneKey).(*time.Location)
+
+	if !ok {
+		return nil, eris.New("Error, location not stored in ctx")
+	}
+
+	targetCurrency := currency.FromLocation(loc)
+
+	conRate, err := s.currencyRepository.GetLatest(ctx)
+
+	if err != nil {
+		return nil, err
+	}
+
+	for _, auction := range auctions {
+		auction.BidFiat = conRate.Exchange(auction.BidFiat, targetCurrency)
+		auction.BidCurrency = targetCurrency
 	}
 
 	return auctions, nil
