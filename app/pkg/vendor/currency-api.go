@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/adriein/tibia-char/pkg/enums"
 	"github.com/rotisserie/eris"
 )
 
@@ -29,7 +30,11 @@ func NewOpenCurrencyAPI() *OpenCurrencyAPI {
 	return &OpenCurrencyAPI{}
 }
 
-func (o *OpenCurrencyAPI) GetConversionRates(ctx context.Context, currency string) (*CurrencyConversionRates, error) {
+func (o *OpenCurrencyAPI) GetConversionRates(ctx context.Context, currency enums.Currency) (*CurrencyConversionRates, error) {
+	if ok := currency.Valid(); !ok {
+		return nil, eris.Errorf("Currency %s not supported", currency)
+	}
+
 	url := fmt.Sprintf("https://open.er-api.com/v6/latest/%s", currency)
 
 	request, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)

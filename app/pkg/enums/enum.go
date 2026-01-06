@@ -79,3 +79,29 @@ func (s AuctionStage) Valid() bool {
 
 	return false
 }
+
+type Currency string
+
+const (
+	CurrencyEUR Currency = "EUR"
+	CurrencyUSD Currency = "USD"
+	CurrencyBRL Currency = "BRL"
+	CurrencyAUD Currency = "AUD"
+	CurrencyGBP Currency = "GBP"
+	CurrencyPLN Currency = "PLN"
+)
+
+func (c Currency) Valid() bool {
+	switch c {
+	case
+		CurrencyEUR,
+		CurrencyUSD,
+		CurrencyBRL,
+		CurrencyAUD,
+		CurrencyGBP,
+		CurrencyPLN:
+		return true
+	}
+
+	return false
+}
