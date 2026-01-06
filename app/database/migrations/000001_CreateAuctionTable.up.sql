@@ -4,6 +4,11 @@ TABLES
 ================================================================================
 */
 
+CREATE TABLE IF NOT EXISTS tc_currency_rates (
+    tcr_currency VARCHAR(3) PRIMARY KEY,
+    tcr_exchange_rate NUMERIC(4, 3) NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS tc_world (
     tw_id SMALLINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     tw_name VARCHAR UNIQUE NOT NULL,

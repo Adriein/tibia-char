@@ -11,3 +11,4 @@ DROP TABLE IF EXISTS tc_auction;
 DROP TABLE IF EXISTS tc_world;
 DROP TABLE IF EXISTS tc_vocation;
 DROP TABLE IF EXISTS tc_gender;
+DROP TABLE IF EXISTS tc_currency_rates;
