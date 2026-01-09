@@ -69,6 +69,52 @@
       }
     }
 
+    /*.card__header-trending {
+      border-radius: var(--radius-full);
+      background-color: var(--color-muted);
+      border: 1px solid var(--color-muted-ink);
+      overflow: hidden;
+      flex-shrink: 0;
+      width: 40px;
+      height: 40px;
+
+      img {
+        object-fit: contain;
+        transform: translate(-20%, -20%);
+      }
+    }*/
+    .card__header-trending {
+      display: inline-flex;
+      align-items: center;
+      background: var(--color-muted);
+      border: 1px solid var(--color-muted-ink);
+      border-radius: var(--radius-full);
+      padding: 2px 12px 2px 2px; /* Tight left padding to hug the image */
+      height: 32px;
+      gap: 10px;
+
+      &.card__header-trending-avatar {
+        background-image: linear-gradient(to bottom right, rgba(249, 115, 22, 0.2), rgba(220, 38, 38, 0.2));
+        padding: 0.25rem;
+        animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        img {
+          width: 28px;
+          height: 28px;
+          border-radius: 50%;
+          background: white; /* Creates a "ring" effect if the img has transparency */
+          object-fit: contain;
+        }
+      }
+
+
+
+      span {
+        font-size: 12px;
+        font-weight: 800;
+        color: var(--color-muted-ink);
+      }
+    }
+
     .card__bid,
     .card__featured-items,
     .card__info {
