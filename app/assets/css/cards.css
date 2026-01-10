@@ -72,7 +72,7 @@
     .card__header-trending {
       display: inline-flex;
       align-items: center;
-      gap: var(--inline-space);
+      gap: var(--inline-space-half);
       padding: 3px 10px 3px 5px;
       margin-left: auto;
 
@@ -94,7 +94,7 @@
     }
 
     .card__header-trending-text {
-      color: var(--color-muted-ink);
+      color: var(--color-ink);
       font-size: var(--text-xx-small);
       font-weight: var(--text-weight-xl);
       text-transform: uppercase;
