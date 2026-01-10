@@ -712,6 +712,41 @@ func (r *PgAuctionRepository) GetActiveAuctions(ctx context.Context) ([]*Auction
 		return nil, eris.Wrap(err, "Failed iterating quests rows")
 	}
 
+	bidRegistryQuery := `
+		SELECT
+			ta.ta_auction_id,
+			ta.ta_current_bid,
+			ta.ta_date_add
+		FROM
+			tc_auction ta
+		WHERE
+			ta.ta_auction_id = ANY($1);
+	`
+	bidRegistryRows, err := r.connection.QueryContext(ctx, bidRegistryQuery, pq.Array(orderedIDs))
+
+	if err != nil {
+		return nil, eris.Wrap(err, "Failed to query bid registry")
+	}
+
+	defer bidRegistryRows.Close()
+
+	for bidRegistryRows.Next() {
+		var registry BidRegistry
+		var auctionID int
+
+		if err := questsRows.Scan(&auctionID, &registry.Amount, &registry.DateAdd); err != nil {
+			return nil, eris.Wrap(err, "Failed to scan registry")
+		}
+
+		if auction, ok := auctionMap[auctionID]; ok {
+			auction.BidRegistry = append(auction.BidRegistry, &registry)
+		}
+	}
+
+	if err = bidRegistryRows.Err(); err != nil {
+		return nil, eris.Wrap(err, "Failed iterating bid registry rows")
+	}
+
 	auctions := make([]*Auction, 0, len(orderedIDs))
 
 	for _, auctionID := range orderedIDs {

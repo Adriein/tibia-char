@@ -293,6 +293,11 @@ func NewQuestFromName(name string) (*Quest, error) {
 	return nil, eris.Errorf("Quest %s not registered", name)
 }
 
+type BidRegistry struct {
+	Amount  int
+	DateAdd time.Time
+}
+
 type Auction struct {
 	ID               int64
 	AuctionID        int
@@ -317,12 +322,27 @@ type Auction struct {
 	Bid              int
 	BidFiat          int
 	BidCurrency      enums.Currency
+	BidRegistry      []*BidRegistry
 	Stage            enums.AuctionStage
 	AuctionStart     time.Time
 	AuctionEnd       time.Time
 	Status           enums.AuctionRecordableStatus
 	DateAdd          time.Time
 	DateUpd          time.Time
+}
+
+func (a *Auction) IsTrending() bool {
+	var increasedTimes int
+
+	for i, registry := range a.BidRegistry {
+		next := a.BidRegistry[i+1]
+
+		if registry.Amount < next.Amount {
+			increasedTimes++
+		}
+	}
+
+	return increasedTimes > 5
 }
 
 type AuctionLinkSet struct {
