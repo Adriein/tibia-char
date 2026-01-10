@@ -25,6 +25,7 @@
     color: var(--card-header-text-ink, var(--color-surface-ink));
     gap: var(--card-header-space, var(--inline-space));
     background-color: var(--card-header-bg, transparent);
+    align-items: center;
   }
 
   .card__title {
@@ -105,7 +106,7 @@
         /* PRO TIP: Use a dark red ink for a more expensive look than pure white */
         color: oklch(0.20 0.10 20);
 
-        font-size: var(--text-xx-small);
+        font-size: 0.45rem;
         font-weight: 800; /* Use a specific weight if --text-weight-xl isn't defined */
         text-transform: uppercase;
         letter-spacing: 0.08em; /* Slightly more spacing for premium feel */
@@ -122,8 +123,8 @@
     }
 
     .card__header-trending-avatar {
-      width: 3rem;
-      height: 3rem;
+      width: 45px;
+      height: 45px;
       border-radius: var(--radius-full);
 
       /* Match the gradient but with transparency */
@@ -146,8 +147,8 @@
       box-shadow: 0 0 0 0 oklch(0.65 0.25 35 / 0.6);
 
       img {
-        width: 2.25rem;
-        height: 2.25rem;
+        width: 38px;
+        height: 38px;
         border-radius: var(--radius-full);
         object-fit: contain;
         animation: img-breathe 3s ease-in-out infinite;
@@ -378,15 +379,12 @@
       transform: scale(1);
       box-shadow: 0 0 0 0 oklch(0.65 0.25 35 / 0.4);
     }
-    /* Slow, smooth expansion to 40% of the timeline */
     40% {
-      transform: scale(1.06);
-      box-shadow: 0 0 20px 4px oklch(0.65 0.25 35 / 0.2);
+      transform: scale(1.05);
+      box-shadow: 0 0 12px 2px oklch(0.65 0.25 35 / 0.2);
     }
-    /* Very gentle return to rest */
     100% {
       transform: scale(1);
-      box-shadow: 0 0 0 0 oklch(0.65 0.25 35 / 0);
     }
   }
 
@@ -403,15 +401,15 @@
   /* 3. The Label (The "Glow") */
   @keyframes span-glow {
     0%, 100% {
-      transform: translateX(-50%) scale(1);
+      /* Only change light and depth, never move the position */
       filter: brightness(1);
-      opacity: 0.9;
+      opacity: 0.95;
+      box-shadow: 0 2px 8px oklch(0.60 0.20 25 / 30%);
     }
     40% {
-      transform: translateX(-50%) scale(1.02);
-      filter: brightness(1.1);
+      filter: brightness(1.2);
       opacity: 1;
-      text-shadow: 0 0 10px oklch(1 0 0 / 0.3);
+      box-shadow: 0 4px 12px oklch(0.60 0.20 25 / 50%);
     }
   }
 }
