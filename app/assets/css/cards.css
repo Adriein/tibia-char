@@ -72,18 +72,15 @@
     .card__header-trending {
       display: inline-flex;
       align-items: center;
-      gap: 6px;
+      gap: var(--inline-space);
       padding: 3px 10px 3px 5px;
       margin-left: auto;
 
-      /* Using your system's muted color (assuming a soft grey/ink-depth) */
-      background: oklch(0.25 0.02 20); /* A deep, muted "off-black" or dark grey */
+      background: var(--color-muted);
 
-      /* The "Accent": A thin, glowing border instead of a full orange background */
       border: 1px solid oklch(0.70 0.20 45 / 30%);
       border-radius: var(--radius-full);
 
-      /* Gentle swell without the heavy orange filter */
       animation: badge-swell 3s ease-in-out infinite;
       align-self: flex-start;
     }
@@ -92,15 +89,14 @@
       width: 20px;
       height: 20px;
       object-fit: contain;
-      /* We keep the icon bright orange so it stands out against the dark bg */
       filter: drop-shadow(0 0 4px oklch(0.70 0.20 45 / 0.5));
       transform: translate(-20%, -20%);
     }
 
     .card__header-trending-text {
-      color: var(--color-ink);
-      font-size: 0.55rem;
-      font-weight: 700;
+      color: var(--color-muted-ink);
+      font-size: var(--text-xx-small);
+      font-weight: var(--text-weight-xl);
       text-transform: uppercase;
       letter-spacing: 0.08em;
     }
