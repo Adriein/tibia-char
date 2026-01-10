@@ -342,7 +342,7 @@ func (a *Auction) IsTrending() bool {
 		}
 	}
 
-	return increasedTimes > 5
+	return increasedTimes >= 5
 }
 
 type AuctionLinkSet struct {
