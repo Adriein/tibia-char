@@ -86,32 +86,72 @@
     .card__header-trending {
       display: inline-flex;
       align-items: center;
-      background: var(--color-muted);
-      border: 1px solid var(--color-muted-ink);
-      border-radius: var(--radius-full);
-      padding: 2px 12px 2px 2px; /* Tight left padding to hug the image */
-      height: 32px;
-      gap: 10px;
-
-      &.card__header-trending-avatar {
-        background-image: linear-gradient(to bottom right, rgba(249, 115, 22, 0.2), rgba(220, 38, 38, 0.2));
-        padding: 0.25rem;
-        animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-        img {
-          width: 28px;
-          height: 28px;
-          border-radius: 50%;
-          background: white; /* Creates a "ring" effect if the img has transparency */
-          object-fit: contain;
-        }
-      }
-
-
+      position: relative;
+      margin-left: auto;
 
       span {
-        font-size: 12px;
-        font-weight: 800;
-        color: var(--color-muted-ink);
+        position: absolute;
+        bottom: -0.5rem;
+        left: 50%;
+        transform: translateX(-50%);
+
+        /* Premium Glow: Uses a more vibrant OKLCH Orange-to-Red */
+        background: linear-gradient(
+          to right,
+          oklch(0.70 0.20 45), /* Vibrant Orange */
+          oklch(0.60 0.20 25)  /* Deep Hot Red */
+        );
+
+        /* PRO TIP: Use a dark red ink for a more expensive look than pure white */
+        color: oklch(0.20 0.10 20);
+
+        font-size: var(--text-xx-small);
+        font-weight: 800; /* Use a specific weight if --text-weight-xl isn't defined */
+        text-transform: uppercase;
+        letter-spacing: 0.08em; /* Slightly more spacing for premium feel */
+
+        padding: var(--inline-space-half) var(--block-space-half);
+        border-radius: var(--radius-full);
+        white-space: nowrap;
+
+        /* Subtle Glass Border */
+        border: 1px solid oklch(1 0 0 / 30%);
+        box-shadow: 0 4px 12px oklch(0.60 0.20 25 / 40%);
+        animation: span-glow 3s ease-in-out infinite;
+      }
+    }
+
+    .card__header-trending-avatar {
+      width: 3rem;
+      height: 3rem;
+      border-radius: var(--radius-full);
+
+      /* Match the gradient but with transparency */
+      background: linear-gradient(
+        to bottom right,
+        oklch(0.70 0.20 45 / 20%),
+        oklch(0.60 0.20 25 / 20%)
+      );
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      /* Use your brand-main or a matching hot color */
+      border: 2px solid oklch(0.70 0.20 45 / 50%);
+
+      animation: trending-heartbeat 3s ease-in-out infinite;
+      will-change: transform;
+
+      box-shadow: 0 0 0 0 oklch(0.65 0.25 35 / 0.6);
+
+      img {
+        width: 2.25rem;
+        height: 2.25rem;
+        border-radius: var(--radius-full);
+        object-fit: contain;
+        animation: img-breathe 3s ease-in-out infinite;
+        transform: translate(-20%, -20%);
       }
     }
 
@@ -330,6 +370,48 @@
       .card__body-skills-container  {
         grid-template-columns: 1fr;
       }
+    }
+  }
+
+  @keyframes trending-heartbeat {
+    0% {
+      transform: scale(1);
+      box-shadow: 0 0 0 0 oklch(0.65 0.25 35 / 0.4);
+    }
+    /* Slow, smooth expansion to 40% of the timeline */
+    40% {
+      transform: scale(1.06);
+      box-shadow: 0 0 20px 4px oklch(0.65 0.25 35 / 0.2);
+    }
+    /* Very gentle return to rest */
+    100% {
+      transform: scale(1);
+      box-shadow: 0 0 0 0 oklch(0.65 0.25 35 / 0);
+    }
+  }
+
+  /* 2. The Inner Image (The "Breathe") */
+  @keyframes img-breathe {
+    0%, 100% {
+      filter: brightness(1) saturate(1);
+    }
+    40% {
+      filter: brightness(1.15) saturate(1.1);
+    }
+  }
+
+  /* 3. The Label (The "Glow") */
+  @keyframes span-glow {
+    0%, 100% {
+      transform: translateX(-50%) scale(1);
+      filter: brightness(1);
+      opacity: 0.9;
+    }
+    40% {
+      transform: translateX(-50%) scale(1.02);
+      filter: brightness(1.1);
+      opacity: 1;
+      text-shadow: 0 0 10px oklch(1 0 0 / 0.3);
     }
   }
 }
