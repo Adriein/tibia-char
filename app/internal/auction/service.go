@@ -2,7 +2,6 @@ package auction
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"math/rand"
 	"time"
@@ -172,9 +171,27 @@ func (s *Service) scrapAuctionDetail(auctionLinkSet *AuctionLinkSet) error {
 
 	workload := pm.BalanceLoad(auctionLinkSet.Data)
 
-	fmt.Println(workload)
+	failed := NewAuctionLinkSet()
 
-	links := collections.ChunkMap(auctionLinkSet.Data, AuctionDetailMaxConcurrency)
+	g, gCtx := errgroup.WithContext(context.Background())
+
+	for proxyAddr, work := range workload {
+		ctx := context.WithValue(gCtx, "Addr", proxyAddr)
+
+		g.Go(func() error {
+			s.scrapProxyAddrWorkGroup(ctx, g, failed, work)
+
+			return nil
+		})
+	}
+
+	err := g.Wait()
+
+	if err != nil {
+		return err
+	}
+
+	/*links := collections.ChunkMap(auctionLinkSet.Data, AuctionDetailMaxConcurrency)
 
 	semaphore := make(chan struct{}, AuctionDetailMaxConcurrency)
 
@@ -234,9 +251,58 @@ func (s *Service) scrapAuctionDetail(auctionLinkSet *AuctionLinkSet) error {
 		if err != nil {
 			return err
 		}
-	}
+	}*/
 
-	s.logger.Printf("Total to scrap: %d, Scrapped: %d, Failed: %d", len(auctionLinkSet.Data), scrapped, len(failed.Data))
+	s.logger.Printf("Total to scrap: %d, Failed: %d", len(auctionLinkSet.Data), len(failed.Data))
 
 	return nil
+}
+
+func (s *Service) scrapProxyAddrWorkGroup(ctx context.Context, g *errgroup.Group, failed *AuctionLinkSet, workGroup []collections.KeyValue[int, string]) {
+	semaphore := make(chan struct{}, AuctionDetailMaxConcurrency)
+
+	for i, kv := range workGroup {
+
+		if i != 0 {
+			randDelay := time.Duration(2+rand.Intn(5)) * time.Second
+
+			time.Sleep(randDelay)
+		}
+
+		g.Go(func() error {
+			select {
+			case <-ctx.Done():
+				return ctx.Err()
+			case semaphore <- struct{}{}:
+				defer func() { <-semaphore }()
+			}
+
+			auctionId := kv.Key
+			linkURL := kv.Value
+
+			dto, err := s.auctionParser.Parse(ctx, auctionId, linkURL)
+
+			if err != nil {
+				if eris.Is(err, RateLimitError) {
+					return eris.Wrapf(err, "Rate limit reached parsing auctionId %d", auctionId)
+				}
+
+				failed.Set(auctionId, linkURL)
+
+				return nil
+			}
+
+			auction, err := s.mapper.FromDTO(dto)
+
+			if err != nil {
+				return eris.Wrapf(err, "Error mapping from DTO auctionId %d", auctionId)
+			}
+
+			if err := s.auctionRepository.Save(auction); err != nil {
+				return eris.Wrapf(err, "Error saving to DB auctionId %d", auctionId)
+			}
+
+			return nil
+		})
+	}
 }

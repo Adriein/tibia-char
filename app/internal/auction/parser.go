@@ -206,6 +206,9 @@ func (p *AuctionHtmlParser) Parse(ctx context.Context, auctionId int, link strin
 
 	c := p.collector.Clone()
 
+	c.SetProxy(ctx.Value("Addr").(string))
+	fmt.Println(ctx.Value("Addr").(string))
+
 	c.OnError(func(r *colly.Response, err error) {
 		if r.StatusCode == http.StatusForbidden {
 			parseErr = eris.Wrapf(RateLimitError, "Failed to fetch %s: status %d", r.Request.URL, r.StatusCode)

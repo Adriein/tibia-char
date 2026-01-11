@@ -1,6 +1,10 @@
 package auction
 
-import "github.com/adriein/tibia-char/pkg/helper/collections"
+import (
+	"fmt"
+
+	"github.com/adriein/tibia-char/pkg/helper/collections"
+)
 
 type ProxyWorkload map[string][]collections.KeyValue[int, string]
 
@@ -9,7 +13,9 @@ type ProxyManager struct {
 }
 
 func NewProxyManager() *ProxyManager {
-	return &ProxyManager{ProxyAddress: []string{"fakeProxy1", "fakeProxy2"}}
+	proxyURL1 := fmt.Sprintf("http://%s:%s@%s:%d", "ibnnxcva", "fl36k8kwqjcg", "142.111.48.253", 7030)
+	proxyURL2 := fmt.Sprintf("http://%s:%s@%s:%d", "ibnnxcva", "fl36k8kwqjcg", "23.95.150.145", 6114)
+	return &ProxyManager{ProxyAddress: []string{proxyURL1, proxyURL2}}
 }
 
 func (pm *ProxyManager) BalanceLoad(auctions map[int]string) ProxyWorkload {
