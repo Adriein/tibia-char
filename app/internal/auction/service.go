@@ -90,7 +90,7 @@ func (s *Service) ScrapBazaar(ctx context.Context) error {
 
 	s.logger.Printf("TraceID: %s Total auction links %d - Auction links obtained %d\n", traceID, currentAuctions, len(auctionLinkSet.Data))
 
-	if err := s.scrapAuctionDetail(auctionLinkSet); err != nil {
+	if err := s.scrapAuctionDetails(auctionLinkSet); err != nil {
 		s.logger.Printf("TraceID: %s Finished Scrapping with error: %s in %s\n", traceID, err.Error(), time.Since(now))
 
 		return err
@@ -166,7 +166,7 @@ func (s *Service) scrapAuctionLinks(worlds []*World) (*AuctionLinkSet, error) {
 	return auctionLinkSet, nil
 }
 
-func (s *Service) scrapAuctionDetail(auctionLinkSet *AuctionLinkSet) error {
+func (s *Service) scrapAuctionDetails(auctionLinkSet *AuctionLinkSet) error {
 	pm := NewProxyManager()
 
 	workload := pm.BalanceLoad(auctionLinkSet.Data)
@@ -179,7 +179,7 @@ func (s *Service) scrapAuctionDetail(auctionLinkSet *AuctionLinkSet) error {
 		ctx := context.WithValue(gCtx, "Addr", proxyAddr)
 
 		g.Go(func() error {
-			s.scrapProxyAddrWorkGroup(ctx, g, failed, work)
+			s.scrapAuctionDetail(ctx, g, failed, work)
 
 			return nil
 		})
@@ -258,51 +258,55 @@ func (s *Service) scrapAuctionDetail(auctionLinkSet *AuctionLinkSet) error {
 	return nil
 }
 
-func (s *Service) scrapProxyAddrWorkGroup(ctx context.Context, g *errgroup.Group, failed *AuctionLinkSet, workGroup []collections.KeyValue[int, string]) {
+func (s *Service) scrapAuctionDetail(ctx context.Context, g *errgroup.Group, failed *AuctionLinkSet, workGroup []collections.KeyValue[int, string]) {
 	semaphore := make(chan struct{}, AuctionDetailMaxConcurrency)
 
-	for i, kv := range workGroup {
+	chunks := collections.Chunk(workGroup, AuctionDetailMaxConcurrency)
 
+	for i, chunk := range chunks {
 		if i != 0 {
 			randDelay := time.Duration(2+rand.Intn(5)) * time.Second
 
 			time.Sleep(randDelay)
 		}
 
-		g.Go(func() error {
-			select {
-			case <-ctx.Done():
-				return ctx.Err()
-			case semaphore <- struct{}{}:
-				defer func() { <-semaphore }()
-			}
-
-			auctionId := kv.Key
-			linkURL := kv.Value
-
-			dto, err := s.auctionParser.Parse(ctx, auctionId, linkURL)
-
-			if err != nil {
-				if eris.Is(err, RateLimitError) {
-					return eris.Wrapf(err, "Rate limit reached parsing auctionId %d", auctionId)
+		for _, kv := range chunk {
+			g.Go(func() error {
+				select {
+				case <-ctx.Done():
+					return ctx.Err()
+				case semaphore <- struct{}{}:
+					defer func() { <-semaphore }()
 				}
 
-				failed.Set(auctionId, linkURL)
+				auctionId := kv.Key
+				linkURL := kv.Value
+
+				dto, err := s.auctionParser.Parse(ctx, auctionId, linkURL)
+
+				if err != nil {
+					if eris.Is(err, RateLimitError) {
+						return eris.Wrapf(err, "Rate limit reached parsing auctionId %d", auctionId)
+					}
+
+					failed.Set(auctionId, linkURL)
+
+					return nil
+				}
+
+				auction, err := s.mapper.FromDTO(dto)
+
+				if err != nil {
+					return eris.Wrapf(err, "Error mapping from DTO auctionId %d", auctionId)
+				}
+
+				if err := s.auctionRepository.Save(auction); err != nil {
+					return eris.Wrapf(err, "Error saving to DB auctionId %d", auctionId)
+				}
 
 				return nil
-			}
-
-			auction, err := s.mapper.FromDTO(dto)
-
-			if err != nil {
-				return eris.Wrapf(err, "Error mapping from DTO auctionId %d", auctionId)
-			}
-
-			if err := s.auctionRepository.Save(auction); err != nil {
-				return eris.Wrapf(err, "Error saving to DB auctionId %d", auctionId)
-			}
-
-			return nil
-		})
+			})
+		}
 	}
+
 }
