@@ -2,6 +2,7 @@ package auction
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"math/rand"
 	"time"
@@ -167,6 +168,12 @@ func (s *Service) scrapAuctionLinks(worlds []*World) (*AuctionLinkSet, error) {
 }
 
 func (s *Service) scrapAuctionDetail(auctionLinkSet *AuctionLinkSet) error {
+	pm := NewProxyManager()
+
+	workload := pm.BalanceLoad(auctionLinkSet.Data)
+
+	fmt.Println(workload)
+
 	links := collections.ChunkMap(auctionLinkSet.Data, AuctionDetailMaxConcurrency)
 
 	semaphore := make(chan struct{}, AuctionDetailMaxConcurrency)
