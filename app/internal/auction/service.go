@@ -149,7 +149,7 @@ func (s *Service) scrapAuctionLinks(worlds []*World) (*AuctionLinkSet, error) {
 					defer func() { <-semaphore }()
 				}
 
-				if err := s.linkParser.ScrapeWorld(world.Name, auctionLinkSet); err != nil {
+				if err := s.linkParser.Scrap(world.Name, auctionLinkSet); err != nil {
 					return err
 				}
 				return nil

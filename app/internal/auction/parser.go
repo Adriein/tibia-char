@@ -87,13 +87,13 @@ func (p *AuctionListHtmlParser) GetTotalCurrentAuctions() (int, error) {
 	return totalCurrentAuctions, nil
 }
 
-func (p *AuctionListHtmlParser) ScrapeWorld(world string, set *AuctionLinkSet) error {
+func (p *AuctionListHtmlParser) Scrap(world string, set *AuctionLinkSet) error {
 	for page := 1; ; page++ {
 		randDelay := time.Duration(2+rand.Intn(5)) * time.Second
 
 		time.Sleep(randDelay)
 
-		links, err := p.scrapeAuctionListPage(world, page)
+		links, err := p.scrapAuctionListPage(world, page)
 
 		if err != nil {
 			return eris.Wrapf(err, "Failed to scrape page %d for world %s", page, world)
@@ -129,7 +129,7 @@ func (p *AuctionListHtmlParser) ScrapeWorld(world string, set *AuctionLinkSet) e
 	return nil
 }
 
-func (p *AuctionListHtmlParser) scrapeAuctionListPage(world string, page int) ([]string, error) {
+func (p *AuctionListHtmlParser) scrapAuctionListPage(world string, page int) ([]string, error) {
 	var result []string
 	var scrapeErr error
 

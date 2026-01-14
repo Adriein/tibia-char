@@ -1,7 +1,6 @@
 package auction
 
 import (
-	"fmt"
 	"io"
 	"log"
 	"os"
@@ -48,21 +47,34 @@ func (l *TibiaCharCollyLogDebugger) Event(e *debug.Event) {
 	l.logger.Printf("[%06d] Id: %d [TraceId: %06d %s] %q (%s)\n", counter, e.CollectorID, e.RequestID, e.Type, e.Values, time.Since(l.start))
 }
 
-type Scrapper interface {
-	GetInstance() *CollyScrapper
-}
-
 type CollyScrapper struct {
 	Collector *colly.Collector
+	debugger  debug.Debugger
 }
 
-func NewScrapper(prefix string) *CollyScrapper {
+type Option func(*CollyScrapper)
+
+func NewScrapper(opts ...Option) *CollyScrapper {
+	cs := &CollyScrapper{}
+
+	for _, opt := range opts {
+		opt(cs)
+	}
+
+	/*&TibiaCharCollyLogDebugger{Prefix: fmt.Sprintf("[%s] ", prefix)}*/
 	c := colly.NewCollector(
 		colly.AllowedDomains(constants.TibiaOfficialWebsite),
-		colly.Debugger(&TibiaCharCollyLogDebugger{Prefix: fmt.Sprintf("[%s] ", prefix)}),
 	)
 
-	return &CollyScrapper{
-		Collector: c,
+	if cs.debugger != nil {
+		c.SetDebugger(cs.debugger)
+	}
+
+	return cs
+}
+
+func WithDebugger(d debug.Debugger) Option {
+	return func(c *CollyScrapper) {
+		c.debugger = d
 	}
 }
