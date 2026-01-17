@@ -636,3 +636,29 @@ func (p *AuctionHtmlParser) parseAuctionQuests(e *colly.HTMLElement, dto *Auctio
 
 	return nil
 }
+
+type ParserFactory interface {
+	CreateAuctionNumberParser(collector *CollyScrapper) *AuctionNumberHtmlParser
+	CreateAuctionListParser(collector *CollyScrapper) *AuctionListHtmlParser
+	CreateAuctionParser(collector *CollyScrapper) *AuctionHtmlParser
+}
+
+type HtmlParserFactory struct{}
+
+func (f *HtmlParserFactory) CreateAuctionNumberParser(collector *CollyScrapper) *AuctionNumberHtmlParser {
+	return &AuctionNumberHtmlParser{
+		collector: collector.Collector,
+	}
+}
+
+func (f *HtmlParserFactory) CreateAuctionListParser(collector *CollyScrapper) *AuctionListHtmlParser {
+	return &AuctionListHtmlParser{
+		collector: collector.Collector,
+	}
+}
+
+func (f *HtmlParserFactory) CreateAuctionParser(collector *CollyScrapper) *AuctionHtmlParser {
+	return &AuctionHtmlParser{
+		collector: collector.Collector,
+	}
+}

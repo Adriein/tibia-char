@@ -17,12 +17,12 @@ import (
 
 type Service struct {
 	tibiaAPI           *vendor.TibiaApi
-	linkParser         *AuctionListHtmlParser
-	auctionParser      *AuctionHtmlParser
 	auctionRepository  AuctionRepository
 	worldRepository    WorldRepository
 	currencyRepository currency.CurrencyRepository
 	mapper             *Mapper
+	parserFactory      ParserFactory
+	scrapperFactory    *CollyFactory
 	logger             *log.Logger
 }
 
@@ -30,23 +30,23 @@ const AuctionDetailMaxConcurrency = 5
 const AuctionLinkMaxConcurrency = 5
 
 func NewService(
-	ta *vendor.TibiaApi,
-	lp *AuctionListHtmlParser,
-	ap *AuctionHtmlParser,
-	ar AuctionRepository,
-	wr WorldRepository,
-	cr currency.CurrencyRepository,
-	m *Mapper,
+	tibiaAPI *vendor.TibiaApi,
+	auctionRepo AuctionRepository,
+	worldRepo WorldRepository,
+	currencyRepo currency.CurrencyRepository,
+	mapper *Mapper,
+	parserFactory ParserFactory,
+	scrapperFactory *CollyFactory,
 	logger *log.Logger,
 ) *Service {
 	return &Service{
-		tibiaAPI:           ta,
-		linkParser:         lp,
-		auctionParser:      ap,
-		auctionRepository:  ar,
-		worldRepository:    wr,
-		currencyRepository: cr,
-		mapper:             m,
+		tibiaAPI:           tibiaAPI,
+		auctionRepository:  auctionRepo,
+		worldRepository:    worldRepo,
+		currencyRepository: currencyRepo,
+		mapper:             mapper,
+		parserFactory:      parserFactory,
+		scrapperFactory:    scrapperFactory,
 		logger:             logger,
 	}
 }
@@ -58,7 +58,10 @@ func (s *Service) ScrapBazaar(ctx context.Context) error {
 
 	now := time.Now()
 
-	currentAuctions, err := s.linkParser.GetTotalCurrentAuctions()
+	scrapperInstance := s.scrapperFactory.CreateScrapper("")
+	auctionNumberParser := s.parserFactory.CreateAuctionNumberParser(scrapperInstance)
+
+	currentAuctions, err := auctionNumberParser.Scrap()
 
 	if err != nil {
 		return err
@@ -149,7 +152,11 @@ func (s *Service) scrapAuctionLinks(worlds []*World) (*AuctionLinkSet, error) {
 					defer func() { <-semaphore }()
 				}
 
-				if err := s.linkParser.Scrap(world.Name, auctionLinkSet); err != nil {
+				scrapperInstance := s.scrapperFactory.CreateScrapper("")
+
+				linkParser := s.parserFactory.CreateAuctionListParser(scrapperInstance)
+
+				if err := linkParser.Scrap(world.Name, auctionLinkSet); err != nil {
 					return err
 				}
 				return nil
@@ -282,7 +289,10 @@ func (s *Service) scrapAuctionDetail(ctx context.Context, g *errgroup.Group, fai
 				auctionId := kv.Key
 				linkURL := kv.Value
 
-				dto, err := s.auctionParser.Parse(ctx, auctionId, linkURL)
+				scrapperInstance := s.scrapperFactory.CreateScrapper("")
+				auctionParser := s.parserFactory.CreateAuctionParser(scrapperInstance)
+
+				dto, err := auctionParser.Parse(ctx, auctionId, linkURL)
 
 				if err != nil {
 					if eris.Is(err, RateLimitError) {
