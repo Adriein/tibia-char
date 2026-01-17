@@ -1,8 +1,7 @@
 package auction
 
 import (
-	"fmt"
-
+	"github.com/adriein/tibia-char/pkg/constants"
 	"github.com/adriein/tibia-char/pkg/helper/collections"
 )
 
@@ -13,9 +12,7 @@ type ProxyManager struct {
 }
 
 func NewProxyManager() *ProxyManager {
-	proxyURL1 := fmt.Sprintf("http://%s:%s@%s:%d", "ibnnxcva", "fl36k8kwqjcg", "142.111.48.253", 7030)
-	proxyURL2 := fmt.Sprintf("http://%s:%s@%s:%d", "ibnnxcva", "fl36k8kwqjcg", "23.95.150.145", 6114)
-	return &ProxyManager{ProxyAddress: []string{proxyURL1, proxyURL2}}
+	return &ProxyManager{ProxyAddress: []string{constants.LocalProxy}}
 }
 
 func (pm *ProxyManager) BalanceLoad(auctions map[int]string) ProxyWorkload {

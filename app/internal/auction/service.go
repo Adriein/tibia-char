@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/adriein/tibia-char/internal/currency"
+	"github.com/adriein/tibia-char/pkg/constants"
 	"github.com/adriein/tibia-char/pkg/enums"
 	"github.com/adriein/tibia-char/pkg/helper/collections"
 	"github.com/adriein/tibia-char/pkg/middleware"
@@ -190,7 +191,7 @@ func (s *Service) scrapAuctionDetails(auctionLinkSet *AuctionLinkSet) error {
 	g, gCtx := errgroup.WithContext(context.Background())
 
 	for proxyAddr, work := range workload {
-		ctx := context.WithValue(gCtx, "Addr", proxyAddr)
+		ctx := context.WithValue(gCtx, constants.ProxyAddr, proxyAddr)
 
 		g.Go(func() error {
 			s.scrapAuctionDetail(ctx, g, failed, work)

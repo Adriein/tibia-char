@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/PuerkitoBio/goquery"
+	"github.com/adriein/tibia-char/pkg/constants"
 	"github.com/adriein/tibia-char/pkg/enums"
 	"github.com/gocolly/colly/v2"
 	"github.com/rotisserie/eris"
@@ -220,8 +221,11 @@ func (p *AuctionHtmlParser) Parse(ctx context.Context, auctionId int, link strin
 
 	c := p.collector.Clone()
 
-	c.SetProxy(ctx.Value("Addr").(string))
-	fmt.Println(ctx.Value("Addr").(string))
+	proxyAddr := ctx.Value(constants.ProxyAddr).(string)
+
+	if proxyAddr != constants.LocalProxy {
+		c.SetProxy(proxyAddr)
+	}
 
 	c.OnError(func(r *colly.Response, err error) {
 		if r.StatusCode == http.StatusForbidden {

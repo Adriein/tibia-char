@@ -62,6 +62,11 @@ const (
 	None     = "none"
 )
 
+const (
+	ProxyAddr  = "PROXY_ADDR"
+	LocalProxy = "local"
+)
+
 // Errors
 
 const (
