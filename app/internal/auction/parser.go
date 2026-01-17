@@ -26,6 +26,69 @@ var RateLimitError = eris.New("Error rate limit reached")
 
 /*
 ================================================================================
+TOTAL AUCTIONS NUMBER PARSER
+================================================================================
+*/
+
+type AuctionNumberHtmlParser struct {
+	collector *colly.Collector
+}
+
+func NewAuctionNumberHtmlParser(c *colly.Collector) *AuctionNumberHtmlParser {
+	return &AuctionNumberHtmlParser{collector: c}
+}
+
+func (p *AuctionNumberHtmlParser) Scrap() (int, error) {
+	var errors []error
+	var totalCurrentAuctions int = 0
+
+	c := p.collector.Clone()
+
+	c.OnHTML("td[class=PageNavigation]", func(e *colly.HTMLElement) {
+		htmlExtractedText := e.Text
+
+		parts := strings.Split(htmlExtractedText, ": ")
+
+		if len(parts) < 2 {
+			err := eris.Errorf("String format is unexpected: %s", htmlExtractedText)
+			errors = append(errors, err)
+
+			return
+		}
+
+		numberStr := parts[1]
+
+		cleanStr := strings.ReplaceAll(numberStr, ",", "")
+
+		resultInt, err := strconv.Atoi(cleanStr)
+
+		if err != nil {
+			err := eris.Errorf("Error converting to integer: %s", err.Error())
+			errors = append(errors, err)
+
+			return
+		}
+
+		totalCurrentAuctions = resultInt
+	})
+
+	c.Visit(BaseAuctionListURL)
+
+	if len(errors) > 0 {
+		var b strings.Builder
+
+		for _, err := range errors {
+			b.WriteString(fmt.Sprintln(err.Error()))
+		}
+
+		return totalCurrentAuctions, eris.Errorf("Error getting total current auctions: %s", b.String())
+	}
+
+	return totalCurrentAuctions, nil
+}
+
+/*
+================================================================================
 LINK PARSER
 ================================================================================
 */
