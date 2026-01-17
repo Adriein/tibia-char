@@ -25,18 +25,14 @@ func NewController(app *internal.App) *Controller {
 	worldRepository := NewPgWorldRepository(app.Databse)
 	currencyRepository := currency.NewPgCurrencyRepository(app.Databse)
 
-	linkScrapper := NewScrapper("CollectAuctionLinks")
-
-	detailScrapper := NewScrapper("CollectAuctionDetails")
-
 	tibiaAPI := vendor.NewTibiaApi()
 
-	auctionListHtmlParser := NewAuctionListHtmlParser(linkScrapper.Collector)
-	auctionHtmlParser := NewAuctionHtmlParser(detailScrapper.Collector)
+	scrapperFactory := &CollyFactory{}
+	parserFactory := &HtmlParserFactory{}
 
 	mapper := NewMapper(worldRepository)
 
-	service := NewService(tibiaAPI, auctionListHtmlParser, auctionHtmlParser, auctionRepository, worldRepository, currencyRepository, mapper, logger)
+	service := NewService(tibiaAPI, auctionRepository, worldRepository, currencyRepository, mapper, parserFactory, scrapperFactory, logger)
 
 	return &Controller{
 		service: service,

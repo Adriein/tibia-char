@@ -8,11 +8,9 @@ import (
 	"github.com/adriein/tibia-char/internal"
 	"github.com/adriein/tibia-char/internal/auction"
 	"github.com/adriein/tibia-char/internal/currency"
-	"github.com/adriein/tibia-char/pkg/constants"
 	"github.com/adriein/tibia-char/pkg/helper"
 	"github.com/adriein/tibia-char/pkg/middleware"
 	"github.com/adriein/tibia-char/pkg/vendor"
-	"github.com/gocolly/colly/v2"
 	_ "github.com/lib/pq"
 	"github.com/rotisserie/eris"
 )
@@ -26,26 +24,14 @@ func main() {
 	worldRepository := auction.NewPgWorldRepository(app.Databse)
 	currencyRepository := currency.NewPgCurrencyRepository(app.Databse)
 
-	linkScrapper := auction.NewScrapper("CollectAuctionLinks")
-
-	linkScrapper.Collector.Limit(&colly.LimitRule{
-		DomainGlob: constants.TibiaOfficialWebsite,
-	})
-
-	detailScrapper := auction.NewScrapper("CollectAuctionDetails")
-
-	detailScrapper.Collector.Limit(&colly.LimitRule{
-		DomainGlob: constants.TibiaOfficialWebsite,
-	})
+	scrapperFactory := &auction.CollyFactory{}
+	parserFactory := &auction.HtmlParserFactory{}
 
 	tibiaAPI := vendor.NewTibiaApi()
 
-	auctionListHtmlParser := auction.NewAuctionListHtmlParser(linkScrapper.Collector)
-	auctionHtmlParser := auction.NewAuctionHtmlParser(detailScrapper.Collector)
-
 	mapper := auction.NewMapper(worldRepository)
 
-	cron := auction.NewService(tibiaAPI, auctionListHtmlParser, auctionHtmlParser, auctionRepository, worldRepository, currencyRepository, mapper, logger)
+	cron := auction.NewService(tibiaAPI, auctionRepository, worldRepository, currencyRepository, mapper, parserFactory, scrapperFactory, logger)
 
 	ctx := context.WithValue(context.Background(), middleware.TraceIDKey, helper.TraceID())
 
