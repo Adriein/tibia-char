@@ -76,6 +76,8 @@ func NewScrapper(opts ...Option) *CollyScrapper {
 		c.SetDebugger(cs.debugger)
 	}
 
+	cs.Collector = c
+
 	return cs
 }
 

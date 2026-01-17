@@ -43,7 +43,7 @@ func (p *AuctionNumberHtmlParser) Scrap() (int, error) {
 	var errors []error
 	var totalCurrentAuctions int = 0
 
-	c := p.collector.Clone()
+	c := p.collector
 
 	c.OnHTML("td[class=PageNavigation]", func(e *colly.HTMLElement) {
 		htmlExtractedText := e.Text
@@ -148,7 +148,7 @@ func (p *AuctionListHtmlParser) scrapAuctionListPage(world string, page int) ([]
 	var result []string
 	var scrapeErr error
 
-	c := p.collector.Clone()
+	c := p.collector
 
 	c.OnHTML("div[class=AuctionLinks]", func(e *colly.HTMLElement) {
 		e.ForEach("a[href]", func(_ int, el *colly.HTMLElement) {
@@ -219,7 +219,7 @@ func (p *AuctionHtmlParser) Parse(ctx context.Context, auctionId int, link strin
 
 	var parseErr error
 
-	c := p.collector.Clone()
+	c := p.collector
 
 	proxyAddr := ctx.Value(constants.ProxyAddr).(string)
 
@@ -650,19 +650,13 @@ type ParserFactory interface {
 type HtmlParserFactory struct{}
 
 func (f *HtmlParserFactory) CreateAuctionNumberParser(collector *CollyScrapper) *AuctionNumberHtmlParser {
-	return &AuctionNumberHtmlParser{
-		collector: collector.Collector,
-	}
+	return NewAuctionNumberHtmlParser(collector.Collector)
 }
 
 func (f *HtmlParserFactory) CreateAuctionListParser(collector *CollyScrapper) *AuctionListHtmlParser {
-	return &AuctionListHtmlParser{
-		collector: collector.Collector,
-	}
+	return NewAuctionListHtmlParser(collector.Collector)
 }
 
 func (f *HtmlParserFactory) CreateAuctionParser(collector *CollyScrapper) *AuctionHtmlParser {
-	return &AuctionHtmlParser{
-		collector: collector.Collector,
-	}
+	return NewAuctionHtmlParser(collector.Collector)
 }
