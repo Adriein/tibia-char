@@ -564,7 +564,9 @@ func (p *AuctionHtmlParser) extractBossPoints(e *colly.HTMLElement, dto *Auction
 	if text == "Boss Points:" {
 		bossPointsString := e.DOM.Siblings().Eq(0).Text()
 
-		bossPoints, err := strconv.Atoi(bossPointsString)
+		sanitizedBossPointsString := strings.ReplaceAll(bossPointsString, ",", "")
+
+		bossPoints, err := strconv.Atoi(sanitizedBossPointsString)
 
 		if err != nil {
 			return eris.Wrap(err, "Error converting boss points to int")

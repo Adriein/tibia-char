@@ -68,8 +68,31 @@ func NewScrapper(opts ...Option) *CollyScrapper {
 		opt(cs)
 	}
 
+	headers := map[string]string{
+		"accept":                      "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
+		"accept-language":             "en,es-ES;q=0.9,es;q=0.8",
+		"cache-control":               "max-age=0",
+		"priority":                    "u=0, i",
+		"sec-ch-ua":                   `"Google Chrome";v="143", "Chromium";v="143", "Not A(Brand";v="24"`,
+		"sec-ch-ua-arch":              `"x86"`,
+		"sec-ch-ua-bitness":           `"64"`,
+		"sec-ch-ua-full-version":      `"143.0.7499.192"`,
+		"sec-ch-ua-full-version-list": `"Google Chrome";v="143.0.7499.192", "Chromium";v="143.0.7499.192", "Not A(Brand";v="24.0.0.0"`,
+		"sec-ch-ua-mobile":            "?0",
+		"sec-ch-ua-model":             `""`,
+		"sec-ch-ua-platform":          `"Linux"`,
+		"sec-ch-ua-platform-version":  `""`,
+		"sec-fetch-dest":              "document",
+		"sec-fetch-mode":              "navigate",
+		"sec-fetch-site":              "cross-site",
+		"sec-fetch-user":              "?1",
+		"upgrade-insecure-requests":   "1",
+	}
+
 	c := colly.NewCollector(
 		colly.AllowedDomains(constants.TibiaOfficialWebsite),
+		colly.UserAgent("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36"),
+		colly.Headers(headers),
 	)
 
 	if cs.debugger != nil {

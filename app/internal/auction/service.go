@@ -312,6 +312,8 @@ func (s *Service) scrapAuctionDetail(ctx context.Context, g *errgroup.Group, fai
 						return eris.Wrapf(err, "Rate limit reached parsing auctionId %d", auctionId)
 					}
 
+					s.logger.Println(err.Error())
+
 					failed.Set(auctionId, linkURL)
 
 					return nil
