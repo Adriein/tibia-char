@@ -2,8 +2,10 @@ package auction
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"math/rand"
+	"sync/atomic"
 	"time"
 
 	"github.com/adriein/tibia-char/internal/currency"
@@ -58,7 +60,7 @@ func (s *Service) ScrapBazaar(ctx context.Context) error {
 
 	now := time.Now()
 
-	scrapperInstance := s.scrapperFactory.CreateScrapper("")
+	scrapperInstance := s.scrapperFactory.CreateScrapper("N")
 	auctionNumberParser := s.parserFactory.CreateAuctionNumberParser(scrapperInstance)
 
 	currentAuctions, err := auctionNumberParser.Scrap()
@@ -141,6 +143,8 @@ func (s *Service) scrapAuctionLinks(worlds []*World) (*AuctionLinkSet, error) {
 	auctionLinkSet := NewAuctionLinkSet()
 
 	for _, chunk := range worldsChunk {
+		goroutineCounter := int32(0)
+
 		g, ctx := errgroup.WithContext(context.Background())
 
 		for _, world := range chunk {
@@ -152,7 +156,10 @@ func (s *Service) scrapAuctionLinks(worlds []*World) (*AuctionLinkSet, error) {
 					defer func() { <-semaphore }()
 				}
 
-				scrapperInstance := s.scrapperFactory.CreateScrapper("")
+				goroutineNum := atomic.AddInt32(&goroutineCounter, 1)
+				goroutineID := fmt.Sprintf("L-routine%d", goroutineNum)
+
+				scrapperInstance := s.scrapperFactory.CreateScrapper(goroutineID)
 
 				linkParser := s.parserFactory.CreateAuctionListParser(scrapperInstance)
 
@@ -277,6 +284,8 @@ func (s *Service) scrapAuctionDetail(ctx context.Context, g *errgroup.Group, fai
 			time.Sleep(randDelay)
 		}
 
+		goroutineCounter := int32(0)
+
 		for _, kv := range chunk {
 			g.Go(func() error {
 				select {
@@ -289,7 +298,10 @@ func (s *Service) scrapAuctionDetail(ctx context.Context, g *errgroup.Group, fai
 				auctionId := kv.Key
 				linkURL := kv.Value
 
-				scrapperInstance := s.scrapperFactory.CreateScrapper("")
+				goroutineNum := atomic.AddInt32(&goroutineCounter, 1)
+				goroutineID := fmt.Sprintf("D-routine%d", goroutineNum)
+
+				scrapperInstance := s.scrapperFactory.CreateScrapper(goroutineID)
 				auctionParser := s.parserFactory.CreateAuctionParser(scrapperInstance)
 
 				dto, err := auctionParser.Parse(ctx, auctionId, linkURL)
