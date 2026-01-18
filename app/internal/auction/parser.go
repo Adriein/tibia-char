@@ -128,8 +128,7 @@ func (p *AuctionListHtmlParser) Scrap(world string, set *AuctionLinkSet, storedS
 			}
 
 			if storedSet.Has(auctionID) {
-				newLinksAdded = 0
-				break
+				continue
 			}
 
 			if set.Has(auctionID) {
