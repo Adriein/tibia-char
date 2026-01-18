@@ -600,6 +600,10 @@ func (p *AuctionHtmlParser) parseAuctionCharms(e *colly.HTMLElement, dto *Auctio
 
 	if strings.Contains(sanitizedTextContent, "CostsTypeCharmNameGrade") {
 		relevantHTML.Siblings().EachWithBreak(func(i int, s *goquery.Selection) bool {
+			if s.HasClass("IndicateMoreEntries") {
+				return true
+			}
+
 			children := s.Children()
 
 			charmType := children.Eq(1).Text()
