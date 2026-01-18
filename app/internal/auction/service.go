@@ -76,7 +76,7 @@ func (s *Service) ScrapBazaar(ctx context.Context) error {
 		return err
 	}
 
-	/*worldDTO, err := s.tibiaAPI.GetWorlds()
+	worldDTO, err := s.tibiaAPI.GetWorlds()
 
 	if err != nil {
 		return eris.Wrap(err, "Failed to fetch worlds from Tibia API")
@@ -100,9 +100,9 @@ func (s *Service) ScrapBazaar(ctx context.Context) error {
 			BattleEye: battleEye,
 			Pvp:       dto.PvpType,
 		})
-	}*/
+	}
 
-	worlds := []*World{{Id: 1, Name: "Calmera", Location: "North America", BattleEye: enums.BattleEyeYellow, Pvp: "Optional Pvp"}}
+	//worlds := []*World{{Id: 1, Name: "Calmera", Location: "North America", BattleEye: enums.BattleEyeYellow, Pvp: "Optional Pvp"}}
 
 	for _, world := range worlds {
 		_, err := s.worldRepository.GetOrCreate(world)
@@ -379,4 +379,6 @@ func (s *Service) RefreshActiveAuctions(ctx context.Context) error {
 			continue
 		}
 	}
+
+	return nil
 }

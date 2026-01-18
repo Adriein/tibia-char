@@ -175,6 +175,7 @@ var charmMap = map[string]*Charm{
 	"voids call":       {ID: 23, Type: "Minor", Name: "Voids Call"},
 	"wound":            {ID: 24, Type: "Major", Name: "Wound"},
 	"zap":              {ID: 25, Type: "Major", Name: "Zap"},
+	"curse":            {ID: 26, Type: "Major", Name: "Curse"},
 }
 
 func NewCharmFromName(name string) (*Charm, error) {

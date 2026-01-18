@@ -296,4 +296,5 @@ INSERT INTO tc_charms (tc_type, tc_name) VALUES
 ('Minor', 'Void Inversion'),
 ('Minor', 'Voids Call'),
 ('Major', 'Wound'),
-('Major', 'Zap');
+('Major', 'Zap'),
+('Major', 'Curse');

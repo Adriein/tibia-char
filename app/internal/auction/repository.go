@@ -735,7 +735,7 @@ func (r *PgAuctionRepository) GetActiveAuctions(ctx context.Context) ([]*Auction
 		var registry BidRegistry
 		var auctionID int
 
-		if err := questsRows.Scan(&auctionID, &registry.Amount, &registry.DateAdd); err != nil {
+		if err := bidRegistryRows.Scan(&auctionID, &registry.Amount, &registry.DateAdd); err != nil {
 			return nil, eris.Wrap(err, "Failed to scan registry")
 		}
 
