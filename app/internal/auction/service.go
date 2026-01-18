@@ -70,10 +70,30 @@ func (s *Service) ScrapBazaar(ctx context.Context) error {
 		return err
 	}
 
-	/*worlds, err := s.tibiaAPI.GetWorlds()
+	/*worldDTO, err := s.tibiaAPI.GetWorlds()
 
 	if err != nil {
 		return eris.Wrap(err, "Failed to fetch worlds from Tibia API")
+	}
+
+	var worlds []*World
+
+	for i, dto := range worldDTO.Worlds.RegularWorlds {
+		var battleEye enums.BattleEye
+
+		if dto.BattleEyeDate != "release" {
+			battleEye = enums.BattleEyeYellow
+		} else {
+			battleEye = enums.BattleEyeGreen
+		}
+
+		worlds = append(worlds, &World{
+			Id:        i + 1,
+			Name:      dto.Name,
+			Location:  dto.Location,
+			BattleEye: battleEye,
+			Pvp:       dto.PvpType,
+		})
 	}*/
 
 	worlds := []*World{{Id: 1, Name: "Calmera", Location: "North America", BattleEye: enums.BattleEyeYellow, Pvp: "Optional Pvp"}}
