@@ -54,6 +54,12 @@ func NewService(
 	}
 }
 
+/*
+================================================================================
+Scrapper Logic
+================================================================================
+*/
+
 func (s *Service) ScrapBazaar(ctx context.Context) error {
 	traceID := ctx.Value(middleware.TraceIDKey)
 
@@ -127,41 +133,23 @@ func (s *Service) ScrapBazaar(ctx context.Context) error {
 	return nil
 }
 
-func (s *Service) GetAuctions(ctx context.Context) ([]*Auction, error) {
-	auctions, err := s.auctionRepository.GetActiveAuctions(ctx)
-
-	if err != nil {
-		return nil, err
-	}
-
-	loc, ok := ctx.Value(middleware.TimezoneKey).(*time.Location)
-
-	if !ok {
-		return nil, eris.New("Error, location not stored in ctx")
-	}
-
-	targetCurrency := currency.FromLocation(loc)
-
-	conRate, err := s.currencyRepository.GetLatest(ctx)
-
-	if err != nil {
-		return nil, err
-	}
-
-	for _, auction := range auctions {
-		auction.BidFiat = conRate.Exchange(auction.BidFiat, targetCurrency)
-		auction.BidCurrency = targetCurrency
-	}
-
-	return auctions, nil
-}
-
 func (s *Service) scrapAuctionLinks(worlds []*World) (*AuctionLinkSet, error) {
 	semaphore := make(chan struct{}, AuctionLinkMaxConcurrency)
 
 	worldsChunk := collections.Chunk(worlds, AuctionLinkMaxConcurrency)
 
 	auctionLinkSet := NewAuctionLinkSet()
+	storedAuctionLinkSet := NewAuctionLinkSet()
+
+	auctions, err := s.auctionRepository.GetActiveAuctions(context.Background())
+
+	if err != nil {
+		return nil, eris.Wrap(err, "Error getting active auctions")
+	}
+
+	for _, auction := range auctions {
+		storedAuctionLinkSet.Set(auction.AuctionID, auction.TibiaAuctionLink)
+	}
 
 	for _, chunk := range worldsChunk {
 		goroutineCounter := int32(0)
@@ -184,7 +172,7 @@ func (s *Service) scrapAuctionLinks(worlds []*World) (*AuctionLinkSet, error) {
 
 				linkParser := s.parserFactory.CreateAuctionListParser(scrapperInstance)
 
-				if err := linkParser.Scrap(world.Name, auctionLinkSet); err != nil {
+				if err := linkParser.Scrap(world.Name, auctionLinkSet, storedAuctionLinkSet); err != nil {
 					return err
 				}
 				return nil
@@ -225,68 +213,6 @@ func (s *Service) scrapAuctionDetails(auctionLinkSet *AuctionLinkSet) error {
 	if err != nil {
 		return err
 	}
-
-	/*links := collections.ChunkMap(auctionLinkSet.Data, AuctionDetailMaxConcurrency)
-
-	semaphore := make(chan struct{}, AuctionDetailMaxConcurrency)
-
-	failed := NewAuctionLinkSet()
-	scrapped := 0
-
-	for i, chunk := range links {
-		g, ctx := errgroup.WithContext(context.Background())
-
-		if i != 0 {
-			randDelay := time.Duration(2+rand.Intn(5)) * time.Second
-
-			time.Sleep(randDelay)
-		}
-
-		for _, kv := range chunk {
-			scrapped++
-			g.Go(func() error {
-				select {
-				case <-ctx.Done():
-					return ctx.Err()
-				case semaphore <- struct{}{}:
-					defer func() { <-semaphore }()
-				}
-
-				auctionId := kv.Key
-				linkURL := kv.Value
-
-				dto, err := s.auctionParser.Parse(ctx, auctionId, linkURL)
-
-				if err != nil {
-					if eris.Is(err, RateLimitError) {
-						return eris.Wrapf(err, "Rate limit reached parsing auctionId %d", auctionId)
-					}
-
-					failed.Set(auctionId, linkURL)
-
-					return nil
-				}
-
-				auction, err := s.mapper.FromDTO(dto)
-
-				if err != nil {
-					return eris.Wrapf(err, "Error mapping from DTO auctionId %d", auctionId)
-				}
-
-				if err := s.auctionRepository.Save(auction); err != nil {
-					return eris.Wrapf(err, "Error saving to DB auctionId %d", auctionId)
-				}
-
-				return nil
-			})
-		}
-
-		err := g.Wait()
-
-		if err != nil {
-			return err
-		}
-	}*/
 
 	s.logger.Printf("Total to scrap: %d, Failed: %d", len(auctionLinkSet.Data), len(failed.Data))
 
@@ -355,3 +281,44 @@ func (s *Service) scrapAuctionDetail(ctx context.Context, g *errgroup.Group, fai
 	}
 
 }
+
+/*
+================================================================================
+Get Auctions Logic
+================================================================================
+*/
+
+func (s *Service) GetAuctions(ctx context.Context) ([]*Auction, error) {
+	auctions, err := s.auctionRepository.GetActiveAuctions(ctx)
+
+	if err != nil {
+		return nil, err
+	}
+
+	loc, ok := ctx.Value(middleware.TimezoneKey).(*time.Location)
+
+	if !ok {
+		return nil, eris.New("Error, location not stored in ctx")
+	}
+
+	targetCurrency := currency.FromLocation(loc)
+
+	conRate, err := s.currencyRepository.GetLatest(ctx)
+
+	if err != nil {
+		return nil, err
+	}
+
+	for _, auction := range auctions {
+		auction.BidFiat = conRate.Exchange(auction.BidFiat, targetCurrency)
+		auction.BidCurrency = targetCurrency
+	}
+
+	return auctions, nil
+}
+
+/*
+================================================================================
+Schedule Auctions Logic
+================================================================================
+*/

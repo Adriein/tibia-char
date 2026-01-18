@@ -102,7 +102,7 @@ func NewAuctionListHtmlParser(c *colly.Collector) *AuctionListHtmlParser {
 	return &AuctionListHtmlParser{collector: c}
 }
 
-func (p *AuctionListHtmlParser) Scrap(world string, set *AuctionLinkSet) error {
+func (p *AuctionListHtmlParser) Scrap(world string, set *AuctionLinkSet, storedSet *AuctionLinkSet) error {
 	for page := 1; ; page++ {
 		randDelay := time.Duration(2+rand.Intn(5)) * time.Second
 
@@ -125,6 +125,11 @@ func (p *AuctionListHtmlParser) Scrap(world string, set *AuctionLinkSet) error {
 
 			if err != nil {
 				return err
+			}
+
+			if storedSet.Has(auctionID) {
+				newLinksAdded = 0
+				break
 			}
 
 			if set.Has(auctionID) {
@@ -162,7 +167,7 @@ func (p *AuctionListHtmlParser) scrapAuctionListPage(world string, page int) ([]
 		scrapeErr = eris.Wrapf(err, "scraping error for world %s page %d: status %d", world, page, r.StatusCode)
 	})
 
-	targetURL := fmt.Sprintf("%s&filter_world=%s&currentpage=%d", BaseAuctionListURL, world, page)
+	targetURL := fmt.Sprintf("%s&filter_world=%s&currentpage=%d&order_column=103&order_direction=0", BaseAuctionListURL, world, page)
 
 	if err := c.Visit(targetURL); err != nil {
 		return nil, eris.Wrapf(err, "failed to visit %s", targetURL)
