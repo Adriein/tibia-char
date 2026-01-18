@@ -144,6 +144,7 @@ func (wr *PgWorldRepository) GetOrCreate(world *World) (*World, error) {
 type AuctionRepository interface {
 	Save(auction *Auction) error
 	GetActiveAuctions(ctx context.Context) ([]*Auction, error)
+	GetActiveAuctionsFinishingIn(ctx context.Context, duration time.Duration) ([]*Auction, error)
 }
 
 type PgAuctionRepository struct {
@@ -754,4 +755,73 @@ func (r *PgAuctionRepository) GetActiveAuctions(ctx context.Context) ([]*Auction
 	}
 
 	return auctions, nil
+}
+
+func (r *PgAuctionRepository) GetActiveAuctionsFinishingIn(ctx context.Context, duration time.Duration) ([]*Auction, error) {
+	query := `
+		SELECT
+			a.ta_id,
+			a.ta_auction_id,
+			a.ta_tibia_auction_link,
+			a.ta_auction_start,
+			a.ta_auction_end,
+			tar.tar_status,
+			tar.tar_date_add,
+			tar.tar_date_upd
+		FROM
+			tc_auction a
+		INNER JOIN
+			tc_auction_recording tar ON a.ta_id = tar.tar_recordable_id
+		WHERE
+			tar.tar_status = 'active'
+		AND
+			a.ta_auction_end <= NOW() + make_interval(secs => $1)
+		;
+	`
+
+	ctxTimeout, cancel := context.WithTimeout(ctx, time.Second*10)
+
+	defer cancel()
+
+	rows, err := r.connection.QueryContext(ctxTimeout, query, int(duration.Seconds()))
+
+	if err != nil {
+		return nil, eris.Wrap(err, "Failed to query active auctions")
+	}
+
+	var result []*Auction
+
+	for rows.Next() {
+		var (
+			auction      Auction
+			statusString string
+		)
+
+		err := rows.Scan(
+			&auction.ID,
+			&auction.AuctionID,
+			&auction.TibiaAuctionLink,
+			&auction.AuctionStart,
+			&auction.AuctionEnd,
+			&statusString,
+			&auction.DateAdd,
+			&auction.DateUpd,
+		)
+
+		if err != nil {
+			return nil, eris.Wrap(err, "Failed to scan auction")
+		}
+
+		status, err := enums.GetAuctionRecordableStatusFromString(statusString)
+
+		if err != nil {
+			return nil, eris.Wrap(err, "Failed to parse auction status")
+		}
+
+		auction.Status = status
+
+		result = append(result, &auction)
+	}
+
+	return result, nil
 }

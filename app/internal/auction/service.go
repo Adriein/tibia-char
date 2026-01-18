@@ -322,3 +322,61 @@ func (s *Service) GetAuctions(ctx context.Context) ([]*Auction, error) {
 Schedule Auctions Logic
 ================================================================================
 */
+
+func (s *Service) RefreshActiveAuctions(ctx context.Context) error {
+	finishingIn10MinAuc, err := s.auctionRepository.GetActiveAuctionsFinishingIn(ctx, 10*time.Minute)
+
+	if err != nil {
+		return err
+	}
+
+	for _, auction := range finishingIn10MinAuc {
+		hasBeenUpdatedInTheLast5Min := auction.DateUpd.After(time.Now().Add(5 * time.Minute))
+
+		if hasBeenUpdatedInTheLast5Min {
+			continue
+		}
+	}
+
+	finishingIn60MinAuc, err := s.auctionRepository.GetActiveAuctionsFinishingIn(ctx, 60*time.Minute)
+
+	if err != nil {
+		return err
+	}
+
+	for _, auction := range finishingIn60MinAuc {
+		hasBeenUpdatedInTheLast60Min := auction.DateUpd.After(time.Now().Add(60 * time.Minute))
+
+		if hasBeenUpdatedInTheLast60Min {
+			continue
+		}
+	}
+
+	finishingIn24HourAuc, err := s.auctionRepository.GetActiveAuctionsFinishingIn(ctx, 24*time.Hour)
+
+	if err != nil {
+		return err
+	}
+
+	for _, auction := range finishingIn24HourAuc {
+		hasBeenUpdatedInTheLast6Hours := auction.DateUpd.After(time.Now().Add(6 * time.Hour))
+
+		if hasBeenUpdatedInTheLast6Hours {
+			continue
+		}
+	}
+
+	everyOtherAuc, err := s.auctionRepository.GetActiveAuctionsFinishingIn(ctx, 30*24*time.Hour)
+
+	if err != nil {
+		return err
+	}
+
+	for _, auction := range everyOtherAuc {
+		hasBeenUpdatedInTheLast24Hours := auction.DateUpd.After(time.Now().Add(24 * time.Hour))
+
+		if hasBeenUpdatedInTheLast24Hours {
+			continue
+		}
+	}
+}
