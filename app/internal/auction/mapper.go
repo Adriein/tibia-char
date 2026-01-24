@@ -122,7 +122,7 @@ func (m *Mapper) FromDTO(dto *AuctionDTO) (*Auction, error) {
 		Stage:            dto.Stage,
 		AuctionStart:     dto.AuctionStartTime,
 		AuctionEnd:       dto.AuctionEndTime,
-		Status:           enums.RecordableActive,
+		Status:           dto.Status,
 		Skills: &Skills{
 			AuctionID:  dto.AuctionId,
 			Axe:        dto.Skills.Axe,

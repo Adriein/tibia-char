@@ -60,6 +60,7 @@ type AuctionDTO struct {
 	BossPoints       int
 	Bid              int
 	Stage            enums.AuctionStage
+	Status           enums.AuctionRecordableStatus
 	AuctionStartTime time.Time
 	AuctionEndTime   time.Time
 }
