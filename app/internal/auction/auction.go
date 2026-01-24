@@ -336,6 +336,10 @@ func (a *Auction) IsTrending() bool {
 	var increasedTimes int
 
 	for i, registry := range a.BidRegistry {
+		if len(a.BidRegistry) <= i+1 {
+			break
+		}
+
 		next := a.BidRegistry[i+1]
 
 		if registry.Amount < next.Amount {
