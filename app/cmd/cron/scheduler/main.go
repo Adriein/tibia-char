@@ -35,7 +35,7 @@ func main() {
 
 	ctx := context.WithValue(context.Background(), middleware.TraceIDKey, helper.TraceID())
 
-	err := cron.ScrapBazaar(ctx)
+	err := cron.RefreshActiveAuctions(ctx)
 
 	if err != nil {
 		log.Fatal(eris.ToString(err, true))
