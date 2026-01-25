@@ -112,28 +112,30 @@ func (s *Service) ScrapBazaar(ctx context.Context) error {
 		}
 	}
 
-	auctionLinkSet, err := s.scrapAuctionLinks(worlds)
+	auctionLinkSet, err := s.scrapAuctionLinks(ctx, worlds)
 
 	if err != nil {
-		s.logger.Printf("TraceID: %s Finished Scrapping with error in %s\n", traceID, time.Since(now))
+		s.logger.Printf("TraceID: %s Finished Scrapping with error time: %s\n", traceID, time.Since(now))
 
 		return err
 	}
-
-	s.logger.Printf("TraceID: %s Total auction links %d - Auction links obtained %d\n", traceID, currentAuctions, len(auctionLinkSet.Data))
 
 	if err := s.scrapAuctionDetails(auctionLinkSet); err != nil {
-		s.logger.Printf("TraceID: %s Finished Scrapping with error: %s in %s\n", traceID, err.Error(), time.Since(now))
+		s.logger.Printf("TraceID: %s Finished Scrapping with error time: %s\n", traceID, time.Since(now))
 
 		return err
 	}
 
-	s.logger.Printf("TraceID: %s Finished Scrapping in %s\n", traceID, time.Since(now))
+	s.logger.Printf("TraceID: %s Total auction links %d - Auction links obtained %d - Time: %s\n", traceID, currentAuctions, len(auctionLinkSet.Data), time.Since(now))
 
 	return nil
 }
 
-func (s *Service) scrapAuctionLinks(worlds []*World) (*AuctionLinkSet, error) {
+func (s *Service) scrapAuctionLinks(ctx context.Context, worlds []*World) (*AuctionLinkSet, error) {
+	traceID := ctx.Value(middleware.TraceIDKey)
+
+	now := time.Now()
+
 	semaphore := make(chan struct{}, AuctionLinkMaxConcurrency)
 
 	worldsChunk := collections.Chunk(worlds, AuctionLinkMaxConcurrency)
@@ -173,7 +175,7 @@ func (s *Service) scrapAuctionLinks(worlds []*World) (*AuctionLinkSet, error) {
 				linkParser := s.parserFactory.CreateAuctionListParser(scrapperInstance)
 
 				if err := linkParser.Scrap(world.Name, auctionLinkSet, storedAuctionLinkSet); err != nil {
-					return err
+					return eris.Wrapf(err, "Failed to collect link in L-routine%d", goroutineNum)
 				}
 				return nil
 			})
@@ -185,6 +187,8 @@ func (s *Service) scrapAuctionLinks(worlds []*World) (*AuctionLinkSet, error) {
 			return nil, err
 		}
 	}
+
+	s.logger.Printf("TraceID: %s Finished Scrapping with error time: %s\n", traceID, time.Since(now))
 
 	return auctionLinkSet, nil
 }
