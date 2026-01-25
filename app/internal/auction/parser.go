@@ -163,13 +163,13 @@ func (p *AuctionListHtmlParser) scrapAuctionListPage(world string, page int) ([]
 	})
 
 	c.OnError(func(r *colly.Response, err error) {
-		scrapeErr = eris.Wrapf(err, "scraping error for world %s page %d: status %d", world, page, r.StatusCode)
+		scrapeErr = eris.Wrapf(err, "Scraping error for world %s page %d: status %d", world, page, r.StatusCode)
 	})
 
 	targetURL := fmt.Sprintf("%s&filter_world=%s&currentpage=%d&order_column=103&order_direction=0", BaseAuctionListURL, world, page)
 
 	if err := c.Visit(targetURL); err != nil {
-		return nil, eris.Wrapf(err, "failed to visit %s", targetURL)
+		return nil, eris.Wrapf(err, "Failed to visit %s", targetURL)
 	}
 
 	if scrapeErr != nil {
