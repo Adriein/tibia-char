@@ -224,6 +224,9 @@ func (s *Service) scrapAuctionDetail(ctx context.Context, g *errgroup.Group, fai
 
 	chunks := collections.Chunk(workGroup, AuctionDetailMaxConcurrency)
 
+	workDoneCounter := int32(0)
+	totalWorkload := len(workGroup)
+
 	for i, chunk := range chunks {
 		if i != 0 {
 			randDelay := time.Duration(2+rand.Intn(5)) * time.Second
@@ -262,24 +265,36 @@ func (s *Service) scrapAuctionDetail(ctx context.Context, g *errgroup.Group, fai
 
 					failed.Set(auctionId, linkURL)
 
+					s.notifyStatus(totalWorkload, &workDoneCounter)
+
 					return nil
 				}
 
 				auction, err := s.mapper.FromDTO(dto)
 
 				if err != nil {
+					s.notifyStatus(totalWorkload, &workDoneCounter)
+
 					return eris.Wrapf(err, "Error mapping from DTO auctionId %d", auctionId)
 				}
 
 				if err := s.auctionRepository.Save(auction); err != nil {
+					s.notifyStatus(totalWorkload, &workDoneCounter)
+
 					return eris.Wrapf(err, "Error saving to DB auctionId %d", auctionId)
 				}
+
+				s.notifyStatus(totalWorkload, &workDoneCounter)
 
 				return nil
 			})
 		}
 	}
+}
 
+func (s *Service) notifyStatus(totalWork int, workDoneCounter *int32) {
+	newValue := atomic.AddInt32(workDoneCounter, 1)
+	s.logger.Printf("%d/%d", newValue, totalWork)
 }
 
 /*
