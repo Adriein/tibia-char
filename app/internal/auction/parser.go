@@ -409,11 +409,21 @@ func (p *AuctionHtmlParser) parseAuctionBody(e *colly.HTMLElement, dto *AuctionD
 			})
 		case "CurrentBid":
 			container := ch.DOM.Children()
-			//TODO: debug because this is not archiving some expired auctions
 			if container.Children().Eq(0).HasClass("AuctionInfo") {
+
+				if len(container.Children().Eq(0).Children().Nodes) == 0 {
+					auctionInfoDivText := container.Children().Eq(0).Text()
+
+					if auctionInfoDivText == "cancelled" {
+						dto.Status = enums.RecordableArchived
+
+						return true
+					}
+				}
+
 				auctionStatus := container.Children().Eq(0).Children().Eq(0).Text()
 
-				if auctionStatus == "finished" || auctionStatus == "cancelled" {
+				if auctionStatus == "finished" {
 					dto.Status = enums.RecordableArchived
 
 					return true
