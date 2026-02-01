@@ -408,7 +408,7 @@ func (p *AuctionHtmlParser) parseAuctionBody(e *colly.HTMLElement, dto *AuctionD
 				dto.Featured = append(dto.Featured, spcfCh.Text)
 			})
 		case "CurrentBid":
-			auctionInfo := ch.DOM.Children().Eq(0)
+			auctionInfo := ch.DOM.Children().Eq(0).Children().Eq(0)
 
 			if !auctionInfo.HasClass("AuctionInfo") {
 				dto.Status = enums.RecordableActive
@@ -416,7 +416,7 @@ func (p *AuctionHtmlParser) parseAuctionBody(e *colly.HTMLElement, dto *AuctionD
 			}
 
 			auctionInfoText := auctionInfo.Text()
-			if auctionInfoText == "cancelled" {
+			if auctionInfoText == "cancelled" || auctionInfoText == "currentlyprocessed" {
 				dto.Status = enums.RecordableArchived
 				return true
 			}
