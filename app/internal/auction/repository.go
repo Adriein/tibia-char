@@ -438,8 +438,8 @@ func (r *PgAuctionRepository) GetActiveAuctions(ctx context.Context) ([]*Auction
 			a.ta_auction_start,
 			a.ta_auction_end,
 			tar.tar_status,
-			a.ta_date_add,
-			a.ta_date_upd
+			tar.tar_date_add,
+			tar.tar_date_upd
 		FROM
 			tc_auction a
 		INNER JOIN
