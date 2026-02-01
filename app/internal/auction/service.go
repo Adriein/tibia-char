@@ -343,6 +343,12 @@ Schedule Auctions Logic
 */
 
 func (s *Service) RefreshActiveAuctions(ctx context.Context) error {
+	traceID := ctx.Value(middleware.TraceIDKey)
+
+	now := time.Now()
+
+	s.logger.Printf("TraceID: %s Start refresh cron\n", traceID)
+
 	type refreshPolicy struct {
 		finishingIn    time.Duration
 		updateInterval time.Duration
@@ -352,7 +358,7 @@ func (s *Service) RefreshActiveAuctions(ctx context.Context) error {
 		{finishingIn: 10 * time.Minute, updateInterval: 5 * time.Minute},
 		{finishingIn: 60 * time.Minute, updateInterval: 60 * time.Minute},
 		{finishingIn: 24 * time.Hour, updateInterval: 6 * time.Hour},
-		{finishingIn: 30 * 24 * time.Hour, updateInterval: 24 * time.Hour},
+		{finishingIn: 30 * 24 * time.Hour, updateInterval: 6 * time.Hour},
 	}
 
 	auctionsToUpdate := NewAuctionLinkSet()
@@ -380,6 +386,8 @@ func (s *Service) RefreshActiveAuctions(ctx context.Context) error {
 	if err := s.scrapAuctionDetails(auctionsToUpdate); err != nil {
 		return eris.Wrap(err, "Failed to refresh auctions")
 	}
+
+	s.logger.Printf("TraceID: %s Finish refresh cron in: %s\n", traceID, time.Since(now))
 
 	return nil
 }
