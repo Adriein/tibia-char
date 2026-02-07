@@ -11,6 +11,35 @@ import (
 	"github.com/adriein/tibia-char/pkg/middleware"
 )
 
+func formatTimeAgo(duration time.Duration) string {
+	if duration < time.Minute {
+		return "just now"
+	}
+
+	minutes := int(duration.Minutes())
+	if minutes < 60 {
+		return fmt.Sprintf("%dm ago", minutes)
+	}
+
+	hours := int(duration.Hours())
+	if hours < 24 {
+		return fmt.Sprintf("%dh ago", hours)
+	}
+
+	days := hours / 24
+	if days < 30 {
+		return fmt.Sprintf("%dd ago", days)
+	}
+
+	months := days / 30
+	if months < 12 {
+		return fmt.Sprintf("%dmo ago", months)
+	}
+
+	years := months / 12
+	return fmt.Sprintf("%dy ago", years)
+}
+
 script initTimezone() {
     if (!document.cookie.includes("User_Tz=")) {
         const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -74,7 +103,7 @@ templ AuctionCard(auction *Auction) {
 
 		abbr, _ := auction.AuctionEnd.In(loc).Zone()
 
-		auctionEnd := fmt.Sprintf("%s (%s)", formattedAuctionEnd, abbr)
+		auctionEnd := fmt.Sprintf("%s %s", formattedAuctionEnd, abbr)
 
 		var timeLeft string
 
@@ -112,6 +141,8 @@ templ AuctionCard(auction *Auction) {
 			auctionStage = "Winning"
 			stageBadgeClass = "card__bid-badge card__bid-badge--winning"
 		}
+
+		lastUpdated := formatTimeAgo(time.Since(auction.DateUpd))
 	}}
 	<div class="card card--auction">
 		<div class="card__header">
@@ -121,6 +152,7 @@ templ AuctionCard(auction *Auction) {
 			<div>
 				<h1 class="card__title">{auction.CharName}</h1>
 				<h2 class="card__subtitle">{auction.CharLevel} {auction.CharVocation.Name}</h2>
+				<span class="card__updated">{lastUpdated}</span>
 			</div>
 			if auction.IsTrending() {
 				<div class="card__header-trending">

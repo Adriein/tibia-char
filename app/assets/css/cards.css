@@ -28,11 +28,29 @@
   }
 
   .card__title {
+    line-height: 1;
     font-size: var(--text-normal);
   }
 
   .card__subtitle {
     font-size: var(--text-x-small);
+  }
+
+  .card__updated {
+    display: flex;
+    gap: var(--inline-space);
+    align-items: center;
+    font-size: var(--text-xx-small);
+  }
+
+  .card__updated::before {
+    content: "";
+    width: 4px;
+    height: 4px;
+    background-color: var(--color-success);
+    border-radius: 50%;
+    display: inline-block;
+    animation: pulse 2s infinite;
   }
 
   .card__header ~ *,
@@ -327,6 +345,18 @@
     40% {
       filter: brightness(1.15);
       box-shadow: 0 4px 12px oklch(0.60 0.20 25 / 40%);
+    }
+  }
+
+  @keyframes pulse {
+    0% {
+      box-shadow: 0 0 0 0 oklch(0.75 0.15 150 / 0.8);
+    }
+    70% {
+      box-shadow: 0 0 0 6px oklch(0.75 0.15 150 / 0);
+    }
+    100% {
+      box-shadow: 0 0 0 0 oklch(0.75 0.15 150 / 0);
     }
   }
 }
