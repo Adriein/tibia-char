@@ -1,0 +1,24 @@
+@layer components {
+  .grid {
+    display: grid;
+    gap: var(--grid-gap);
+    grid-template-columns: repeat(var(--grid-cols), 1fr);
+  }
+
+  .grid-cards {
+    display: grid;
+    gap: var(--grid-gap);
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 400px), 1fr));
+  }
+
+  /* Column Spanning Classes */
+  .col-12 { grid-column: span 12; }
+  .col-8  { grid-column: span 8; }
+  .col-6  { grid-column: span 6; }
+  .col-4  { grid-column: span 4; }
+
+  @media (max-width: 768px) {
+    .col-md-12 { grid-column: span 12; }
+    [class*="col-"] { grid-column: span 12; } /* Mobile default: full width */
+  }
+}

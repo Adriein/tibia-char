@@ -9,6 +9,10 @@
   --block-space-half: calc(var(--block-space) / 2);
   --block-space-double: calc(var(--block-space) * 2);
 
+  /* Grid system */
+  --grid-gap: var(--inline-space);
+  --grid-cols: 12;
+
   /* Text */
   --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
   --font-serif: ui-serif, serif;

@@ -320,9 +320,9 @@ templ AuctionCard(auction *Auction) {
 }
 
 templ Auctions(auctions []*Auction) {
-	<div>
+	<div class="grid-cards">
 		for _, auction := range auctions {
-    	@AuctionCard(auction)
-  	}
+			@AuctionCard(auction)
+		}
 	</div>
 }
