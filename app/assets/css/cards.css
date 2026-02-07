@@ -7,7 +7,6 @@
     color: var(--card-text-ink, var(--color-surface-ink));
     border: var(--card-border-size, 1px) solid var(--card-border-color, var(--color-border));
     border-radius: var(--card-radius, var(--radius-md));
-    max-width: 400px;
     overflow: hidden;
     display: flex;
     flex-direction: column;
@@ -71,6 +70,8 @@
   }
 
   .card--auction {
+    max-width: 400px;
+
     .card__header-avatar {
       background-color: var(--color-brand-main);
       width: 56px;
@@ -144,20 +145,20 @@
       --badge-font-size: var(--text-xx-small);
       margin-left: var(--inline-space-half);
 
-      &.card__bid-badge--current {
-        --badge-bg: oklch(from var(--color-success) l c h / 20%);;
-        --badge-color: var(--color-success);
+      &.card__bid-badge--initial {
+        --badge-bg: var(--color-muted);
+        --badge-color: var(--color-muted-ink);
       }
 
       &.card__bid-badge--winning {
-        --badge-bg: var(--color-muted);
-        --badge-color: var(--color-muted-ink);
+        --badge-bg: oklch(from var(--color-success) l c h / 20%);;
+        --badge-color: var(--color-success);
       }
     }
 
     .card__bid-amount {
       display: flex;
-      gap: 4px;
+      gap: var(--inline-space);
       font-weight: var(--card__bid-amount-text-w, var(--text-weight-xl));
       align-items: center;
 

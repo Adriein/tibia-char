@@ -190,10 +190,10 @@ func AuctionCard(auction *Auction) templ.Component {
 		switch auction.Stage {
 		case enums.StageInitial:
 			auctionStage = "Initial"
-			stageBadgeClass = "badge--primary card__bid-badge"
+			stageBadgeClass = "card__bid-badge card__bid-badge--initial"
 		case enums.StageCurrent:
 			auctionStage = "Current"
-			stageBadgeClass = "card__bid-badge card__bid-badge--current"
+			stageBadgeClass = "card__bid-badge badge--primary"
 		case enums.StageWinning:
 			auctionStage = "Winning"
 			stageBadgeClass = "card__bid-badge card__bid-badge--winning"
@@ -672,7 +672,7 @@ func Auctions(auctions []*Auction) templ.Component {
 			templ_7745c5c3_Var33 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 46, "<div class=\"grid-container\"><div class=\"grid-cards\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 46, "<div><div class=\"pagination pagination--auctions\"><span>Auctions 2580</span><div>1 / 50</div><span>20 / page</span></div></div><div class=\"grid-cards\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -682,7 +682,7 @@ func Auctions(auctions []*Auction) templ.Component {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 47, "</div></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 47, "</div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

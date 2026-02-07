@@ -14,15 +14,15 @@ type VocationRepository interface {
 	GetOrCreate(vocation string) (*Vocation, error)
 }
 
-type PgVocationReository struct {
+type PgVocationRepsitory struct {
 	connection *sql.DB
 }
 
-func NewPgVocationRepository(c *sql.DB) *PgVocationReository {
-	return &PgVocationReository{connection: c}
+func NewPgVocationRepository(c *sql.DB) *PgVocationRepsitory {
+	return &PgVocationRepsitory{connection: c}
 }
 
-func (vr *PgVocationReository) GetOrCreate(vocation string) (*Vocation, error) {
+func (vr *PgVocationRepsitory) GetOrCreate(vocation string) (*Vocation, error) {
 	query := `
 		WITH ins AS (
 			INSERT INTO tc_vocation (tv_name)

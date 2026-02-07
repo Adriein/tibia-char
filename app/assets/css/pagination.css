@@ -1,0 +1,20 @@
+@layer components {
+  .pagination {
+    --pagination-padding-inline: var(--inline-space-double);
+    --pagination-padding-block: var(--block-space);
+
+    background-color: var(--pagination-bg, var(--color-surface));
+    color: var(--pagination-text-ink, var(--color-surface-ink));
+    border: var(--pagination-border-size, 1px) solid var(--pagination-border-color, var(--color-border));
+    border-radius: var(--pagination-radius, var(--radius-md));
+    overflow: hidden;
+    display: flex;
+    gap: var(--inline-space);
+    padding: var(--pagination-padding-block) var(--pagination-padding-inline);
+  }
+
+  .pagination--auctions {
+    --pagination-radius: 0px;
+    justify-content: space-between;
+  }
+}
