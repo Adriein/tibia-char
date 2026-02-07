@@ -307,8 +307,12 @@ Get Auctions Logic
 ================================================================================
 */
 
-func (s *Service) GetAuctions(ctx context.Context) ([]*Auction, error) {
-	auctions, err := s.auctionRepository.GetActiveAuctions(ctx)
+func (s *Service) GetAuctions(ctx context.Context, filter *AuctionFilter) ([]*Auction, error) {
+	if filter == nil {
+		filter = DefaultAuctionFilter()
+	}
+
+	auctions, err := s.auctionRepository.GetAuctionsWithFilter(ctx, filter)
 
 	if err != nil {
 		return nil, err

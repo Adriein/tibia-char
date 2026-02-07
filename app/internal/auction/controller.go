@@ -44,7 +44,7 @@ func (c *Controller) Get() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		traceID, _ := ctx.Get(middleware.TraceIDKey)
 
-		auctions, err := c.service.GetAuctions(ctx)
+		auctions, err := c.service.GetAuctions(ctx, nil)
 
 		if err != nil {
 			//TODO: Temporal logging until I decide what to do

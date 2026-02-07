@@ -145,6 +145,7 @@ type AuctionRepository interface {
 	Save(auction *Auction) error
 	GetActiveAuctions(ctx context.Context) ([]*Auction, error)
 	GetActiveAuctionsFinishingIn(ctx context.Context, duration time.Duration) ([]*Auction, error)
+	GetAuctionsWithFilter(ctx context.Context, filter *AuctionFilter) ([]*Auction, error)
 }
 
 type PgAuctionRepository struct {
@@ -824,4 +825,349 @@ func (r *PgAuctionRepository) GetActiveAuctionsFinishingIn(ctx context.Context, 
 	}
 
 	return result, nil
+}
+
+func (r *PgAuctionRepository) GetAuctionsWithFilter(ctx context.Context, filter *AuctionFilter) ([]*Auction, error) {
+	query := `
+		SELECT
+			a.ta_id,
+			a.ta_auction_id,
+			a.ta_tibia_auction_link,
+			a.ta_img,
+			a.ta_char_name,
+			a.ta_char_level,
+			v.*,
+			g.*,
+			w.*,
+			ts.*,
+			a.ta_world_transfer,
+			a.ta_boss_points,
+			a.ta_charm_expansion,
+			a.ta_charm_points,
+			a.ta_task_expansion,
+			a.ta_current_bid,
+			a.ta_current_bid_fiat,
+			a.ta_current_bid_currency,
+			a.ta_auction_stage,
+			a.ta_auction_start,
+			a.ta_auction_end,
+			tar.tar_status,
+			tar.tar_date_add,
+			tar.tar_date_upd
+		FROM
+			tc_auction a
+		INNER JOIN
+			tc_vocation v ON a.ta_char_vocation = v.tv_id
+		INNER JOIN
+			tc_gender g ON a.ta_char_gender = g.tg_id
+		INNER JOIN
+			tc_world w ON a.ta_char_world = w.tw_id
+		INNER JOIN
+			tc_auction_recording tar ON a.ta_id = tar.tar_recordable_id
+		INNER JOIN
+			tc_skills ts ON a.ta_auction_id = ts.ts_auction_id
+		WHERE
+			tar.tar_status = 'active'
+		ORDER BY
+			a.ta_auction_end ASC
+		LIMIT $1 OFFSET $2;
+	`
+
+	ctxTimeout, cancel := context.WithTimeout(ctx, time.Second*10)
+
+	defer cancel()
+
+	rows, err := r.connection.QueryContext(ctxTimeout, query, filter.Limit, filter.Offset)
+
+	if err != nil {
+		return nil, eris.Wrap(err, "Failed to query auctions with filter")
+	}
+
+	defer rows.Close()
+
+	auctionMap := make(map[int]*Auction)
+
+	var orderedIDs []int
+
+	for rows.Next() {
+		var (
+			auction         Auction
+			vocation        Vocation
+			gender          Gender
+			world           World
+			skills          Skills
+			battleEyeString string
+			statusString    string
+		)
+
+		err := rows.Scan(
+			&auction.ID,
+			&auction.AuctionID,
+			&auction.TibiaAuctionLink,
+			&auction.Img,
+			&auction.CharName,
+			&auction.CharLevel,
+			&vocation.Id,
+			&vocation.Name,
+			&gender.Id,
+			&gender.Name,
+			&world.Id,
+			&world.Name,
+			&world.Location,
+			&battleEyeString,
+			&world.Pvp,
+			&skills.AuctionID,
+			&skills.Axe,
+			&skills.Club,
+			&skills.Distance,
+			&skills.Fishing,
+			&skills.Fist,
+			&skills.MagicLevel,
+			&skills.Shielding,
+			&skills.Sword,
+			&auction.WorldTransfer,
+			&auction.BossPoints,
+			&auction.CharmExpansion,
+			&auction.CharmPoints,
+			&auction.TaskExpansion,
+			&auction.Bid,
+			&auction.BidFiat,
+			&auction.BidCurrency,
+			&auction.Stage,
+			&auction.AuctionStart,
+			&auction.AuctionEnd,
+			&statusString,
+			&auction.DateAdd,
+			&auction.DateUpd,
+		)
+
+		if err != nil {
+			return nil, eris.Wrap(err, "Failed to scan auction")
+		}
+
+		status, err := enums.GetAuctionRecordableStatusFromString(statusString)
+
+		if err != nil {
+			return nil, eris.Wrap(err, "Failed to parse auction status")
+		}
+
+		battleEyeEnum, err := enums.GetBattleEyeFromString(battleEyeString)
+
+		if err != nil {
+			return nil, eris.Wrap(err, "Failed parsing Battle Eye")
+		}
+
+		auction.Status = status
+		auction.CharVocation = &vocation
+		auction.CharGender = &gender
+		world.BattleEye = battleEyeEnum
+		auction.CharWorld = &world
+		auction.Skills = &skills
+		auction.Charms = make([]*Charm, 0)
+		auction.FeaturedItems = make([]*FeaturedItem, 0)
+		auction.Imbuements = make([]*Imbuement, 0)
+
+		auctionMap[auction.AuctionID] = &auction
+
+		orderedIDs = append(orderedIDs, auction.AuctionID)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, eris.Wrap(err, "Failed iterating auction rows")
+	}
+
+	if len(orderedIDs) == 0 {
+		return []*Auction{}, nil
+	}
+
+	featuredItemsQuery := `
+		SELECT
+			tfi.tfi_id,
+			tfi.tfi_auction_id,
+			tfi.tfi_item_id
+		FROM
+			tc_featured_items tfi
+		WHERE
+			tfi.tfi_auction_id = ANY($1);
+	`
+
+	featuredItemsRows, err := r.connection.QueryContext(ctx, featuredItemsQuery, pq.Array(orderedIDs))
+
+	if err != nil {
+		return nil, eris.Wrap(err, "Failed to query featured items")
+	}
+
+	defer featuredItemsRows.Close()
+
+	for featuredItemsRows.Next() {
+		var item FeaturedItem
+
+		if err := featuredItemsRows.Scan(&item.ID, &item.AuctionID, &item.ItemID); err != nil {
+			return nil, eris.Wrap(err, "Failed to scan featured item")
+		}
+
+		if auction, ok := auctionMap[item.AuctionID]; ok {
+			auction.FeaturedItems = append(auction.FeaturedItems, &item)
+		}
+	}
+
+	if err = featuredItemsRows.Err(); err != nil {
+		return nil, eris.Wrap(err, "Failed iterating featured item rows")
+	}
+
+	imbuementsQuery := `
+		SELECT
+			tai.tai_auction_id,
+			ti.ti_id,
+			ti.ti_name
+		FROM
+			tc_auction_imbuements tai
+		INNER JOIN
+			tc_imbuements ti ON tai.tai_imbuement_id = ti.ti_id
+		WHERE
+			tai.tai_auction_id = ANY($1);
+	`
+	imbuementRows, err := r.connection.QueryContext(ctx, imbuementsQuery, pq.Array(orderedIDs))
+
+	if err != nil {
+		return nil, eris.Wrap(err, "Failed to query imbuements")
+	}
+
+	defer imbuementRows.Close()
+
+	for imbuementRows.Next() {
+		var imbuement Imbuement
+		var auctionID int
+
+		if err := imbuementRows.Scan(&auctionID, &imbuement.ID, &imbuement.Name); err != nil {
+			return nil, eris.Wrap(err, "Failed to scan imbuement")
+		}
+
+		if auction, ok := auctionMap[auctionID]; ok {
+			auction.Imbuements = append(auction.Imbuements, &imbuement)
+		}
+	}
+
+	if err = imbuementRows.Err(); err != nil {
+		return nil, eris.Wrap(err, "Failed iterating imbuement rows")
+	}
+
+	charmsQuery := `
+		SELECT
+			tac.tac_auction_id,
+			tac.tac_charm_id,
+			tac.tac_grade,
+			tc.tc_name,
+			tc.tc_type
+		FROM
+			tc_auction_charms tac
+		INNER JOIN
+			tc_charms tc ON tac.tac_charm_id = tc.tc_id
+		WHERE
+			tac.tac_auction_id = ANY($1);
+	`
+	charmsRows, err := r.connection.QueryContext(ctx, charmsQuery, pq.Array(orderedIDs))
+
+	if err != nil {
+		return nil, eris.Wrap(err, "Failed to query charms")
+	}
+
+	defer charmsRows.Close()
+
+	for charmsRows.Next() {
+		var charm Charm
+		var auctionID int
+
+		if err := charmsRows.Scan(&auctionID, &charm.ID, &charm.Grade, &charm.Name, &charm.Type); err != nil {
+			return nil, eris.Wrap(err, "Failed to scan charm")
+		}
+
+		if auction, ok := auctionMap[auctionID]; ok {
+			auction.Charms = append(auction.Charms, &charm)
+		}
+	}
+
+	if err = charmsRows.Err(); err != nil {
+		return nil, eris.Wrap(err, "Failed iterating charms rows")
+	}
+
+	questsQuery := `
+		SELECT
+			taq.taq_auction_id,
+			taq.taq_quest_id,
+			tq.tq_name
+		FROM
+			tc_auction_quests taq
+		INNER JOIN
+			tc_quests tq ON taq.taq_quest_id = tq.tq_id
+		WHERE
+			taq.taq_auction_id = ANY($1);
+	`
+	questsRows, err := r.connection.QueryContext(ctx, questsQuery, pq.Array(orderedIDs))
+
+	if err != nil {
+		return nil, eris.Wrap(err, "Failed to query quests")
+	}
+
+	defer questsRows.Close()
+
+	for questsRows.Next() {
+		var quest Quest
+		var auctionID int
+
+		if err := questsRows.Scan(&auctionID, &quest.ID, &quest.Name); err != nil {
+			return nil, eris.Wrap(err, "Failed to scan quest")
+		}
+
+		if auction, ok := auctionMap[auctionID]; ok {
+			auction.Quests = append(auction.Quests, &quest)
+		}
+	}
+
+	if err = questsRows.Err(); err != nil {
+		return nil, eris.Wrap(err, "Failed iterating quests rows")
+	}
+
+	bidRegistryQuery := `
+		SELECT
+			ta.ta_auction_id,
+			ta.ta_current_bid,
+			ta.ta_date_add
+		FROM
+			tc_auction ta
+		WHERE
+			ta.ta_auction_id = ANY($1);
+	`
+	bidRegistryRows, err := r.connection.QueryContext(ctx, bidRegistryQuery, pq.Array(orderedIDs))
+
+	if err != nil {
+		return nil, eris.Wrap(err, "Failed to query bid registry")
+	}
+
+	defer bidRegistryRows.Close()
+
+	for bidRegistryRows.Next() {
+		var registry BidRegistry
+		var auctionID int
+
+		if err := bidRegistryRows.Scan(&auctionID, &registry.Amount, &registry.DateAdd); err != nil {
+			return nil, eris.Wrap(err, "Failed to scan registry")
+		}
+
+		if auction, ok := auctionMap[auctionID]; ok {
+			auction.BidRegistry = append(auction.BidRegistry, &registry)
+		}
+	}
+
+	if err = bidRegistryRows.Err(); err != nil {
+		return nil, eris.Wrap(err, "Failed iterating bid registry rows")
+	}
+
+	auctions := make([]*Auction, 0, len(orderedIDs))
+
+	for _, auctionID := range orderedIDs {
+		auctions = append(auctions, auctionMap[auctionID])
+	}
+
+	return auctions, nil
 }
