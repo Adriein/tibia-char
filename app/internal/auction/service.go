@@ -360,8 +360,8 @@ func (s *Service) RefreshActiveAuctions(ctx context.Context) error {
 
 	policies := []refreshPolicy{
 		{finishingIn: 10 * time.Minute, updateInterval: 5 * time.Minute},
-		{finishingIn: 60 * time.Minute, updateInterval: 60 * time.Minute},
-		{finishingIn: 24 * time.Hour, updateInterval: 6 * time.Hour},
+		{finishingIn: 60 * time.Minute, updateInterval: 20 * time.Minute},
+		{finishingIn: 24 * time.Hour, updateInterval: 4 * time.Hour},
 		{finishingIn: 30 * 24 * time.Hour, updateInterval: 6 * time.Hour},
 	}
 
