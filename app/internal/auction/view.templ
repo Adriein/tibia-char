@@ -48,7 +48,7 @@ script initTimezone() {
     }
 }
 
-templ AuctionsView(auctions []*Auction) {
+templ AuctionsView(page *PaginatedAuctions) {
   <html>
 		<head>
 			@initTimezone()
@@ -63,7 +63,7 @@ templ AuctionsView(auctions []*Auction) {
 		</head>
 		<body>
 			<section>
-				@Auctions(auctions)
+				@Auctions(page)
 			</section>
 		</body>
 	</html>
@@ -319,16 +319,16 @@ templ AuctionCard(auction *Auction) {
 	</div>
 }
 
-templ Auctions(auctions []*Auction) {
+templ Auctions(page *PaginatedAuctions) {
 	<div>
 		<div class="pagination pagination--auctions">
-			<span>Auctions 2580</span>
-			<div>1 / 50</div>
-			<span>20 / page</span>
+			<span>Auctions {page.TotalCount}</span>
+			<div>{page.Page} / {page.TotalPages}</div>
+			<span>{page.PageSize} / page</span>
 		</div>
 	</div>
 	<div class="grid-cards">
-		for _, auction := range auctions {
+		for _, auction := range page.Auctions {
 			@AuctionCard(auction)
 		}
 	</div>

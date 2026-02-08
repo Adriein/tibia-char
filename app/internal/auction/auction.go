@@ -351,6 +351,14 @@ func (a *Auction) IsTrending() bool {
 	return increasedTimes >= 5
 }
 
+type PaginatedAuctions struct {
+	Auctions   []*Auction
+	TotalCount int
+	Page       int
+	PageSize   int
+	TotalPages int
+}
+
 type AuctionLinkSet struct {
 	sync.RWMutex
 	Data map[int]string

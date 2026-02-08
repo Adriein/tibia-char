@@ -44,14 +44,14 @@ func (c *Controller) Get() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		traceID, _ := ctx.Get(middleware.TraceIDKey)
 
-		auctions, err := c.service.GetAuctions(ctx, nil)
+		page, err := c.service.GetAuctions(ctx, nil)
 
 		if err != nil {
 			//TODO: Temporal logging until I decide what to do
 			c.logger.Printf("TraceID %s Error getting auctions: %s\n", traceID, eris.ToString(err, true))
 		}
 
-		renderer := vendor.NewTemplRenderer(ctx, http.StatusOK, AuctionsView(auctions))
+		renderer := vendor.NewTemplRenderer(ctx, http.StatusOK, AuctionsView(page))
 
 		ctx.Render(http.StatusOK, renderer)
 	}

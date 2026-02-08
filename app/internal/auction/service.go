@@ -307,7 +307,7 @@ Get Auctions Logic
 ================================================================================
 */
 
-func (s *Service) GetAuctions(ctx context.Context, filter *AuctionFilter) ([]*Auction, error) {
+func (s *Service) GetAuctions(ctx context.Context, filter *AuctionFilter) (*PaginatedAuctions, error) {
 	if filter == nil {
 		filter = DefaultAuctionFilter()
 	}
@@ -337,7 +337,23 @@ func (s *Service) GetAuctions(ctx context.Context, filter *AuctionFilter) ([]*Au
 		auction.BidCurrency = targetCurrency
 	}
 
-	return auctions, nil
+	totalCount, err := s.auctionRepository.CountActiveAuctions(ctx)
+
+	if err != nil {
+		return nil, err
+	}
+
+	totalPages := totalCount / filter.Limit
+
+	result := &PaginatedAuctions{
+		Auctions:   auctions,
+		TotalCount: totalCount,
+		PageSize:   filter.Limit,
+		Page:       filter.Offset + 1,
+		TotalPages: totalPages,
+	}
+
+	return result, nil
 }
 
 /*
