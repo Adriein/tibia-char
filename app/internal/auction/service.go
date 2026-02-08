@@ -411,3 +411,41 @@ func (s *Service) RefreshActiveAuctions(ctx context.Context) error {
 
 	return nil
 }
+
+/*
+================================================================================
+Consolidate Auctions Logic
+================================================================================
+*/
+
+func (s *Service) ConsolidateAuctions(ctx context.Context) error {
+	traceID := ctx.Value(middleware.TraceIDKey)
+
+	now := time.Now()
+
+	s.logger.Printf("TraceID: %s Start consolidate cron\n", traceID)
+
+	auctionsToUpdate := NewAuctionLinkSet()
+
+	auctions, err := s.auctionRepository.GetAuctionsPendingToConsolidate(ctx)
+
+	if err != nil {
+		return err
+	}
+
+	for _, auction := range auctions {
+		if _, exists := auctionsToUpdate.Get(auction.AuctionID); exists {
+			continue
+		}
+
+		auctionsToUpdate.Set(auction.AuctionID, auction.TibiaAuctionLink)
+	}
+
+	if err := s.scrapAuctionDetails(auctionsToUpdate); err != nil {
+		return eris.Wrap(err, "Failed to refresh auctions")
+	}
+
+	s.logger.Printf("TraceID: %s Finish consolidate cron in: %s\n", traceID, time.Since(now))
+
+	return nil
+}

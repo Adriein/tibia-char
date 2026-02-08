@@ -146,6 +146,7 @@ type AuctionRepository interface {
 	GetActiveAuctions(ctx context.Context) ([]*Auction, error)
 	GetActiveAuctionsFinishingIn(ctx context.Context, duration time.Duration) ([]*Auction, error)
 	GetAuctionsWithFilter(ctx context.Context, filter *AuctionFilter) ([]*Auction, error)
+	GetAuctionsPendingToConsolidate(ctx context.Context) ([]*Auction, error)
 	CountActiveAuctions(ctx context.Context) (int, error)
 }
 
@@ -1192,4 +1193,59 @@ func (r *PgAuctionRepository) CountActiveAuctions(ctx context.Context) (int, err
 	}
 
 	return count, nil
+}
+
+func (r *PgAuctionRepository) GetAuctionsPendingToConsolidate(ctx context.Context) ([]*Auction, error) {
+	query := `
+		SELECT
+			latest.ta_id,
+			latest.ta_auction_id,
+			latest.ta_tibia_auction_link
+		FROM
+			tc_auction_recording tar
+		INNER JOIN (
+			SELECT DISTINCT ON (ta_auction_id) ta_id, ta_auction_id, ta_auction_stage, ta_tibia_auction_link
+			FROM tc_auction
+			ORDER BY ta_auction_id, ta_date_add DESC
+		) latest ON tar.tar_recordable_id = latest.ta_id
+		WHERE
+			tar.tar_status = 'archived'
+		AND
+			latest.ta_auction_stage = 'current'
+		;
+	`
+
+	ctxTimeout, cancel := context.WithTimeout(ctx, time.Second*10)
+
+	defer cancel()
+
+	rows, err := r.connection.QueryContext(ctxTimeout, query)
+
+	if err != nil {
+		return nil, eris.Wrap(err, "Failed to query auctions")
+	}
+
+	defer rows.Close()
+
+	var result []*Auction
+
+	for rows.Next() {
+		var (
+			auction Auction
+		)
+
+		err := rows.Scan(
+			&auction.ID,
+			&auction.AuctionID,
+			&auction.TibiaAuctionLink,
+		)
+
+		if err != nil {
+			return nil, eris.Wrap(err, "Failed to scan auction")
+		}
+
+		result = append(result, &auction)
+	}
+
+	return result, nil
 }

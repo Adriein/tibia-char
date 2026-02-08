@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"os"
+	"time"
 
 	"github.com/adriein/tibia-char/internal"
 	"github.com/adriein/tibia-char/internal/auction"
@@ -18,7 +19,7 @@ import (
 func main() {
 	app := internal.NewApp()
 
-	logger := log.New(os.Stderr, "[Scrapper Cron] ", log.LstdFlags|log.LUTC)
+	logger := log.New(os.Stderr, "[Scheduler Cron] ", log.LstdFlags|log.LUTC)
 
 	auctionRepository := auction.NewPgAuctionRepository(app.Databse)
 	worldRepository := auction.NewPgWorldRepository(app.Databse)
@@ -35,9 +36,20 @@ func main() {
 
 	ctx := context.WithValue(context.Background(), middleware.TraceIDKey, helper.TraceID())
 
-	err := cron.RefreshActiveAuctions(ctx)
+	//TODO: remove the infinite loop when going to prod
+	for true {
+		refreshErr := cron.RefreshActiveAuctions(ctx)
 
-	if err != nil {
-		log.Fatal(eris.ToString(err, true))
+		if refreshErr != nil {
+			log.Println(eris.ToString(refreshErr, true))
+		}
+
+		consolidateErr := cron.ConsolidateAuctions(ctx)
+
+		if consolidateErr != nil {
+			log.Println(eris.ToString(consolidateErr, true))
+		}
+
+		time.Sleep(5 * time.Minute)
 	}
 }
