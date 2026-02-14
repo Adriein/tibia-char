@@ -1186,7 +1186,7 @@ func (r *PgAuctionRepository) GetAuctionsPendingToConsolidate(ctx context.Contex
 		FROM
 			tc_auction_recording tar
 		INNER JOIN (
-			SELECT DISTINCT ON (ta_auction_id) ta_id, ta_auction_id, ta_auction_stage, ta_tibia_auction_link
+			SELECT DISTINCT ON (ta_auction_id) ta_id, ta_auction_id, ta_auction_end, ta_tibia_auction_link
 			FROM tc_auction
 			ORDER BY ta_auction_id, ta_date_add DESC
 		) latest ON tar.tar_recordable_id = latest.ta_id
