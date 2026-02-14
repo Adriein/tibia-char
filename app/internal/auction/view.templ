@@ -86,6 +86,16 @@ templ AuctionsView(page *PaginatedAuctions) {
 +-------------+-----------------------------------+---------------------------------------------------------+
 */
 
+templ SkillItem(name string, value int, imgSrc string, imgAlt string, threshold int) {
+	<div class={"skill-item", templ.KV("skill-item--high", value >= threshold)}>
+		<div>
+			<img alt={imgAlt} src={imgSrc}/>
+			<p>{name}</p>
+		</div>
+		<span>{fmt.Sprintf("%d", value)}</span>
+	</div>
+}
+
 templ AuctionCard(auction *Auction) {
 	{{
 		const (
@@ -205,66 +215,21 @@ templ AuctionCard(auction *Auction) {
 				</div>
 			</div>
 		</div>
-		<div class="card__body">
-			<div class="card__body-skills-container">
-				<div class="skill-item">
-					<div>
-						<img alt="axe fighting" src="/assets/images/stonecutter_axe.png"/>
-						<p>Axe</p>
-					</div>
-					<span>{auction.Skills.Axe}</span>
-				</div>
-				<div class="skill-item">
-					<div>
-						<img alt="club fighting" src="/assets/images/thunder_hammer.png"/>
-						<p>Club</p>
-					</div>
-					<span>{auction.Skills.Club}</span>
-				</div>
-				<div class="skill-item">
-					<div>
-						<img alt="distance fighting" src="/assets/images/soulbleeder.png"/>
-						<p>Distance</p>
-					</div>
-					<span>{auction.Skills.Distance}</span>
-				</div>
-				<div class="skill-item">
-					<div>
-						<img alt="fishing" src="/assets/images/fishing_rod.png"/>
-						<p>Fishing</p>
-					</div>
-					<span>{auction.Skills.Fishing}</span>
-				</div>
-				<div class="skill-item">
-					<div>
-						<img alt="fist fighting" src="/assets/images/grand_sanguine_claws.png"/>
-						<p>Fist</p>
-					</div>
-					<span>{auction.Skills.Fist}</span>
-				</div>
-				<div class="skill-item">
-					<div>
-						<img alt="magic level" src="/assets/images/spell_book.png"/>
-						<p>Magic Level</p>
-					</div>
-					<span>{auction.Skills.MagicLevel}</span>
-				</div>
-				<div class="skill-item">
-					<div>
-						<img alt="shielding" src="/assets/images/demon_shield.png"/>
-						<p>Shielding</p>
-					</div>
-					<span>{auction.Skills.Shielding}</span>
-				</div>
-				<div class="skill-item">
-					<div>
-						<img alt="sword fighting" src="/assets/images/magic_sword.png"/>
-						<p>Sword</p>
-					</div>
-					<span>{auction.Skills.Sword}</span>
-				</div>
-			</div>
+		{{
+		const HighSkillThreshold = 110
+	}}
+	<div class="card__body">
+		<div class="card__body-skills-container">
+			@SkillItem("Axe", auction.Skills.Axe, "/assets/images/stonecutter_axe.png", "axe fighting", HighSkillThreshold)
+			@SkillItem("Club", auction.Skills.Club, "/assets/images/thunder_hammer.png", "club fighting", HighSkillThreshold)
+			@SkillItem("Distance", auction.Skills.Distance, "/assets/images/soulbleeder.png", "distance fighting", HighSkillThreshold)
+			@SkillItem("Fishing", auction.Skills.Fishing, "/assets/images/fishing_rod.png", "fishing", HighSkillThreshold)
+			@SkillItem("Fist", auction.Skills.Fist, "/assets/images/grand_sanguine_claws.png", "fist fighting", HighSkillThreshold)
+			@SkillItem("Magic Level", auction.Skills.MagicLevel, "/assets/images/spell_book.png", "magic level", HighSkillThreshold)
+			@SkillItem("Shielding", auction.Skills.Shielding, "/assets/images/demon_shield.png", "shielding", HighSkillThreshold)
+			@SkillItem("Sword", auction.Skills.Sword, "/assets/images/magic_sword.png", "sword fighting", HighSkillThreshold)
 		</div>
+	</div>
 		<div class="card__featured-items">
 			for i := range 4 {
 				if i+1 > len(auction.FeaturedItems) {

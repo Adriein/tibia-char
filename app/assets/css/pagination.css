@@ -16,5 +16,6 @@
   .pagination--auctions {
     --pagination-radius: 0px;
     justify-content: space-between;
+    font-size: var(--text-normal);
   }
 }
