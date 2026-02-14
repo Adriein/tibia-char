@@ -5,10 +5,12 @@
     grid-template-columns: repeat(var(--grid-cols), 1fr);
   }
 
-  .grid-cards {
+  .grid-auction-cards {
     display: grid;
     gap: var(--grid-gap);
-    grid-template-columns: repeat(auto-fit, minmax(min(100%, 400px), 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 400px), 400px));
+    padding: var(--block-space) var(--inline-space-double);
+    justify-content: center;
   }
 
   /* Column Spanning Classes */
@@ -20,5 +22,9 @@
   @media (max-width: 768px) {
     .col-md-12 { grid-column: span 12; }
     [class*="col-"] { grid-column: span 12; } /* Mobile default: full width */
+
+    .grid-auction-cards {
+      padding: var(--block-space-half) var(--inline-space-half);
+    }
   }
 }

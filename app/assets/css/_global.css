@@ -10,7 +10,7 @@
   --block-space-double: calc(var(--block-space) * 2);
 
   /* Grid system */
-  --grid-gap: var(--inline-space);
+  --grid-gap: var(--inline-space-double);
   --grid-cols: 12;
 
   /* Text */

@@ -327,7 +327,7 @@ templ Auctions(page *PaginatedAuctions) {
 			<span>{page.PageSize} / page</span>
 		</div>
 	</div>
-	<div class="grid-cards">
+	<div class="grid-auction-cards">
 		for _, auction := range page.Auctions {
 			@AuctionCard(auction)
 		}
