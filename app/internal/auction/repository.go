@@ -11,7 +11,7 @@ import (
 )
 
 type VocationRepository interface {
-	GetOrCreate(vocation string) (*Vocation, error)
+	Get(vocation string) (*Vocation, error)
 }
 
 type PgVocationRepsitory struct {
@@ -22,18 +22,9 @@ func NewPgVocationRepository(c *sql.DB) *PgVocationRepsitory {
 	return &PgVocationRepsitory{connection: c}
 }
 
-func (vr *PgVocationRepsitory) GetOrCreate(vocation string) (*Vocation, error) {
+func (vr *PgVocationRepsitory) Get(vocation string) (*Vocation, error) {
 	query := `
-		WITH ins AS (
-			INSERT INTO tc_vocation (tv_name)
-			VALUES ($1)
-			ON CONFLICT (tv_name) DO NOTHING
-			RETURNING tv_id, tv_name
-		)
-		SELECT tv_id, tv_name FROM ins
-		UNION ALL
-		SELECT tv_id, tv_name FROM tc_vocation WHERE tv_name = $1
-		LIMIT 1;
+		SELECT * FROM tc_vocation WHERE tv_name = $1;
 	`
 
 	var dto Vocation
@@ -48,7 +39,7 @@ func (vr *PgVocationRepsitory) GetOrCreate(vocation string) (*Vocation, error) {
 }
 
 type GenderRepository interface {
-	GetOrCreate(gender string) (*Gender, error)
+	Get(gender string) (*Gender, error)
 }
 
 type PgGenderRepository struct {
@@ -59,18 +50,9 @@ func NewPgGenderRepository(c *sql.DB) *PgGenderRepository {
 	return &PgGenderRepository{connection: c}
 }
 
-func (gr *PgGenderRepository) GetOrCreate(gender string) (*Gender, error) {
+func (gr *PgGenderRepository) Get(gender string) (*Gender, error) {
 	query := `
-		WITH ins AS (
-			INSERT INTO tc_gender (tg_name)
-			VALUES ($1)
-			ON CONFLICT (tg_name) DO NOTHING
-			RETURNING tg_id, tg_name
-		)
-		SELECT tg_id, tg_name FROM ins
-		UNION ALL
-		SELECT tg_id, tg_name FROM tc_gender WHERE tg_name = $1
-		LIMIT 1;
+		SELECT * FROM tc_gender WHERE tg_name = $1
 	`
 
 	var dto Gender
@@ -98,15 +80,19 @@ func NewPgWorldRepository(c *sql.DB) *PgWorldRepository {
 
 func (wr *PgWorldRepository) GetOrCreate(world *World) (*World, error) {
 	query := `
-		WITH ins AS (
-			INSERT INTO tc_world (tw_name, tw_location, tw_battle_eye, tw_pvp)
-			VALUES ($1, $2, $3, $4)
-			ON CONFLICT (tw_name) DO NOTHING
-			RETURNING tw_id, tw_name, tw_location, tw_battle_eye, tw_pvp
+		WITH existing AS (
+    		SELECT * FROM tc_world WHERE tw_name = $1
+		),
+		inserted AS (
+    		INSERT INTO tc_world (tw_name, tw_location, tw_battle_eye, tw_pvp)
+    		SELECT $1, $2, $3, $4
+    		WHERE NOT EXISTS (SELECT 1 FROM existing)
+    		ON CONFLICT (tw_name) DO NOTHING
+    		RETURNING *
 		)
-		SELECT * FROM ins
+		SELECT * FROM inserted
 		UNION ALL
-		SELECT * FROM tc_world WHERE tw_name = $1
+		SELECT * FROM existing
 		LIMIT 1;
 	`
 

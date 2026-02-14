@@ -358,7 +358,7 @@ func (s *Service) GetAuctions(ctx context.Context, filter *AuctionFilter) (*Pagi
 
 /*
 ================================================================================
-Schedule Auctions Logic
+Refresh Auctions Logic
 ================================================================================
 */
 
@@ -367,7 +367,7 @@ func (s *Service) RefreshActiveAuctions(ctx context.Context) error {
 
 	now := time.Now()
 
-	s.logger.Printf("TraceID: %s Start refresh cron\n", traceID)
+	s.logger.Printf("TraceID: %s Start refresh phase\n", traceID)
 
 	type refreshPolicy struct {
 		finishingIn    time.Duration
@@ -407,7 +407,7 @@ func (s *Service) RefreshActiveAuctions(ctx context.Context) error {
 		return eris.Wrap(err, "Failed to refresh auctions")
 	}
 
-	s.logger.Printf("TraceID: %s Finish refresh cron in: %s\n", traceID, time.Since(now))
+	s.logger.Printf("TraceID: %s Finish refresh phase in: %s\n", traceID, time.Since(now))
 
 	return nil
 }
@@ -423,7 +423,7 @@ func (s *Service) ConsolidateAuctions(ctx context.Context) error {
 
 	now := time.Now()
 
-	s.logger.Printf("TraceID: %s Start consolidate cron\n", traceID)
+	s.logger.Printf("TraceID: %s Start consolidate phase\n", traceID)
 
 	auctionsToUpdate := NewAuctionLinkSet()
 
@@ -445,7 +445,36 @@ func (s *Service) ConsolidateAuctions(ctx context.Context) error {
 		return eris.Wrap(err, "Failed to refresh auctions")
 	}
 
-	s.logger.Printf("TraceID: %s Finish consolidate cron in: %s\n", traceID, time.Since(now))
+	s.logger.Printf("TraceID: %s Finish consolidate phase in: %s\n", traceID, time.Since(now))
 
 	return nil
 }
+
+/*
+================================================================================
+Auctions Phase Scheduler Logic
+================================================================================
+*/
+
+/*func (s* Service) AuctionsPhaseScheduler(ctx context.Context) error {
+	var lastNewAuctionsIngestion time.Time = nil
+
+	for true {
+		loc, err := time.LoadLocation("CET")
+
+		if err != nil {
+			return eris.Wrap(err, "Failed creating location CET")
+		}
+
+		time.Date()
+
+		nowCET := time.Now().In(loc).
+
+		if lastNewAuctionsIngestion == nil || lastNewAuctionsIngestion.
+
+
+	}
+
+
+	return nil
+}*/
