@@ -23,9 +23,7 @@ func NewPgVocationRepository(c *sql.DB) *PgVocationRepsitory {
 }
 
 func (vr *PgVocationRepsitory) Get(vocation string) (*Vocation, error) {
-	query := `
-		SELECT * FROM tc_vocation WHERE tv_name = $1;
-	`
+	query := `SELECT * FROM tc_vocation WHERE tv_name = $1;`
 
 	var dto Vocation
 
@@ -51,9 +49,7 @@ func NewPgGenderRepository(c *sql.DB) *PgGenderRepository {
 }
 
 func (gr *PgGenderRepository) Get(gender string) (*Gender, error) {
-	query := `
-		SELECT * FROM tc_gender WHERE tg_name = $1
-	`
+	query := `SELECT * FROM tc_gender WHERE tg_name = $1`
 
 	var dto Gender
 
