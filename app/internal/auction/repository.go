@@ -1191,9 +1191,9 @@ func (r *PgAuctionRepository) GetAuctionsPendingToConsolidate(ctx context.Contex
 			ORDER BY ta_auction_id, ta_date_add DESC
 		) latest ON tar.tar_recordable_id = latest.ta_id
 		WHERE
-			tar.tar_status = 'archived'
+			tar.tar_status = 'active'
 		AND
-			latest.ta_auction_stage = 'current'
+			latest.ta_auction_end < now()
 		;
 	`
 
