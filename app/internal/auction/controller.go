@@ -4,6 +4,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 
 	"github.com/adriein/tibia-char/internal"
 	"github.com/adriein/tibia-char/internal/currency"
@@ -44,7 +45,26 @@ func (c *Controller) Get() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		traceID, _ := ctx.Get(middleware.TraceIDKey)
 
-		page, err := c.service.GetAuctions(ctx, nil)
+		qty, err := strconv.Atoi(ctx.DefaultQuery("qty", "20"))
+
+		if err != nil {
+			c.logger.Printf("TraceID %s Error getting auctions: %s\n", traceID, eris.ToString(err, true))
+		}
+
+		pageNum, err := strconv.Atoi(ctx.DefaultQuery("page", "1"))
+
+		if err != nil {
+			c.logger.Printf("TraceID %s Error getting auctions: %s\n", traceID, eris.ToString(err, true))
+		}
+
+		filter := &AuctionFilter{
+			Limit:     qty,
+			Page:      pageNum - 1,
+			SortBy:    SortByEndTime,
+			SortOrder: SortOrderAsc,
+		}
+
+		page, err := c.service.GetAuctions(ctx, filter)
 
 		if err != nil {
 			//TODO: Temporal logging until I decide what to do

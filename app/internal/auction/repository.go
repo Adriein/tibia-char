@@ -861,7 +861,9 @@ func (r *PgAuctionRepository) GetAuctionsWithFilter(ctx context.Context, filter 
 
 	defer cancel()
 
-	rows, err := r.connection.QueryContext(ctxTimeout, query, filter.Limit, filter.Offset)
+	offset := filter.Page * filter.Limit
+
+	rows, err := r.connection.QueryContext(ctxTimeout, query, filter.Limit, offset)
 
 	if err != nil {
 		return nil, eris.Wrap(err, "Failed to query auctions with filter")

@@ -288,7 +288,15 @@ templ Auctions(page *PaginatedAuctions) {
 	<div>
 		<div class="pagination pagination--auctions">
 			<span>Auctions {page.TotalCount}</span>
-			<div>{page.Page} / {page.TotalPages}</div>
+			<div>
+				<a href={fmt.Sprintf("/index?page=%d&qty=%d", page.Page-1, page.PageSize)} class={templ.KV("disabled", page.Page <= 1)}>
+					Previous
+				</a>
+				<span>{page.Page} / {page.TotalPages}</span>
+				<a href={fmt.Sprintf("/index?page=%d&qty=%d", page.Page+1, page.PageSize)}>
+					Next
+				</a>
+			</div>
 			<span>{page.PageSize} / page</span>
 		</div>
 	</div>

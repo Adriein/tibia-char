@@ -15,7 +15,7 @@ const (
 
 type AuctionFilter struct {
 	Limit     int
-	Offset    int
+	Page      int
 	SortBy    SortField
 	SortOrder SortOrder
 }
@@ -23,7 +23,7 @@ type AuctionFilter struct {
 func DefaultAuctionFilter() *AuctionFilter {
 	return &AuctionFilter{
 		Limit:     20,
-		Offset:    0,
+		Page:      0,
 		SortBy:    SortByEndTime,
 		SortOrder: SortOrderAsc,
 	}

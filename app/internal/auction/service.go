@@ -349,7 +349,7 @@ func (s *Service) GetAuctions(ctx context.Context, filter *AuctionFilter) (*Pagi
 		Auctions:   auctions,
 		TotalCount: totalCount,
 		PageSize:   filter.Limit,
-		Page:       filter.Offset + 1,
+		Page:       filter.Page + 1,
 		TotalPages: totalPages,
 	}
 
