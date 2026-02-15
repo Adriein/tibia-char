@@ -1181,22 +1181,18 @@ func (r *PgAuctionRepository) CountActiveAuctions(ctx context.Context) (int, err
 
 func (r *PgAuctionRepository) GetAuctionsPendingToConsolidate(ctx context.Context) ([]*Auction, error) {
 	query := `
-		SELECT
-			latest.ta_id,
-			latest.ta_auction_id,
-			latest.ta_tibia_auction_link
+		SELECT DISTINCT ON (tar.tar_auction_id)
+			a.ta_id,
+			a.ta_auction_id,
+			a.ta_tibia_auction_link
 		FROM
-			tc_auction_recording tar
-		INNER JOIN (
-			SELECT DISTINCT ON (ta_auction_id) ta_id, ta_auction_id, ta_auction_end, ta_tibia_auction_link
-			FROM tc_auction
-			ORDER BY ta_auction_id, ta_date_add DESC
-		) latest ON tar.tar_recordable_id = latest.ta_id
+    		tc_auction_recording tar
+		INNER JOIN tc_auction a ON tar.tar_recordable_id = a.ta_id
 		WHERE
-			tar.tar_status = 'active'
+    		tar.tar_status = 'active'
 		AND
-			latest.ta_auction_end < now()
-		;
+    		a.ta_auction_end < now()
+		ORDER BY tar.tar_auction_id, a.ta_date_add DESC
 	`
 
 	ctxTimeout, cancel := context.WithTimeout(ctx, time.Second*10)
