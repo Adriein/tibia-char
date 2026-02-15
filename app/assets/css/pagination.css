@@ -26,8 +26,8 @@
     }
 
     .pagination__ctrl {
-      width: 30px;
-      height: 30px;
+      width: 35px;
+      height: 35px;
       background-color: var(--color-muted);
       border: 1px solid var(--color-border);
       border-radius: var(--radius-sm);
@@ -44,7 +44,14 @@
       svg {
         width: 25px;
         height: 25px;
+        display: block;
       }
+    }
+
+    .pagination__ctrl--disabled {
+      pointer-events: none;
+      opacity: 0.5;
+      cursor: not-allowed;
     }
   }
 }
