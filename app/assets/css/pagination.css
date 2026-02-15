@@ -15,24 +15,35 @@
 
   .pagination--auctions {
     --pagination-radius: 0px;
+
     justify-content: space-between;
     font-size: var(--text-normal);
 
-    .pagination__ctrl {
-        width: 40px;
-        height: 40px;
-        background-color: var(--color-muted);
-        border: 1px solid var(--color-border);
-        border-radius: var(--radius-sm);
+    .pagination__ctrl-container {
+      display: flex;
+      gap: var(--inline-space);
+      align-items: center;
+    }
 
-        overflow: hidden;
-        display: flex;
-        align-items: center;
-        justify-content: center;
+    .pagination__ctrl {
+      width: 30px;
+      height: 30px;
+      background-color: var(--color-muted);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-sm);
+
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      text-decoration: none;
+      color: inherit;
+      cursor: pointer;
 
       svg {
-        width: 30px;
-        height: 30px;
+        width: 25px;
+        height: 25px;
       }
     }
   }

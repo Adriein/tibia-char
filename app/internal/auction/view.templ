@@ -288,7 +288,7 @@ templ Auctions(page *PaginatedAuctions) {
 	<div>
 		<div class="pagination pagination--auctions">
 			<span>Auctions {page.TotalCount}</span>
-			<div>
+			<div class="pagination__ctrl-container">
 				<a href={fmt.Sprintf("/index?page=%d&qty=%d", page.Page-1, page.PageSize)} class={"pagination__ctrl", templ.KV("pagination__ctrl--disabled", page.Page <= 1)}>
 					<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-chevron-left"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M15 6l-6 6l6 6" /></svg>
 				</a>
