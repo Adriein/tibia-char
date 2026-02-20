@@ -111,7 +111,7 @@ func (wr *PgWorldRepository) GetOrCreate(world *World) (*World, error) {
 	)
 
 	if err != nil {
-		return nil, eris.New(err.Error())
+		return nil, eris.Wrap(err, world.Name)
 	}
 
 	dto.BattleEye, err = enums.GetBattleEyeFromString(battleEye)
