@@ -56,6 +56,34 @@ func NewService(
 
 /*
 ================================================================================
+Scrapper Orchestrator
+================================================================================
+*/
+
+func (s *Service) ScrapperOrchestrator(ctx context.Context) error {
+	scrapErr := s.ScrapBazaar(ctx)
+
+	if scrapErr != nil {
+		return scrapErr
+	}
+
+	refErr := s.RefreshActiveAuctions(ctx)
+
+	if refErr != nil {
+		return refErr
+	}
+
+	conErr := s.ConsolidateAuctions(ctx)
+
+	if conErr != nil {
+		return conErr
+	}
+
+	return nil
+}
+
+/*
+================================================================================
 Scrapper Logic
 ================================================================================
 */
@@ -63,7 +91,7 @@ Scrapper Logic
 func (s *Service) ScrapBazaar(ctx context.Context) error {
 	traceID := ctx.Value(middleware.TraceIDKey)
 
-	s.logger.Printf("TraceID: %s Start Scrap Bazaar\n", traceID)
+	s.logger.Printf("TraceID: %s Start Scrap Phase\n", traceID)
 
 	now := time.Now()
 
@@ -115,18 +143,18 @@ func (s *Service) ScrapBazaar(ctx context.Context) error {
 	auctionLinkSet, err := s.scrapAuctionLinks(ctx, worlds)
 
 	if err != nil {
-		s.logger.Printf("TraceID: %s Finished Scrapping with error time: %s\n", traceID, time.Since(now))
+		s.logger.Printf("TraceID: %s Finished Scrap Phase with error time: %s\n", traceID, time.Since(now))
 
 		return err
 	}
 
 	if err := s.scrapAuctionDetails(auctionLinkSet); err != nil {
-		s.logger.Printf("TraceID: %s Finished Scrapping with error time: %s\n", traceID, time.Since(now))
+		s.logger.Printf("TraceID: %s Finished Scrap Phase with error time: %s\n", traceID, time.Since(now))
 
 		return err
 	}
 
-	s.logger.Printf("TraceID: %s Total auction links %d - Auction links obtained %d - Time: %s\n", traceID, currentAuctions, len(auctionLinkSet.Data), time.Since(now))
+	s.logger.Printf("TraceID: %s Finish Scrap Phase - Links: %d/%d - Time: %s\n", traceID, currentAuctions, len(auctionLinkSet.Data), time.Since(now))
 
 	return nil
 }
@@ -303,62 +331,7 @@ func (s *Service) notifyStatus(totalWork int, workDoneCounter *int32) {
 
 /*
 ================================================================================
-Get Auctions Logic
-================================================================================
-*/
-
-func (s *Service) GetAuctions(ctx context.Context, filter *AuctionFilter) (*PaginatedAuctions, error) {
-	if filter == nil {
-		filter = DefaultAuctionFilter()
-	}
-
-	auctions, err := s.auctionRepository.GetAuctionsWithFilter(ctx, filter)
-
-	if err != nil {
-		return nil, err
-	}
-
-	loc, ok := ctx.Value(middleware.TimezoneKey).(*time.Location)
-
-	if !ok {
-		return nil, eris.New("Error, location not stored in ctx")
-	}
-
-	targetCurrency := currency.FromLocation(loc)
-
-	conRate, err := s.currencyRepository.GetLatest(ctx)
-
-	if err != nil {
-		return nil, err
-	}
-
-	for _, auction := range auctions {
-		auction.BidFiat = conRate.Exchange(auction.BidFiat, targetCurrency)
-		auction.BidCurrency = targetCurrency
-	}
-
-	totalCount, err := s.auctionRepository.CountActiveAuctions(ctx)
-
-	if err != nil {
-		return nil, err
-	}
-
-	totalPages := totalCount / filter.Limit
-
-	result := &PaginatedAuctions{
-		Auctions:   auctions,
-		TotalCount: totalCount,
-		PageSize:   filter.Limit,
-		Page:       filter.Page + 1,
-		TotalPages: totalPages,
-	}
-
-	return result, nil
-}
-
-/*
-================================================================================
-Refresh Auctions Logic
+Refresh Auctions Phase
 ================================================================================
 */
 
@@ -414,7 +387,7 @@ func (s *Service) RefreshActiveAuctions(ctx context.Context) error {
 
 /*
 ================================================================================
-Consolidate Auctions Logic
+Consolidate Auctions Phase
 ================================================================================
 */
 
@@ -442,7 +415,7 @@ func (s *Service) ConsolidateAuctions(ctx context.Context) error {
 	}
 
 	if err := s.scrapAuctionDetails(auctionsToUpdate); err != nil {
-		return eris.Wrap(err, "Failed to refresh auctions")
+		return eris.Wrap(err, "Failed to consolidate auctions")
 	}
 
 	s.logger.Printf("TraceID: %s Finish consolidate phase in: %s\n", traceID, time.Since(now))
@@ -452,29 +425,55 @@ func (s *Service) ConsolidateAuctions(ctx context.Context) error {
 
 /*
 ================================================================================
-Auctions Phase Scheduler Logic
+Get Auctions Logic
 ================================================================================
 */
 
-/*func (s* Service) AuctionsPhaseScheduler(ctx context.Context) error {
-	var lastNewAuctionsIngestion time.Time = nil
-
-	for true {
-		loc, err := time.LoadLocation("CET")
-
-		if err != nil {
-			return eris.Wrap(err, "Failed creating location CET")
-		}
-
-		time.Date()
-
-		nowCET := time.Now().In(loc).
-
-		if lastNewAuctionsIngestion == nil || lastNewAuctionsIngestion.
-
-
+func (s *Service) GetAuctions(ctx context.Context, filter *AuctionFilter) (*PaginatedAuctions, error) {
+	if filter == nil {
+		filter = DefaultAuctionFilter()
 	}
 
+	auctions, err := s.auctionRepository.GetAuctionsWithFilter(ctx, filter)
 
-	return nil
-}*/
+	if err != nil {
+		return nil, err
+	}
+
+	loc, ok := ctx.Value(middleware.TimezoneKey).(*time.Location)
+
+	if !ok {
+		return nil, eris.New("Error, location not stored in ctx")
+	}
+
+	targetCurrency := currency.FromLocation(loc)
+
+	conRate, err := s.currencyRepository.GetLatest(ctx)
+
+	if err != nil {
+		return nil, err
+	}
+
+	for _, auction := range auctions {
+		auction.BidFiat = conRate.Exchange(auction.BidFiat, targetCurrency)
+		auction.BidCurrency = targetCurrency
+	}
+
+	totalCount, err := s.auctionRepository.CountActiveAuctions(ctx)
+
+	if err != nil {
+		return nil, err
+	}
+
+	totalPages := totalCount / filter.Limit
+
+	result := &PaginatedAuctions{
+		Auctions:   auctions,
+		TotalCount: totalCount,
+		PageSize:   filter.Limit,
+		Page:       filter.Page + 1,
+		TotalPages: totalPages,
+	}
+
+	return result, nil
+}

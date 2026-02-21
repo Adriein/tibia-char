@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"os"
+	"time"
 
 	"github.com/adriein/tibia-char/internal"
 	"github.com/adriein/tibia-char/internal/auction"
@@ -31,13 +32,17 @@ func main() {
 
 	mapper := auction.NewMapper(worldRepository)
 
-	cron := auction.NewService(tibiaAPI, auctionRepository, worldRepository, currencyRepository, mapper, parserFactory, scrapperFactory, logger)
+	service := auction.NewService(tibiaAPI, auctionRepository, worldRepository, currencyRepository, mapper, parserFactory, scrapperFactory, logger)
 
 	ctx := context.WithValue(context.Background(), middleware.TraceIDKey, helper.TraceID())
 
-	err := cron.ScrapBazaar(ctx)
+	for true {
+		err := service.ScrapperOrchestrator(ctx)
 
-	if err != nil {
-		log.Fatal(eris.ToString(err, true))
+		if err != nil {
+			log.Println(eris.ToString(err, true))
+		}
+
+		time.Sleep(5 * time.Minute)
 	}
 }
