@@ -1180,7 +1180,7 @@ func (r *PgAuctionRepository) CountActiveAuctions(ctx context.Context) (int, err
 }
 
 func (r *PgAuctionRepository) GetAuctionsPendingToConsolidate(ctx context.Context) ([]*Auction, error) {
-	query := `
+	finishedAucQuery := `
 		SELECT DISTINCT ON (tar.tar_auction_id)
 			a.ta_id,
 			a.ta_auction_id,
@@ -1199,7 +1199,7 @@ func (r *PgAuctionRepository) GetAuctionsPendingToConsolidate(ctx context.Contex
 
 	defer cancel()
 
-	rows, err := r.connection.QueryContext(ctxTimeout, query)
+	rows, err := r.connection.QueryContext(ctxTimeout, finishedAucQuery)
 
 	if err != nil {
 		return nil, eris.Wrap(err, "Failed to query auctions")
@@ -1208,6 +1208,49 @@ func (r *PgAuctionRepository) GetAuctionsPendingToConsolidate(ctx context.Contex
 	defer rows.Close()
 
 	var result []*Auction
+
+	for rows.Next() {
+		var (
+			auction Auction
+		)
+
+		err := rows.Scan(
+			&auction.ID,
+			&auction.AuctionID,
+			&auction.TibiaAuctionLink,
+		)
+
+		if err != nil {
+			return nil, eris.Wrap(err, "Failed to scan auction")
+		}
+
+		result = append(result, &auction)
+	}
+
+	incorrectBidStageQuery := `
+		SELECT DISTINCT ON (tar.tar_auction_id)
+			a.ta_id,
+			a.ta_auction_id,
+			a.ta_tibia_auction_link
+		FROM
+    		tc_auction_recording tar
+		INNER JOIN tc_auction a ON tar.tar_recordable_id = a.ta_id
+		WHERE
+    		tar.tar_status = 'archived'
+		AND
+    		a.ta_auction_stage = 'current'
+		AND
+			a.ta_date_add <= NOW() - INTERVAL '24 hours'
+		ORDER BY tar.tar_auction_id, a.ta_date_add DESC
+	`
+
+	rows, err = r.connection.Query(incorrectBidStageQuery)
+
+	if err != nil {
+		return nil, eris.Wrap(err, "Failed to query auctions")
+	}
+
+	defer rows.Close()
 
 	for rows.Next() {
 		var (
