@@ -459,11 +459,7 @@ func (s *Service) GetAuctions(ctx context.Context, filter *AuctionFilter) (*Pagi
 		auction.BidCurrency = targetCurrency
 	}
 
-	totalCount, err := s.auctionRepository.CountActiveAuctions(ctx)
-
-	if err != nil {
-		return nil, err
-	}
+	totalCount := len(auctions)
 
 	totalPages := totalCount / filter.Limit
 
