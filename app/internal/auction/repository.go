@@ -220,7 +220,7 @@ func (r *PgAuctionRepository) Save(auction *Auction) error {
 		)
 		VALUES ($1, $2, $3, $4, $5)
 		ON CONFLICT (tar_auction_id) DO UPDATE SET
-			tar_recordable_id = EXCLUDED.tar_recordable_id
+			tar_recordable_id = EXCLUDED.tar_recordable_id,
 			tar_status = EXCLUDED.tar_status,
 			tar_date_upd = EXCLUDED.tar_date_upd;
 	`

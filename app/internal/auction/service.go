@@ -130,7 +130,7 @@ func (s *Service) ScrapBazaar(ctx context.Context) error {
 		})
 	}
 
-	//worlds := []*World{{Id: 1, Name: "Calmera", Location: "North America", BattleEye: enums.BattleEyeYellow, Pvp: "Optional Pvp"}}
+	//worlds = []*World{{Id: 1, Name: "Calmera", Location: "North America", BattleEye: enums.BattleEyeYellow, Pvp: "Optional Pvp"}}
 
 	for _, world := range worlds {
 		_, err := s.worldRepository.GetOrCreate(world)
@@ -312,7 +312,7 @@ func (s *Service) scrapAuctionDetail(ctx context.Context, g *errgroup.Group, fai
 
 				if err := s.auctionRepository.Save(auction); err != nil {
 					s.notifyStatus(totalWorkload, &workDoneCounter)
-
+					//TODO: all the return errors inside this go routine are being ignored
 					return eris.Wrapf(err, "Error saving to DB auctionId %d", auctionId)
 				}
 
