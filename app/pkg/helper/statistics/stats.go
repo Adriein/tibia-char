@@ -12,6 +12,10 @@ func New() *Statistics {
 }
 
 func (s *Statistics) Mean(data []int) float64 {
+	if len(data) == 0 {
+		return 0
+	}
+
 	sum := 0
 
 	for _, value := range data {
@@ -22,14 +26,19 @@ func (s *Statistics) Mean(data []int) float64 {
 }
 
 func (s *Statistics) Variance(data []int) float64 {
-	mean := int(s.Mean(data))
-	sum := 0
+	if len(data) < 2 {
+		return 0
+	}
+	mean := s.Mean(data)
+
+	var sum float64
 
 	for _, value := range data {
-		diff := value - mean
+		diff := float64(value) - mean
 		sum += diff * diff
 	}
-	return float64(sum) / float64(len(data)-1)
+
+	return sum / float64(len(data)-1)
 }
 
 func (s *Statistics) StdDeviation(data []int) float64 {
