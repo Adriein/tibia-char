@@ -129,6 +129,7 @@ type AuctionRepository interface {
 	GetActiveAuctionsFinishingIn(ctx context.Context, duration time.Duration) ([]*Auction, error)
 	GetAuctionsWithFilter(ctx context.Context, filter *AuctionFilter) ([]*Auction, error)
 	GetAuctionsPendingToConsolidate(ctx context.Context) ([]*Auction, error)
+	GetAllAuctionPrices(ctx context.Context) ([]*Auction, error)
 }
 
 type PgAuctionRepository struct {
@@ -1206,7 +1207,7 @@ func (r *PgAuctionRepository) GetAuctionsPendingToConsolidate(ctx context.Contex
 		result = append(result, &auction)
 	}
 
-	/*incorrectBidStageQuery := `
+	incorrectBidStageQuery := `
 			SELECT DISTINCT ON (tar.tar_auction_id)
 				a.ta_id,
 				a.ta_auction_id,
@@ -1223,31 +1224,81 @@ func (r *PgAuctionRepository) GetAuctionsPendingToConsolidate(ctx context.Contex
 			ORDER BY tar.tar_auction_id, a.ta_date_add DESC
 		`
 
-		rows, err = r.connection.Query(incorrectBidStageQuery)
+	rows, err = r.connection.Query(incorrectBidStageQuery)
+
+	if err != nil {
+		return nil, eris.Wrap(err, "Failed to query auctions")
+	}
+
+	defer rows.Close()
+
+	for rows.Next() {
+		var (
+			auction Auction
+		)
+
+		err := rows.Scan(
+			&auction.ID,
+			&auction.AuctionID,
+			&auction.TibiaAuctionLink,
+		)
 
 		if err != nil {
-			return nil, eris.Wrap(err, "Failed to query auctions")
+			return nil, eris.Wrap(err, "Failed to scan auction")
 		}
 
-		defer rows.Close()
+		result = append(result, &auction)
+	}
 
-		for rows.Next() {
-			var (
-				auction Auction
-			)
+	return result, nil
+}
 
-			err := rows.Scan(
-				&auction.ID,
-				&auction.AuctionID,
-				&auction.TibiaAuctionLink,
-			)
+func (r *PgAuctionRepository) GetAllAuctionPrices(ctx context.Context) ([]*Auction, error) {
+	finishedAucQuery := `
+		SELECT
+			a.ta_id,
+			a.ta_auction_id,
+			a.ta_current_bid
+		FROM
+    		tc_auction_recording tar
+		INNER JOIN tc_auction a ON tar.tar_recordable_id = a.ta_id
+		WHERE
+			a.ta_auction_stage = 'current'
+		OR
+			a.ta_auction_stage = 'winning';
+	`
 
-			if err != nil {
-				return nil, eris.Wrap(err, "Failed to scan auction")
-			}
+	ctxTimeout, cancel := context.WithTimeout(ctx, time.Second*10)
 
-			result = append(result, &auction)
-		}*/
+	defer cancel()
+
+	rows, err := r.connection.QueryContext(ctxTimeout, finishedAucQuery)
+
+	if err != nil {
+		return nil, eris.Wrap(err, "Failed to query all auctions prices")
+	}
+
+	defer rows.Close()
+
+	var result []*Auction
+
+	for rows.Next() {
+		var (
+			auction Auction
+		)
+
+		err := rows.Scan(
+			&auction.ID,
+			&auction.AuctionID,
+			&auction.Bid,
+		)
+
+		if err != nil {
+			return nil, eris.Wrap(err, "Failed to scan auction")
+		}
+
+		result = append(result, &auction)
+	}
 
 	return result, nil
 }

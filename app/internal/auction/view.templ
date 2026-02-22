@@ -96,8 +96,10 @@ templ SkillItem(name string, value int, imgSrc string, imgAlt string, threshold 
 	</div>
 }
 
-templ AuctionCard(auction *Auction) {
+templ AuctionCard(viewModel *AuctionViewModel) {
 	{{
+		auction := viewModel.Auction
+
 		const (
 			MaxImbuements = 24
 			MaxQuests = 42
@@ -301,7 +303,7 @@ templ Auctions(page *PaginatedAuctions) {
 		</div>
 	</div>
 	<div class="grid-auction-cards">
-		for _, auction := range page.Auctions {
+		for _, auction := range page.ViewModels {
 			@AuctionCard(auction)
 		}
 	</div>

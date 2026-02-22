@@ -12,6 +12,7 @@ import (
 	"github.com/adriein/tibia-char/pkg/constants"
 	"github.com/adriein/tibia-char/pkg/enums"
 	"github.com/adriein/tibia-char/pkg/helper/collections"
+	"github.com/adriein/tibia-char/pkg/helper/statistics"
 	"github.com/adriein/tibia-char/pkg/middleware"
 	"github.com/adriein/tibia-char/pkg/vendor"
 	"github.com/rotisserie/eris"
@@ -454,9 +455,32 @@ func (s *Service) GetAuctions(ctx context.Context, filter *AuctionFilter) (*Pagi
 		return nil, err
 	}
 
+	auctionWithPrices, err := s.auctionRepository.GetAllAuctionPrices(ctx)
+
+	var prices []int
+
+	for _, auction := range auctionWithPrices {
+		prices = append(prices, auction.Bid)
+	}
+
+	stats := statistics.New()
+
+	mean := stats.Mean(prices)
+	stdDeviation := stats.StdDeviation(prices)
+
+	fmt.Println(mean)
+	fmt.Println(stdDeviation)
+
+	var viewModels []*AuctionViewModel
+
 	for _, auction := range auctions {
 		auction.BidFiat = conRate.Exchange(auction.BidFiat, targetCurrency)
 		auction.BidCurrency = targetCurrency
+
+		viewModels = append(viewModels, &AuctionViewModel{
+			Auction:      auction,
+			StdDeviation: 0,
+		})
 	}
 
 	totalCount := len(auctions)
@@ -464,7 +488,7 @@ func (s *Service) GetAuctions(ctx context.Context, filter *AuctionFilter) (*Pagi
 	totalPages := totalCount / filter.Limit
 
 	result := &PaginatedAuctions{
-		Auctions:   auctions,
+		ViewModels: viewModels,
 		TotalCount: totalCount,
 		PageSize:   filter.Limit,
 		Page:       filter.Page + 1,

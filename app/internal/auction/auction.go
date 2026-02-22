@@ -352,11 +352,16 @@ func (a *Auction) IsTrending() bool {
 }
 
 type PaginatedAuctions struct {
-	Auctions   []*Auction
+	ViewModels []*AuctionViewModel
 	TotalCount int
 	Page       int
 	PageSize   int
 	TotalPages int
+}
+
+type AuctionViewModel struct {
+	Auction      *Auction
+	StdDeviation float64
 }
 
 type AuctionLinkSet struct {
