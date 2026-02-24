@@ -130,6 +130,7 @@ type AuctionRepository interface {
 	GetAuctionsWithFilter(ctx context.Context, filter *AuctionFilter) ([]*Auction, error)
 	GetAuctionsPendingToConsolidate(ctx context.Context) ([]*Auction, error)
 	GetAllAuctionPrices(ctx context.Context) ([]*Auction, error)
+	CountActiveAuctions(ctx context.Context) (int, error)
 }
 
 type PgAuctionRepository struct {
@@ -1301,4 +1302,25 @@ func (r *PgAuctionRepository) GetAllAuctionPrices(ctx context.Context) ([]*Aucti
 	}
 
 	return result, nil
+}
+
+func (r *PgAuctionRepository) CountActiveAuctions(ctx context.Context) (int, error) {
+	query := `
+		SELECT
+			count(*)
+		FROM
+			tc_auction_recording tar
+		WHERE
+			tar.tar_status = 'active';
+	`
+
+	var count int
+
+	err := r.connection.QueryRowContext(ctx, query).Scan(&count)
+
+	if err != nil {
+		return 0, eris.Wrap(err, "Failed to count active auctions")
+	}
+
+	return count, nil
 }

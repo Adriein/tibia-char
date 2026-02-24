@@ -29,7 +29,7 @@ func (s *Statistics) Variance(data []int) float64 {
 	if len(data) < 2 {
 		return 0
 	}
-	mean := s.Mean(data)
+	mean := s.Median(data)
 
 	var sum float64
 
@@ -45,7 +45,7 @@ func (s *Statistics) StdDeviation(data []int) float64 {
 	return math.Sqrt(s.Variance(data))
 }
 
-func (s *Statistics) Median(data []int) int {
+func (s *Statistics) Median(data []int) float64 {
 	length := float64(len(data))
 
 	dataCopyToSort := make([]int, len(data))
@@ -61,8 +61,8 @@ func (s *Statistics) Median(data []int) int {
 	middle := int(length / 2)
 
 	if len(dataCopyToSort)%2 == 1 {
-		return dataCopyToSort[middle]
+		return float64(dataCopyToSort[middle])
 	}
 
-	return int((float64(dataCopyToSort[middle-1] + dataCopyToSort[middle])) / 2)
+	return float64(dataCopyToSort[middle-1]+dataCopyToSort[middle]) / 2
 }

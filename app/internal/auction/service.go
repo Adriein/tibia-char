@@ -62,22 +62,28 @@ Scrapper Orchestrator
 */
 
 func (s *Service) ScrapperOrchestrator(ctx context.Context) error {
-	scrapErr := s.ScrapBazaar(ctx)
+	loc, err := time.LoadLocation("Europe/Berlin")
 
-	if scrapErr != nil {
-		return scrapErr
+	if err != nil {
+		s.logger.Printf("Failed to load location Europe/Berlin: %v", err)
+
+		return err
 	}
 
-	refErr := s.RefreshActiveAuctions(ctx)
+	now := time.Now().In(loc)
 
-	if refErr != nil {
-		return refErr
+	if now.Hour() >= 10 && now.Hour() <= 11 {
+		if err := s.ScrapBazaar(ctx); err != nil {
+			return err
+		}
 	}
 
-	conErr := s.ConsolidateAuctions(ctx)
+	if err := s.RefreshActiveAuctions(ctx); err != nil {
+		return err
+	}
 
-	if conErr != nil {
-		return conErr
+	if err := s.ConsolidateAuctions(ctx); err != nil {
+		return err
 	}
 
 	return nil
@@ -483,7 +489,11 @@ func (s *Service) GetAuctions(ctx context.Context, filter *AuctionFilter) (*Pagi
 		})
 	}
 
-	totalCount := len(auctions)
+	totalCount, err := s.auctionRepository.CountActiveAuctions(ctx)
+
+	if err != nil {
+		return nil, err
+	}
 
 	totalPages := totalCount / filter.Limit
 
