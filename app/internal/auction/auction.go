@@ -364,6 +364,8 @@ type AuctionViewModel struct {
 	StdDeviation float64
 }
 
+type AuctionStatsSubsets = map[string][]int
+
 type AuctionLinkSet struct {
 	sync.RWMutex
 	Data map[int]string

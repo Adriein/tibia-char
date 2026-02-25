@@ -129,7 +129,7 @@ type AuctionRepository interface {
 	GetActiveAuctionsFinishingIn(ctx context.Context, duration time.Duration) ([]*Auction, error)
 	GetAuctionsWithFilter(ctx context.Context, filter *AuctionFilter) ([]*Auction, error)
 	GetAuctionsPendingToConsolidate(ctx context.Context) ([]*Auction, error)
-	GetAllAuctionPrices(ctx context.Context) ([]*Auction, error)
+	GetHistoricAuctionPrices(ctx context.Context) ([]*Auction, error)
 	CountActiveAuctions(ctx context.Context) (int, error)
 }
 
@@ -1254,7 +1254,7 @@ func (r *PgAuctionRepository) GetAuctionsPendingToConsolidate(ctx context.Contex
 	return result, nil
 }
 
-func (r *PgAuctionRepository) GetAllAuctionPrices(ctx context.Context) ([]*Auction, error) {
+func (r *PgAuctionRepository) GetHistoricAuctionPrices(ctx context.Context) ([]*Auction, error) {
 	finishedAucQuery := `
 		SELECT
 			a.ta_id,
@@ -1264,9 +1264,8 @@ func (r *PgAuctionRepository) GetAllAuctionPrices(ctx context.Context) ([]*Aucti
     		tc_auction_recording tar
 		INNER JOIN tc_auction a ON tar.tar_recordable_id = a.ta_id
 		WHERE
-			a.ta_auction_stage = 'current'
-		OR
-			a.ta_auction_stage = 'winning';
+			a.ta_auction_stage = 'winning'
+		;
 	`
 
 	ctxTimeout, cancel := context.WithTimeout(ctx, time.Second*10)
