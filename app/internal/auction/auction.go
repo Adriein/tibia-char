@@ -1,6 +1,7 @@
 package auction
 
 import (
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -351,6 +352,55 @@ func (a *Auction) IsTrending() bool {
 	return increasedTimes >= 5
 }
 
+func (a *Auction) SubsetKey() string {
+	var voc string
+
+	switch a.CharVocation.Id {
+	case constants.VocationKnight:
+		voc = "K"
+	case constants.VocationPaladin:
+		voc = "P"
+	case constants.VocationMonk:
+		voc = "M"
+	case constants.VocationDruid:
+		voc = "D"
+	case constants.VocationSorcerer:
+		voc = "S"
+	default:
+		voc = "N"
+	}
+
+	lvl := getRangeLabel(a.CharLevel, []int{8, 100, 300, 600, 1000, 2000})
+
+	var skillVal int
+
+	switch a.CharVocation.Id {
+	case constants.VocationKnight:
+		skillVal = max(a.Skills.Axe, a.Skills.Sword, a.Skills.Club)
+	case constants.VocationPaladin:
+		skillVal = a.Skills.Distance
+	case constants.VocationMonk:
+		skillVal = a.Skills.Fist
+	default:
+		skillVal = a.Skills.MagicLevel
+	}
+
+	skill := getRangeLabel(skillVal, []int{10, 100, 110, 120, 130})
+
+	return voc + "_" + lvl + "_" + skill
+}
+
+func getRangeLabel(val int, thresholds []int) string {
+
+	for i, threshold := range thresholds {
+		if val >= threshold && val < thresholds[i+1] {
+			return strconv.Itoa(threshold) + "_" + strconv.Itoa(thresholds[i+1]-1)
+		}
+	}
+
+	return "+" + strconv.Itoa(thresholds[len(thresholds)-1])
+}
+
 type PaginatedAuctions struct {
 	ViewModels []*AuctionViewModel
 	TotalCount int
@@ -364,7 +414,7 @@ type AuctionViewModel struct {
 	StdDeviation float64
 }
 
-type AuctionStatsSubsets = map[string][]int
+type AuctionStatsSubsets = map[string]int
 
 type AuctionLinkSet struct {
 	sync.RWMutex
