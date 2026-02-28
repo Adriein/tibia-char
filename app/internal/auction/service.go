@@ -471,13 +471,13 @@ func (s *Service) GetAuctions(ctx context.Context, filter *AuctionFilter) (*Pagi
 		auction.BidFiat = conRate.Exchange(auction.BidFiat, targetCurrency)
 		auction.BidCurrency = targetCurrency
 
-		stdDev := stdDevSubsets[auction.SubsetKey()]
+		stats := stdDevSubsets[auction.SubsetKey()]
 
-		fmt.Printf("%s, %.2f", auction.SubsetKey(), stdDev)
+		ZScore := float64(auction.Bid-int(stats.Median)) / stats.StdDeviation
 
 		viewModels = append(viewModels, &AuctionViewModel{
-			Auction:      auction,
-			StdDeviation: stdDev,
+			Auction: auction,
+			ZScore:  ZScore,
 		})
 	}
 
@@ -511,8 +511,13 @@ func (s *Service) calculateStdDeviationForPriceSubset(auctions []*Auction) StdDe
 		priceSubsets[key] = append(priceSubsets[key], auction.Bid)
 	}
 
+	stats := statistics.New()
+
 	for key, prices := range priceSubsets {
-		stdDevSubset[key] = statistics.New().StdDeviation(prices)
+		median := stats.Median(prices)
+		stdDeviation := stats.StdDeviation(prices)
+
+		stdDevSubset[key] = &AuctionStats{Median: median, StdDeviation: stdDeviation}
 	}
 
 	return stdDevSubset

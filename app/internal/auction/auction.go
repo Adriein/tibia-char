@@ -409,11 +409,16 @@ type PaginatedAuctions struct {
 }
 
 type AuctionViewModel struct {
-	Auction      *Auction
+	Auction *Auction
+	ZScore  float64
+}
+
+type AuctionStats struct {
+	Median       float64
 	StdDeviation float64
 }
 
-type StdDeviationSubsets = map[string]float64
+type StdDeviationSubsets = map[string]*AuctionStats
 
 type AuctionLinkSet struct {
 	sync.RWMutex
