@@ -391,10 +391,9 @@ func (a *Auction) SubsetKey() string {
 }
 
 func getRangeLabel(val int, thresholds []int) string {
-
-	for i, threshold := range thresholds {
-		if val >= threshold && val < thresholds[i+1] {
-			return strconv.Itoa(threshold) + "_" + strconv.Itoa(thresholds[i+1]-1)
+	for i := 0; i < len(thresholds)-1; i++ {
+		if val >= thresholds[i] && val < thresholds[i+1] {
+			return strconv.Itoa(thresholds[i]) + "_" + strconv.Itoa(thresholds[i+1]-1)
 		}
 	}
 
@@ -414,7 +413,7 @@ type AuctionViewModel struct {
 	StdDeviation float64
 }
 
-type AuctionStatsSubsets = map[string]int
+type StdDeviationSubsets = map[string]float64
 
 type AuctionLinkSet struct {
 	sync.RWMutex

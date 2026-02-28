@@ -1255,16 +1255,28 @@ func (r *PgAuctionRepository) GetAuctionsPendingToConsolidate(ctx context.Contex
 }
 
 func (r *PgAuctionRepository) GetHistoricAuctionPrices(ctx context.Context) ([]*Auction, error) {
-	finishedAucQuery := `
+	query := `
 		SELECT
 			a.ta_id,
 			a.ta_auction_id,
+			a.ta_char_level,
+			v.*,
+			ts.*,
 			a.ta_current_bid
 		FROM
     		tc_auction_recording tar
-		INNER JOIN tc_auction a ON tar.tar_recordable_id = a.ta_id
+		INNER JOIN
+			tc_auction a ON tar.tar_recordable_id = a.ta_id
+		INNER JOIN
+			tc_vocation v ON a.ta_char_vocation = v.tv_id
+		INNER JOIN
+			tc_skills ts ON a.ta_auction_id = ts.ts_auction_id
 		WHERE
+			tar.tar_status = 'archived'
+		AND
 			a.ta_auction_stage = 'winning'
+		ORDER BY
+			a.ta_auction_end ASC
 		;
 	`
 
@@ -1272,10 +1284,10 @@ func (r *PgAuctionRepository) GetHistoricAuctionPrices(ctx context.Context) ([]*
 
 	defer cancel()
 
-	rows, err := r.connection.QueryContext(ctxTimeout, finishedAucQuery)
+	rows, err := r.connection.QueryContext(ctxTimeout, query)
 
 	if err != nil {
-		return nil, eris.Wrap(err, "Failed to query all auctions prices")
+		return nil, eris.Wrap(err, "Failed to query auctions")
 	}
 
 	defer rows.Close()
@@ -1284,18 +1296,35 @@ func (r *PgAuctionRepository) GetHistoricAuctionPrices(ctx context.Context) ([]*
 
 	for rows.Next() {
 		var (
-			auction Auction
+			auction  Auction
+			vocation Vocation
+			skills   Skills
 		)
 
 		err := rows.Scan(
 			&auction.ID,
 			&auction.AuctionID,
+			&auction.CharLevel,
+			&vocation.Id,
+			&vocation.Name,
+			&skills.AuctionID,
+			&skills.Axe,
+			&skills.Club,
+			&skills.Distance,
+			&skills.Fishing,
+			&skills.Fist,
+			&skills.MagicLevel,
+			&skills.Shielding,
+			&skills.Sword,
 			&auction.Bid,
 		)
 
 		if err != nil {
 			return nil, eris.Wrap(err, "Failed to scan auction")
 		}
+
+		auction.CharVocation = &vocation
+		auction.Skills = &skills
 
 		result = append(result, &auction)
 	}

@@ -463,21 +463,7 @@ func (s *Service) GetAuctions(ctx context.Context, filter *AuctionFilter) (*Pagi
 
 	historicAucPrices, err := s.auctionRepository.GetHistoricAuctionPrices(ctx)
 
-	var prices []int
-
-	for _, auction := range historicAucPrices {
-		prices = append(prices, auction.Bid)
-	}
-
-	s.calculateStdDeviationForPriceSubset(historicAucPrices)
-
-	stats := statistics.New()
-
-	median := stats.Median(prices)
-	stdDeviation := stats.StdDeviation(prices)
-
-	fmt.Println(median)
-	fmt.Println(stdDeviation)
+	stdDevSubsets := s.calculateStdDeviationForPriceSubset(historicAucPrices)
 
 	var viewModels []*AuctionViewModel
 
@@ -485,9 +471,13 @@ func (s *Service) GetAuctions(ctx context.Context, filter *AuctionFilter) (*Pagi
 		auction.BidFiat = conRate.Exchange(auction.BidFiat, targetCurrency)
 		auction.BidCurrency = targetCurrency
 
+		stdDev := stdDevSubsets[auction.SubsetKey()]
+
+		fmt.Printf("%s, %.2f", auction.SubsetKey(), stdDev)
+
 		viewModels = append(viewModels, &AuctionViewModel{
 			Auction:      auction,
-			StdDeviation: 0,
+			StdDeviation: stdDev,
 		})
 	}
 
@@ -510,15 +500,20 @@ func (s *Service) GetAuctions(ctx context.Context, filter *AuctionFilter) (*Pagi
 	return result, nil
 }
 
-func (s *Service) calculateStdDeviationForPriceSubset(auctions []*Auction) *AuctionStatsSubsets {
-	aucSubset := make(AuctionStatsSubsets)
-	a := make(map[string][]int)
+func (s *Service) calculateStdDeviationForPriceSubset(auctions []*Auction) StdDeviationSubsets {
+	stdDevSubset := make(StdDeviationSubsets)
+
+	priceSubsets := make(map[string][]int)
 
 	for _, auction := range auctions {
 		key := auction.SubsetKey()
 
-		aucSubset[key] = append(aucSubset[key], auction.Bid)
+		priceSubsets[key] = append(priceSubsets[key], auction.Bid)
 	}
 
-	return nil
+	for key, prices := range priceSubsets {
+		stdDevSubset[key] = statistics.New().StdDeviation(prices)
+	}
+
+	return stdDevSubset
 }
