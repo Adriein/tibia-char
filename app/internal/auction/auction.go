@@ -349,7 +349,7 @@ func (a *Auction) IsTrending() bool {
 		}
 	}
 
-	return increasedTimes >= 5
+	return increasedTimes >= 4
 }
 
 func (a *Auction) SubsetKey() string {
