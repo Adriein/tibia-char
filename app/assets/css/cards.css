@@ -95,7 +95,10 @@
 
     .card__header-zscore {
       display: flex;
+      align-items: center;
+      gap: var(--inline-space-half);
       justify-content: center;
+      align-self: flex-start;
 
       font-size: var(--text-xx-small);
 
