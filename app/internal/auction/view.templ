@@ -166,12 +166,20 @@ templ AuctionCard(viewModel *AuctionViewModel) {
 				<h2 class="card__subtitle">{auction.CharLevel} {auction.CharVocation.Name}</h2>
 				<span class="card__updated">{lastUpdated}</span>
 			</div>
-			if auction.IsTrending() {
+			<div class="card__header-flags">
+				if auction.IsTrending() {
 				<div class="card__header-trending">
 					<img class="card__header-trending-icon" alt="hot fire elemental icon" src="/assets/images/fire_elemental_trending_icon.png"/>
 					<span class="card__header-trending-text">Hot</span>
 				</div>
-			}
+				}
+				if viewModel.IsGoodDeal() {
+					<div class="card__header-zscore">
+						<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-trending-up"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M3 17l6 -6l4 4l8 -8" /><path d="M14 7l7 0l0 7" /></svg>
+						<span>Good Deal</span>
+					</div>
+				}
+			</div>
 		</div>
 		<div class="card__bid">
 			<div class="card__bid-section">

@@ -413,6 +413,10 @@ type AuctionViewModel struct {
 	ZScore  float64
 }
 
+func (av *AuctionViewModel) IsGoodDeal() bool {
+	return av.ZScore <= -1
+}
+
 type AuctionStats struct {
 	Median       float64
 	StdDeviation float64

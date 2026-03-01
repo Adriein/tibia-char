@@ -88,6 +88,23 @@
       }
     }
 
+    .card__header-flags {
+      display: inline-flex;
+      margin-left: auto;
+    }
+
+    .card__header-zscore {
+      display: flex;
+      justify-content: center;
+
+      font-size: var(--text-xx-small);
+
+      svg {
+        width: 10px;
+        height: 10px;
+      }
+    }
+
     .card__header-trending {
       display: inline-flex;
       align-items: center;
