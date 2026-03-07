@@ -473,6 +473,15 @@ func (s *Service) GetAuctions(ctx context.Context, filter *AuctionFilter) (*Pagi
 
 		stats := stdDevSubsets[auction.SubsetKey()]
 
+		if auction.CharVocation.Id == constants.VocationNone {
+			viewModels = append(viewModels, &AuctionViewModel{
+				Auction: auction,
+				ZScore:  0,
+			})
+
+			continue
+		}
+
 		ZScore := float64(auction.Bid-int(stats.Median)) / stats.StdDeviation
 
 		viewModels = append(viewModels, &AuctionViewModel{
