@@ -722,14 +722,14 @@ func Auctions(page *PaginatedAuctions) templ.Component {
 			templ_7745c5c3_Var32 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 48, "<div><div class=\"pagination pagination--auctions\"><span>Auctions ")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 48, "<div class=\"pagination pagination--auctions\"><span>Auctions ")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var33 string
 		templ_7745c5c3_Var33, templ_7745c5c3_Err = templ.JoinStringErrs(page.TotalCount)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/internal/auction/view.templ`, Line: 306, Col: 34}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/internal/auction/view.templ`, Line: 305, Col: 33}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var33))
 		if templ_7745c5c3_Err != nil {
@@ -751,7 +751,7 @@ func Auctions(page *PaginatedAuctions) templ.Component {
 		var templ_7745c5c3_Var35 templ.SafeURL
 		templ_7745c5c3_Var35, templ_7745c5c3_Err = templ.JoinURLErrs(fmt.Sprintf("/index?page=%d&qty=%d", page.Page-1, page.PageSize))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/internal/auction/view.templ`, Line: 308, Col: 77}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/internal/auction/view.templ`, Line: 307, Col: 76}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var35))
 		if templ_7745c5c3_Err != nil {
@@ -777,7 +777,7 @@ func Auctions(page *PaginatedAuctions) templ.Component {
 		var templ_7745c5c3_Var37 string
 		templ_7745c5c3_Var37, templ_7745c5c3_Err = templ.JoinStringErrs(page.Page)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/internal/auction/view.templ`, Line: 311, Col: 20}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/internal/auction/view.templ`, Line: 310, Col: 19}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var37))
 		if templ_7745c5c3_Err != nil {
@@ -790,7 +790,7 @@ func Auctions(page *PaginatedAuctions) templ.Component {
 		var templ_7745c5c3_Var38 string
 		templ_7745c5c3_Var38, templ_7745c5c3_Err = templ.JoinStringErrs(page.TotalPages)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/internal/auction/view.templ`, Line: 311, Col: 40}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/internal/auction/view.templ`, Line: 310, Col: 39}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var38))
 		if templ_7745c5c3_Err != nil {
@@ -812,7 +812,7 @@ func Auctions(page *PaginatedAuctions) templ.Component {
 		var templ_7745c5c3_Var40 templ.SafeURL
 		templ_7745c5c3_Var40, templ_7745c5c3_Err = templ.JoinURLErrs(fmt.Sprintf("/index?page=%d&qty=%d", page.Page+1, page.PageSize))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/internal/auction/view.templ`, Line: 312, Col: 77}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/internal/auction/view.templ`, Line: 311, Col: 76}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var40))
 		if templ_7745c5c3_Err != nil {
@@ -838,13 +838,13 @@ func Auctions(page *PaginatedAuctions) templ.Component {
 		var templ_7745c5c3_Var42 string
 		templ_7745c5c3_Var42, templ_7745c5c3_Err = templ.JoinStringErrs(page.PageSize)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/internal/auction/view.templ`, Line: 316, Col: 23}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/internal/auction/view.templ`, Line: 315, Col: 22}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var42))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 58, " / page</span></div></div><div class=\"grid-auction-cards\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 58, " / page</span></div><div class=\"grid-auction-cards\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

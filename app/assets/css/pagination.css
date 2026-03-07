@@ -11,6 +11,9 @@
     display: flex;
     gap: var(--inline-space);
     padding: var(--pagination-padding-block) var(--pagination-padding-inline);
+    position: sticky;
+    top: 0;
+    z-index: var(--z-nav);
   }
 
   .pagination--auctions {
