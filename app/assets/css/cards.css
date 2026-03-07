@@ -91,21 +91,33 @@
     .card__header-flags {
       display: inline-flex;
       margin-left: auto;
+      flex-direction: column;
+      gap: 4px;
+      align-items: flex-end;
     }
 
     .card__header-zscore {
-      display: flex;
+      display: inline-flex;
       align-items: center;
       gap: var(--inline-space-half);
-      justify-content: center;
+
       align-self: flex-start;
 
-      font-size: var(--text-xx-small);
+      padding-block: 3px;
+      padding-inline: var(--inline-space);
 
-      svg {
-        width: 10px;
-        height: 10px;
-      }
+      background: oklch(from var(--color-success) l c h / 15%);
+      border: 1px solid oklch(from var(--color-success) l c h / 45%);
+      border-radius: var(--radius-full);
+
+      color: var(--color-success);
+      font-size: var(--text-xx-small);
+      line-height: 1;
+    }
+
+    .card__header-zscore svg {
+      inline-size: 12px;
+      block-size: 12px;
     }
 
     .card__header-trending {
