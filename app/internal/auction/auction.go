@@ -417,6 +417,10 @@ func (av *AuctionViewModel) IsGoodDeal() bool {
 	return av.ZScore <= -1
 }
 
+func (av *AuctionViewModel) IsBadDeal() bool {
+	return av.ZScore >= 1.5
+}
+
 type AuctionStats struct {
 	Median       float64
 	StdDeviation float64
