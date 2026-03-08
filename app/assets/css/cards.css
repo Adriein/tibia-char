@@ -96,7 +96,7 @@
       align-items: flex-end;
     }
 
-    .card__header-zscore {
+    .card__header-flag-zscore {
       display: inline-flex;
       align-items: center;
       gap: var(--inline-space-half);
@@ -106,21 +106,33 @@
       padding-block: 3px;
       padding-inline: var(--inline-space);
 
-      background: oklch(from var(--color-success) l c h / 15%);
-      border: 1px solid oklch(from var(--color-success) l c h / 45%);
+      background: var(--zscore-bg);
+      border: 1px solid var(--zscore-border-color);
       border-radius: var(--radius-full);
 
-      color: var(--color-success);
+      color: var(--zscore-color);
       font-size: var(--text-xx-small);
       line-height: 1;
     }
 
-    .card__header-zscore svg {
+    .card__header-flag-zscore svg {
       inline-size: 12px;
       block-size: 12px;
     }
 
-    .card__header-trending {
+    .flag-zscore--good {
+      --zscore-bg: oklch(from var(--color-success) l c h / 15%);
+      --zscore-border-color: oklch(from var(--color-success) l c h / 45%);
+      --zscore-color: var(--color-success);
+    }
+
+    .flag-zscore--bad {
+      --zscore-bg: oklch(from var(--color-error) l c h / 15%);
+      --zscore-border-color: oklch(from var(--color-error) l c h / 45%);
+      --zscore-color: var(--color-error);
+    }
+
+    .card__header-flag--trending {
       display: inline-flex;
       align-items: center;
       gap: var(--inline-space-half);
@@ -136,7 +148,7 @@
       align-self: flex-start;
     }
 
-    .card__header-trending-icon {
+    .card__header-flag-icon--trending {
       width: 20px;
       height: 20px;
       object-fit: contain;
@@ -144,7 +156,7 @@
       transform: translate(-20%, -20%);
     }
 
-    .card__header-trending-text {
+    .card__header-flag-text--trending {
       color: var(--color-ink);
       font-size: var(--text-xx-small);
       font-weight: var(--text-weight-xl);

@@ -168,20 +168,20 @@ templ AuctionCard(viewModel *AuctionViewModel) {
 			</div>
 			<div class="card__header-flags">
 				if auction.IsTrending() {
-				<div class="card__header-trending">
-					<img class="card__header-trending-icon" alt="hot fire elemental icon" src="/assets/images/fire_elemental_trending_icon.png"/>
-					<span class="card__header-trending-text">Hot</span>
+				<div class="card__header-flag--trending">
+					<img class="card__header-flag-icon--trending" alt="hot fire elemental icon" src="/assets/images/fire_elemental_trending_icon.png"/>
+					<span class="card__header-flag-text--trending">Hot</span>
 				</div>
 				}
 				if viewModel.IsGoodDeal() {
-					<div class="card__header-zscore">
+					<div class="card__header-flag-zscore flag-zscore--good">
 						<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-trending-up"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M3 17l6 -6l4 4l8 -8" /><path d="M14 7l7 0l0 7" /></svg>
 						<span>Good Deal</span>
 					</div>
 				}
 				if viewModel.IsBadDeal() {
-					<div class="card__header-zscore">
-						<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-trending-up"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M3 17l6 -6l4 4l8 -8" /><path d="M14 7l7 0l0 7" /></svg>
+					<div class="card__header-flag-zscore flag-zscore--bad">
+						<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-trending-down"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M3 7l6 6l4 -4l8 8" /><path d="M21 10l0 7l-7 0" /></svg>
 						<span>Bad Deal</span>
 					</div>
 				}
