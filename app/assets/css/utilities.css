@@ -1,6 +1,6 @@
 @layer utilities {
     .truncate {
-        width: 200px;
+        min-width: 0;
         white-space: nowrap;
         text-overflow: ellipsis;
     }
