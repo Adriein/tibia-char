@@ -1352,3 +1352,15 @@ func (r *PgAuctionRepository) CountActiveAuctions(ctx context.Context) (int, err
 
 	return count, nil
 }
+
+type AggAuctionStatsRepository interface {
+	Save(stats *AuctionStats) error
+}
+
+type PgAggAuctionStatsRepsitory struct {
+	connection *sql.DB
+}
+
+func (r *PgAggAuctionStatsRepsitory) Save(stats *AuctionStats) error {
+	return nil
+}

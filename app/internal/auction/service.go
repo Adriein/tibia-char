@@ -91,6 +91,30 @@ func (s *Service) ScrapperOrchestrator(ctx context.Context) error {
 
 /*
 ================================================================================
+Stats Logic
+================================================================================
+*/
+
+func (s *Service) AggregateAuctionStatsPrecompute(ctx context.Context) error {
+	historicAucPrices, err := s.auctionRepository.GetHistoricAuctionPrices(ctx)
+
+	if err != nil {
+		return err
+	}
+
+	stdDevSubsets := s.calculateStdDeviationForPriceSubset(historicAucPrices)
+
+	fmt.Println(stdDevSubsets)
+
+	return nil
+	/*for key, result := range stdDevSubsets {
+
+
+	}*/
+}
+
+/*
+================================================================================
 Scrapper Logic
 ================================================================================
 */
