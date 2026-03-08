@@ -95,7 +95,7 @@ CREATE TABLE IF NOT EXISTS tc_skills (
 
     CONSTRAINT fk_skills_auction_recording
         FOREIGN KEY (ts_auction_id)
-        REFERENCES tc_auction_recording (tar_auction_id)
+        REFERENCES tc_auction_recording (tar_auction_id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS tc_featured_items (
@@ -105,7 +105,7 @@ CREATE TABLE IF NOT EXISTS tc_featured_items (
 
     CONSTRAINT fk_featured_items_auction_recording
         FOREIGN KEY (tfi_auction_id)
-        REFERENCES tc_auction_recording (tar_auction_id),
+        REFERENCES tc_auction_recording (tar_auction_id) ON DELETE CASCADE,
 
     CONSTRAINT unique_auction_item
         UNIQUE (tfi_auction_id, tfi_item_id)
@@ -125,7 +125,7 @@ CREATE TABLE IF NOT EXISTS tc_auction_charms (
 
     CONSTRAINT fk_auction_charms_auction_recording
         FOREIGN KEY (tac_auction_id)
-        REFERENCES tc_auction_recording (tar_auction_id),
+        REFERENCES tc_auction_recording (tar_auction_id) ON DELETE CASCADE,
 
     CONSTRAINT fk_auction_charms_charms
         FOREIGN KEY (tac_charm_id)
@@ -144,7 +144,7 @@ CREATE TABLE IF NOT EXISTS tc_auction_imbuements (
 
     CONSTRAINT fk_auction_imbuements_auction_recording
         FOREIGN KEY (tai_auction_id)
-        REFERENCES tc_auction_recording (tar_auction_id),
+        REFERENCES tc_auction_recording (tar_auction_id) ON DELETE CASCADE,
 
     CONSTRAINT fk_auction_imbuements_imbuements
         FOREIGN KEY (tai_imbuement_id)
@@ -163,11 +163,33 @@ CREATE TABLE IF NOT EXISTS tc_auction_quests (
 
     CONSTRAINT fk_auction_quests_auction_recording
         FOREIGN KEY (taq_auction_id)
-        REFERENCES tc_auction_recording (tar_auction_id),
+        REFERENCES tc_auction_recording (tar_auction_id) ON DELETE CASCADE,
 
     CONSTRAINT fk_auction_quests_quests
         FOREIGN KEY (taq_quest_id)
         REFERENCES tc_quests (tq_id)
+);
+
+CREATE TABLE IF NOT EXISTS tc_aggregated_auction_stats (
+    taas_subset_key VARCHAR PRIMARY KEY,
+    taas_median_price NUMERIC(20, 2) NOT NULL,
+    taas_mean_price NUMERIC(20, 2) NOT NULL,
+    taas_std_deviation NUMERIC(20, 2) NOT NULL,
+    taas_min_price NUMERIC(20, 2) NOT NULL,
+    taas_max_price NUMERIC(20, 2) NOT NULL,
+    taas_mode_price NUMERIC(20, 2) NOT NULL,
+    taas_sample_size INT NOT NULL,
+    taas_date_upd TIMESTAMP(0) WITHOUT TIME ZONE NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS tc_auction_flags (
+    taf_auction_id INT PRIMARY KEY,
+    taf_good_deal BOOLEAN,
+    taf_bad_deal BOOLEAN,
+
+    CONSTRAINT fk_auction_flags_auction_recording
+        FOREIGN KEY (taf_auction_id)
+        REFERENCES tc_auction_recording (tar_auction_id) ON DELETE CASCADE
 );
 
 /*
