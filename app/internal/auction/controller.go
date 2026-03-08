@@ -58,10 +58,12 @@ func (c *Controller) Get() gin.HandlerFunc {
 		}
 
 		filter := &AuctionFilter{
-			Limit:     qty,
-			Page:      pageNum - 1,
-			SortBy:    SortByEndTime,
-			SortOrder: SortOrderAsc,
+			Pagination: &FilterPagination{
+				Limit:     qty,
+				Page:      pageNum - 1,
+				SortBy:    SortByEndTime,
+				SortOrder: SortOrderAsc,
+			},
 		}
 
 		page, err := c.service.GetAuctions(ctx, filter)
