@@ -162,7 +162,7 @@ templ AuctionCard(viewModel *AuctionViewModel) {
 				<img alt="Auction icon" src={auction.Img}/>
 			</div>
 			<div>
-				<h1 class="card__title">{auction.CharName}</h1>
+				<h1 class="card__title truncate">{auction.CharName}</h1>
 				<h2 class="card__subtitle">{auction.CharLevel} {auction.CharVocation.Name}</h2>
 				<span class="card__updated">{lastUpdated}</span>
 			</div>
