@@ -100,6 +100,12 @@ Stats Agg Logic
 */
 
 func (s *Service) AggregateAuctionStatsPrecompute(ctx context.Context) error {
+	traceID := ctx.Value(middleware.TraceIDKey)
+
+	s.logger.Printf("TraceID: %s Start stats precompute\n", traceID)
+
+	now := time.Now()
+
 	historicAucPrices, err := s.auctionRepository.GetHistoricAuctionPrices(ctx)
 
 	if err != nil {
@@ -143,6 +149,8 @@ func (s *Service) AggregateAuctionStatsPrecompute(ctx context.Context) error {
 			return err
 		}
 	}
+
+	s.logger.Printf("TraceID: %s Finish stats precompute - Time: %s\n", traceID, time.Since(now))
 
 	return nil
 }
