@@ -221,7 +221,7 @@ func (r *PgAuctionRepository) Save(auction *Auction) error {
 			tar_date_add,
 			tar_date_upd
 		)
-		VALUES ($1, $2, $3, $4, $5)
+		VALUES ($1, $2, $3, $4, TIMEZONE('UTC', NOW())
 		ON CONFLICT (tar_auction_id) DO UPDATE SET
 			tar_recordable_id = EXCLUDED.tar_recordable_id,
 			tar_status = EXCLUDED.tar_status,
@@ -1446,7 +1446,7 @@ func (r *PgAggAuctionStatsRepsitory) GetByKey(key string) (*AggAuctionStats, err
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, eris.Wrapf(ErrAggAuctionStatsNotFound, "No aggregated auction stats found for key: %s", key)
 		}
-		
+
 		return nil, eris.Wrap(err, "Error querying aggregated auction stats by key")
 	}
 
