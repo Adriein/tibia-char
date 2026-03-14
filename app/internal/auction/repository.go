@@ -1353,6 +1353,7 @@ func (r *PgAuctionRepository) CountActiveAuctions(ctx context.Context) (int, err
 
 type AggAuctionStatsRepository interface {
 	Save(stats *AggAuctionStats) error
+	GetByKey(key string) (*AggAuctionStats, error)
 }
 
 type PgAggAuctionStatsRepsitory struct {
@@ -1406,4 +1407,45 @@ func (r *PgAggAuctionStatsRepsitory) Save(stats *AggAuctionStats) error {
 	}
 
 	return nil
+}
+
+func (r *PgAggAuctionStatsRepsitory) GetByKey(key string) (*AggAuctionStats, error) {
+	query := `
+		SELECT
+			taas_subset_key,
+			taas_median_price,
+			taas_mean_price,
+			taas_std_deviation,
+			taas_min_price,
+			taas_max_price,
+			taas_mode_price,
+			taas_sample_size
+		FROM
+			tc_aggregated_auction_stats
+		WHERE
+			taas_subset_key = $1;
+	`
+
+	var stats AggAuctionStats
+
+	err := r.connection.QueryRow(query, key).Scan(
+		&stats.SubsetKey,
+		&stats.Median,
+		&stats.Mean,
+		&stats.StdDeviation,
+		&stats.MinPrice,
+		&stats.MaxPrice,
+		&stats.Mode,
+		&stats.SampleSize,
+	)
+
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, eris.Wrapf(err, "No aggregated auction stats found for key: %s", key)
+		}
+		
+		return nil, eris.Wrap(err, "Error querying aggregated auction stats by key")
+	}
+
+	return &stats, nil
 }
