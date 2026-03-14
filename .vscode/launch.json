@@ -35,5 +35,15 @@
       "env": {},
       "args": []
     },
+    {
+      "name": "stats-cron",
+      "type": "go",
+      "request": "launch",
+      "mode": "debug",
+      "program": "${workspaceFolder}/app/cmd/cron/stats/main.go",
+      "cwd": "${workspaceFolder}/app",
+      "env": {},
+      "args": []
+    }
   ]
 }
