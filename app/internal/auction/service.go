@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"math/rand"
+	"sort"
 	"sync/atomic"
 	"time"
 
@@ -20,14 +21,15 @@ import (
 )
 
 type Service struct {
-	tibiaAPI           *vendor.TibiaApi
-	auctionRepository  AuctionRepository
-	worldRepository    WorldRepository
-	currencyRepository currency.CurrencyRepository
-	mapper             *Mapper
-	parserFactory      ParserFactory
-	scrapperFactory    *CollyFactory
-	logger             *log.Logger
+	tibiaAPI             *vendor.TibiaApi
+	auctionRepository    AuctionRepository
+	worldRepository      WorldRepository
+	currencyRepository   currency.CurrencyRepository
+	aggAuctionRepository AggAuctionStatsRepository
+	mapper               *Mapper
+	parserFactory        ParserFactory
+	scrapperFactory      *CollyFactory
+	logger               *log.Logger
 }
 
 const AuctionDetailMaxConcurrency = 5
@@ -38,20 +40,22 @@ func NewService(
 	auctionRepo AuctionRepository,
 	worldRepo WorldRepository,
 	currencyRepo currency.CurrencyRepository,
+	aggAuctionRepository AggAuctionStatsRepository,
 	mapper *Mapper,
 	parserFactory ParserFactory,
 	scrapperFactory *CollyFactory,
 	logger *log.Logger,
 ) *Service {
 	return &Service{
-		tibiaAPI:           tibiaAPI,
-		auctionRepository:  auctionRepo,
-		worldRepository:    worldRepo,
-		currencyRepository: currencyRepo,
-		mapper:             mapper,
-		parserFactory:      parserFactory,
-		scrapperFactory:    scrapperFactory,
-		logger:             logger,
+		tibiaAPI:             tibiaAPI,
+		auctionRepository:    auctionRepo,
+		worldRepository:      worldRepo,
+		currencyRepository:   currencyRepo,
+		aggAuctionRepository: aggAuctionRepository,
+		mapper:               mapper,
+		parserFactory:        parserFactory,
+		scrapperFactory:      scrapperFactory,
+		logger:               logger,
 	}
 }
 
@@ -91,7 +95,7 @@ func (s *Service) ScrapperOrchestrator(ctx context.Context) error {
 
 /*
 ================================================================================
-Stats Logic
+Stats Agg Logic
 ================================================================================
 */
 
@@ -102,15 +106,45 @@ func (s *Service) AggregateAuctionStatsPrecompute(ctx context.Context) error {
 		return err
 	}
 
-	stdDevSubsets := s.calculateStdDeviationForPriceSubset(historicAucPrices)
+	priceSubsets := s.subsetPricesMap(historicAucPrices)
 
-	fmt.Println(stdDevSubsets)
+	stats := statistics.New()
+
+	for key, prices := range priceSubsets {
+		if len(prices) == 0 {
+			continue
+		}
+
+		sort.Ints(prices)
+
+		minPrice := prices[0]
+		maxPrice := prices[len(prices)-1]
+
+		median := stats.Median(prices)
+		mean := stats.Mean(prices)
+
+		stdDeviation := stats.StdDeviation(prices)
+		mode := stats.Mode(prices)
+
+		sampleSize := len(prices)
+
+		agg := &AggAuctionStats{
+			SubsetKey:    key,
+			MinPrice:     minPrice,
+			MaxPrice:     maxPrice,
+			Median:       median,
+			Mean:         mean,
+			StdDeviation: stdDeviation,
+			Mode:         mode,
+			SampleSize:   sampleSize,
+		}
+
+		if err := s.aggAuctionRepository.Save(agg); err != nil {
+			return err
+		}
+	}
 
 	return nil
-	/*for key, result := range stdDevSubsets {
-
-
-	}*/
 }
 
 /*
@@ -487,7 +521,9 @@ func (s *Service) GetAuctions(ctx context.Context, filter *AuctionFilter) (*Pagi
 
 	historicAucPrices, err := s.auctionRepository.GetHistoricAuctionPrices(ctx)
 
-	stdDevSubsets := s.calculateStdDeviationForPriceSubset(historicAucPrices)
+	priceSubsets := s.subsetPricesMap(historicAucPrices)
+
+	stdDevSubsets := s.calculateStdDeviationForPriceSubset(priceSubsets)
 
 	var viewModels []*AuctionViewModel
 
@@ -533,16 +569,8 @@ func (s *Service) GetAuctions(ctx context.Context, filter *AuctionFilter) (*Pagi
 	return result, nil
 }
 
-func (s *Service) calculateStdDeviationForPriceSubset(auctions []*Auction) StdDeviationSubsets {
+func (s *Service) calculateStdDeviationForPriceSubset(priceSubsets PriceSubsets) StdDeviationSubsets {
 	stdDevSubset := make(StdDeviationSubsets)
-
-	priceSubsets := make(map[string][]int)
-
-	for _, auction := range auctions {
-		key := auction.SubsetKey()
-
-		priceSubsets[key] = append(priceSubsets[key], auction.Bid)
-	}
 
 	stats := statistics.New()
 
@@ -554,4 +582,16 @@ func (s *Service) calculateStdDeviationForPriceSubset(auctions []*Auction) StdDe
 	}
 
 	return stdDevSubset
+}
+
+func (s *Service) subsetPricesMap(auctions []*Auction) PriceSubsets {
+	priceSubsets := make(PriceSubsets)
+
+	for _, auction := range auctions {
+		key := auction.SubsetKey()
+
+		priceSubsets[key] = append(priceSubsets[key], auction.Bid)
+	}
+
+	return priceSubsets
 }

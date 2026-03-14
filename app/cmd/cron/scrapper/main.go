@@ -21,9 +21,10 @@ func main() {
 
 	logger := log.New(os.Stderr, "[Scrapper Cron] ", log.LstdFlags|log.LUTC)
 
-	auctionRepository := auction.NewPgAuctionRepository(app.Databse)
-	worldRepository := auction.NewPgWorldRepository(app.Databse)
-	currencyRepository := currency.NewPgCurrencyRepository(app.Databse)
+	auctionRepository := auction.NewPgAuctionRepository(app.Database)
+	worldRepository := auction.NewPgWorldRepository(app.Database)
+	currencyRepository := currency.NewPgCurrencyRepository(app.Database)
+	aggAuctionRepository := auction.NewPgAggAuctionRepository(app.Database)
 
 	scrapperFactory := &auction.CollyFactory{}
 	parserFactory := &auction.HtmlParserFactory{}
@@ -32,7 +33,7 @@ func main() {
 
 	mapper := auction.NewMapper(worldRepository)
 
-	service := auction.NewService(tibiaAPI, auctionRepository, worldRepository, currencyRepository, mapper, parserFactory, scrapperFactory, logger)
+	service := auction.NewService(tibiaAPI, auctionRepository, worldRepository, currencyRepository, aggAuctionRepository, mapper, parserFactory, scrapperFactory, logger)
 
 	ctx := context.WithValue(context.Background(), middleware.TraceIDKey, helper.TraceID())
 

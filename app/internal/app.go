@@ -12,7 +12,7 @@ import (
 )
 
 type App struct {
-	Databse *sql.DB
+	Database *sql.DB
 }
 
 func NewApp() *App {
@@ -37,6 +37,6 @@ func NewApp() *App {
 	}
 
 	return &App{
-		Databse: database.New(),
+		Database: database.New(),
 	}
 }

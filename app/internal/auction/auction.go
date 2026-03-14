@@ -426,7 +426,20 @@ type AuctionStats struct {
 	StdDeviation float64
 }
 
+type AggAuctionStats struct {
+	SubsetKey    string
+	MinPrice     int
+	MaxPrice     int
+	Median       float64
+	Mean         float64
+	StdDeviation float64
+	Mode         int
+	SampleSize   int
+}
+
 type StdDeviationSubsets = map[string]*AuctionStats
+
+type PriceSubsets = map[string][]int
 
 type AuctionLinkSet struct {
 	sync.RWMutex

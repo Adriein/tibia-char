@@ -21,7 +21,7 @@ func main() {
 
 	currencyAPI := vendor.NewOpenCurrencyAPI()
 
-	repository := currency.NewPgCurrencyRepository(app.Databse)
+	repository := currency.NewPgCurrencyRepository(app.Database)
 
 	cron := currency.NewService(repository, currencyAPI, logger)
 

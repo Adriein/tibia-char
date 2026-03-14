@@ -174,7 +174,7 @@ func (r *PgAuctionRepository) Save(auction *Auction) error {
 			ta_date_add,
 			ta_date_upd
 		)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, TIMEZONE('UTC', NOW()))
 		RETURNING ta_id;
 	`
 
@@ -202,7 +202,6 @@ func (r *PgAuctionRepository) Save(auction *Auction) error {
 		auction.AuctionStart,
 		auction.AuctionEnd,
 		auction.DateAdd,
-		auction.DateUpd,
 	).Scan(&generatedId)
 
 	if err != nil {
@@ -223,7 +222,7 @@ func (r *PgAuctionRepository) Save(auction *Auction) error {
 		ON CONFLICT (tar_auction_id) DO UPDATE SET
 			tar_recordable_id = EXCLUDED.tar_recordable_id,
 			tar_status = EXCLUDED.tar_status,
-			tar_date_upd = EXCLUDED.tar_date_upd;
+			tar_date_upd = TIMEZONE('UTC', NOW());
 	`
 
 	_, err = tx.Exec(
@@ -232,7 +231,6 @@ func (r *PgAuctionRepository) Save(auction *Auction) error {
 		generatedId,
 		auction.Status.String(),
 		auction.DateAdd,
-		auction.DateUpd,
 	)
 
 	if err != nil {
@@ -1354,13 +1352,58 @@ func (r *PgAuctionRepository) CountActiveAuctions(ctx context.Context) (int, err
 }
 
 type AggAuctionStatsRepository interface {
-	Save(stats *AuctionStats) error
+	Save(stats *AggAuctionStats) error
 }
 
 type PgAggAuctionStatsRepsitory struct {
 	connection *sql.DB
 }
 
-func (r *PgAggAuctionStatsRepsitory) Save(stats *AuctionStats) error {
+func NewPgAggAuctionRepository(c *sql.DB) *PgAggAuctionStatsRepsitory {
+	return &PgAggAuctionStatsRepsitory{connection: c}
+}
+
+func (r *PgAggAuctionStatsRepsitory) Save(stats *AggAuctionStats) error {
+	query := `
+		INSERT INTO tc_aggregated_auction_stats (
+			taas_subset_key,
+			taas_median_price,
+			taas_mean_price,
+			taas_std_deviation,
+			taas_min_price,
+			taas_max_price,
+			taas_mode_price,
+			taas_sample_size,
+			taas_date_upd
+		)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, TIMEZONE('UTC', NOW()))
+		ON CONFLICT (taas_subset_key) DO UPDATE SET
+			taas_median_price = EXCLUDED.taas_median_price,
+			taas_mean_price = EXCLUDED.taas_mean_price,
+			taas_std_deviation = EXCLUDED.taas_std_deviation,
+			taas_min_price = EXCLUDED.taas_min_price,
+			taas_max_price = EXCLUDED.taas_max_price,
+			taas_mode_price = EXCLUDED.taas_mode_price,
+			taas_sample_size = EXCLUDED.taas_sample_size,
+			taas_date_upd = TIMEZONE('UTC', NOW())
+		;
+	`
+
+	_, err := r.connection.Exec(
+		query,
+		stats.SubsetKey,
+		stats.Median,
+		stats.Mean,
+		stats.StdDeviation,
+		stats.MinPrice,
+		stats.MaxPrice,
+		stats.Mode,
+		stats.SampleSize,
+	)
+
+	if err != nil {
+		return eris.Wrap(err, "Error in upsert on tc_aggregated_auction_stats")
+	}
+
 	return nil
 }

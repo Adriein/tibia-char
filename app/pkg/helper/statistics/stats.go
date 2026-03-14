@@ -66,3 +66,28 @@ func (s *Statistics) Median(data []int) float64 {
 
 	return float64(dataCopyToSort[middle-1]+dataCopyToSort[middle]) / 2
 }
+
+func (s *Statistics) Mode(data []int) int {
+	if len(data) == 0 {
+		return 0
+	}
+
+	frequencies := make(map[int]int)
+	maxFreq := 0
+	var mode int
+
+	for _, p := range data {
+		frequencies[p]++
+
+		if frequencies[p] > maxFreq {
+			maxFreq = frequencies[p]
+			mode = p
+		}
+
+		if frequencies[p] == maxFreq && p < mode {
+			mode = p
+		}
+	}
+
+	return mode
+}

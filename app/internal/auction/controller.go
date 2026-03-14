@@ -22,9 +22,10 @@ type Controller struct {
 func NewController(app *internal.App) *Controller {
 	logger := log.New(os.Stderr, "[Auction] ", log.LstdFlags|log.LUTC)
 
-	auctionRepository := NewPgAuctionRepository(app.Databse)
-	worldRepository := NewPgWorldRepository(app.Databse)
-	currencyRepository := currency.NewPgCurrencyRepository(app.Databse)
+	auctionRepository := NewPgAuctionRepository(app.Database)
+	worldRepository := NewPgWorldRepository(app.Database)
+	currencyRepository := currency.NewPgCurrencyRepository(app.Database)
+	aggAuctionRepository := NewPgAggAuctionRepository(app.Database)
 
 	tibiaAPI := vendor.NewTibiaApi()
 
@@ -33,7 +34,7 @@ func NewController(app *internal.App) *Controller {
 
 	mapper := NewMapper(worldRepository)
 
-	service := NewService(tibiaAPI, auctionRepository, worldRepository, currencyRepository, mapper, parserFactory, scrapperFactory, logger)
+	service := NewService(tibiaAPI, auctionRepository, worldRepository, currencyRepository, aggAuctionRepository, mapper, parserFactory, scrapperFactory, logger)
 
 	return &Controller{
 		service: service,
