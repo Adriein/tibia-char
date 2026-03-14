@@ -3,12 +3,15 @@ package auction
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"time"
 
 	"github.com/adriein/tibia-char/pkg/enums"
 	"github.com/lib/pq"
 	"github.com/rotisserie/eris"
 )
+
+var ErrAggAuctionStatsNotFound = errors.New("Aggregated auction stats not found")
 
 type VocationRepository interface {
 	Get(vocation string) (*Vocation, error)
@@ -1440,8 +1443,8 @@ func (r *PgAggAuctionStatsRepsitory) GetByKey(key string) (*AggAuctionStats, err
 	)
 
 	if err != nil {
-		if err == sql.ErrNoRows {
-			return nil, eris.Wrapf(err, "No aggregated auction stats found for key: %s", key)
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, eris.Wrapf(ErrAggAuctionStatsNotFound, "No aggregated auction stats found for key: %s", key)
 		}
 		
 		return nil, eris.Wrap(err, "Error querying aggregated auction stats by key")

@@ -2,6 +2,7 @@ package auction
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"math/rand"
@@ -536,7 +537,16 @@ func (s *Service) GetAuctions(ctx context.Context, filter *AuctionFilter) (*Pagi
 		stats, err := s.aggAuctionRepository.GetByKey(auction.SubsetKey())
 
 		if err != nil {
-			continue
+			if errors.Is(err, ErrAggAuctionStatsNotFound) {
+				viewModels = append(viewModels, &AuctionViewModel{
+					Auction: auction,
+					ZScore:  0,
+				})
+
+				continue
+			}
+
+			return nil, err
 		}
 
 		if auction.CharVocation.Id == constants.VocationNone {
