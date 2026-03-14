@@ -175,9 +175,9 @@ CREATE TABLE IF NOT EXISTS tc_aggregated_auction_stats (
     taas_median_price NUMERIC(20, 2) NOT NULL,
     taas_mean_price NUMERIC(20, 2) NOT NULL,
     taas_std_deviation NUMERIC(20, 2) NOT NULL,
-    taas_min_price NUMERIC(20, 2) NOT NULL,
-    taas_max_price NUMERIC(20, 2) NOT NULL,
-    taas_mode_price NUMERIC(20, 2) NOT NULL,
+    taas_min_price INT NOT NULL,
+    taas_max_price INT NOT NULL,
+    taas_mode_price INT NOT NULL,
     taas_sample_size INT NOT NULL,
     taas_date_upd TIMESTAMP(0) WITHOUT TIME ZONE NOT NULL
 );
