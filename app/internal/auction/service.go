@@ -545,7 +545,7 @@ func (s *Service) GetAuctions(ctx context.Context, filter *AuctionFilter) (*Pagi
 
 				continue
 			}
-
+			//TODO: decide what to do because this will cause 0 auctions to the frontend maybe we can be more optimistic
 			return nil, err
 		}
 
