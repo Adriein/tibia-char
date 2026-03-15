@@ -221,7 +221,7 @@ func (r *PgAuctionRepository) Save(auction *Auction) error {
 			tar_date_add,
 			tar_date_upd
 		)
-		VALUES ($1, $2, $3, $4, TIMEZONE('UTC', NOW())
+		VALUES ($1, $2, $3, $4, TIMEZONE('UTC', NOW()))
 		ON CONFLICT (tar_auction_id) DO UPDATE SET
 			tar_recordable_id = EXCLUDED.tar_recordable_id,
 			tar_status = EXCLUDED.tar_status,
