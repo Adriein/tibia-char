@@ -172,12 +172,13 @@ func (r *PgAuctionRepository) Save(auction *Auction) error {
 			ta_current_bid_fiat,
 			ta_current_bid_currency,
 			ta_auction_stage,
+			ta_auction_flags,
 			ta_auction_start,
 			ta_auction_end,
 			ta_date_add,
 			ta_date_upd
 		)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, TIMEZONE('UTC', NOW()))
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, TIMEZONE('UTC', NOW()))
 		RETURNING ta_id;
 	`
 
@@ -202,6 +203,7 @@ func (r *PgAuctionRepository) Save(auction *Auction) error {
 		auction.BidFiat,
 		auction.BidCurrency,
 		auction.Stage,
+		auction.Flag,
 		auction.AuctionStart,
 		auction.AuctionEnd,
 		auction.DateAdd,
@@ -838,6 +840,7 @@ func (r *PgAuctionRepository) GetAuctionsWithFilter(ctx context.Context, filter 
 			a.ta_current_bid_fiat,
 			a.ta_current_bid_currency,
 			a.ta_auction_stage,
+			a.ta_auction_flags,
 			a.ta_auction_start,
 			a.ta_auction_end,
 			tar.tar_status,
@@ -925,6 +928,7 @@ func (r *PgAuctionRepository) GetAuctionsWithFilter(ctx context.Context, filter 
 			&auction.BidFiat,
 			&auction.BidCurrency,
 			&auction.Stage,
+			&auction.Flag,
 			&auction.AuctionStart,
 			&auction.AuctionEnd,
 			&statusString,

@@ -77,7 +77,7 @@ func (s *Service) ScrapperOrchestrator(ctx context.Context) error {
 
 	now := time.Now().In(loc)
 
-	if now.Hour() >= 10 && now.Hour() <= 11 {
+	if now.Hour() >= 10 && now.Hour() <= 10 {
 		if err := s.ScrapBazaar(ctx); err != nil {
 			return err
 		}
@@ -513,6 +513,7 @@ func (s *Service) RefreshActiveAuctions(ctx context.Context) error {
 				}
 
 				auctionsToUpdate.Set(auction.AuctionID, auction.TibiaAuctionLink)
+				auctionAddedCounter++
 			}
 		}
 
