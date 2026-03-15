@@ -105,3 +105,13 @@ func (c Currency) Valid() bool {
 
 	return false
 }
+
+type Flag int
+
+const (
+	None     Flag = 0
+	GoodDeal Flag = 1
+	BadDeal  Flag = 2
+	Hot      Flag = 4
+	Featured Flag = 8
+)

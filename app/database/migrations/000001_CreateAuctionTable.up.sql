@@ -52,6 +52,7 @@ CREATE TABLE IF NOT EXISTS tc_auction (
     ta_current_bid_fiat INT NOT NULL,
     ta_current_bid_currency VARCHAR NOT NULL,
     ta_auction_stage VARCHAR NOT NULL,
+    ta_auction_flags INT NOT NULL DEFAULT 0,
     ta_auction_start TIMESTAMP(0) WITHOUT TIME ZONE NOT NULL,
     ta_auction_end TIMESTAMP(0) WITHOUT TIME ZONE NOT NULL,
     ta_date_add TIMESTAMP(0) WITHOUT TIME ZONE NOT NULL,
@@ -180,16 +181,6 @@ CREATE TABLE IF NOT EXISTS tc_aggregated_auction_stats (
     taas_mode_price INT NOT NULL,
     taas_sample_size INT NOT NULL,
     taas_date_upd TIMESTAMP(0) WITHOUT TIME ZONE NOT NULL
-);
-
-CREATE TABLE IF NOT EXISTS tc_auction_flags (
-    taf_auction_id INT PRIMARY KEY,
-    taf_good_deal BOOLEAN,
-    taf_bad_deal BOOLEAN,
-
-    CONSTRAINT fk_auction_flags_auction_recording
-        FOREIGN KEY (taf_auction_id)
-        REFERENCES tc_auction_recording (tar_auction_id) ON DELETE CASCADE
 );
 
 /*

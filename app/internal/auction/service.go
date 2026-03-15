@@ -384,6 +384,24 @@ func (s *Service) scrapAuctionDetail(ctx context.Context, g *errgroup.Group, fai
 					return eris.Wrapf(err, "Error mapping from DTO auctionId %d", auctionId)
 				}
 
+				stats, err := s.aggAuctionRepository.GetByKey(auction.SubsetKey())
+
+				if err != nil {
+					if errors.Is(err, ErrAggAuctionStatsNotFound) {
+						if err := s.auctionRepository.Save(auction); err != nil {
+							s.notifyStatus(totalWorkload, &workDoneCounter)
+							//TODO: all the return errors inside this go routine are being ignored
+							return eris.Wrapf(err, "Error saving to DB auctionId %d", auctionId)
+						}
+
+						s.notifyStatus(totalWorkload, &workDoneCounter)
+
+						return nil
+					}
+				}
+
+				auction.CalculateFlags(stats)
+
 				if err := s.auctionRepository.Save(auction); err != nil {
 					s.notifyStatus(totalWorkload, &workDoneCounter)
 					//TODO: all the return errors inside this go routine are being ignored

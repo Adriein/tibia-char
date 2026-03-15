@@ -330,6 +330,7 @@ type Auction struct {
 	AuctionStart     time.Time
 	AuctionEnd       time.Time
 	Status           enums.AuctionRecordableStatus
+	Flag             enums.Flag
 	DateAdd          time.Time
 	DateUpd          time.Time
 }
@@ -370,7 +371,7 @@ func (a *Auction) SubsetKey() string {
 		voc = "N"
 	}
 
-	lvl := getRangeLabel(a.CharLevel, []int{8, 100, 300, 600, 1000, 2000})
+	lvl := a.getRangeLabel(a.CharLevel, []int{8, 100, 300, 600, 1000, 2000})
 
 	var skillVal int
 
@@ -385,12 +386,12 @@ func (a *Auction) SubsetKey() string {
 		skillVal = a.Skills.MagicLevel
 	}
 
-	skill := getRangeLabel(skillVal, []int{10, 100, 110, 120, 130})
+	skill := a.getRangeLabel(skillVal, []int{10, 100, 110, 120, 130})
 
 	return voc + "_" + lvl + "_" + skill
 }
 
-func getRangeLabel(val int, thresholds []int) string {
+func (a *Auction) getRangeLabel(val int, thresholds []int) string {
 	for i := 0; i < len(thresholds)-1; i++ {
 		if val >= thresholds[i] && val < thresholds[i+1] {
 			return strconv.Itoa(thresholds[i]) + "_" + strconv.Itoa(thresholds[i+1]-1)
@@ -398,6 +399,18 @@ func getRangeLabel(val int, thresholds []int) string {
 	}
 
 	return "+" + strconv.Itoa(thresholds[len(thresholds)-1])
+}
+
+func (a *Auction) CalculateFlags(stats *AggAuctionStats) {
+	ZScore := float64(a.Bid-int(stats.Median)) / stats.StdDeviation
+
+	if ZScore <= -1 {
+		a.Flag = enums.GoodDeal
+	}
+
+	if ZScore >= 1.5 {
+		a.Flag = enums.BadDeal
+	}
 }
 
 type PaginatedAuctions struct {
