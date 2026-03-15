@@ -402,6 +402,8 @@ func (a *Auction) getRangeLabel(val int, thresholds []int) string {
 }
 
 func (a *Auction) CalculateFlags(stats *AggAuctionStats) {
+	a.Flag = enums.None
+
 	ZScore := float64(a.Bid-int(stats.Median)) / stats.StdDeviation
 
 	if ZScore <= -1 {
