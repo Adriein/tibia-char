@@ -257,7 +257,7 @@ func AuctionCard(viewModel *AuctionViewModel) templ.Component {
 			loc = time.UTC
 		}
 
-		formattedAuctionEnd := auction.AuctionEnd.In(loc).Format("Jan 02, 2006 at 15:04")
+		formattedAuctionEnd := auction.AuctionEnd.In(loc).Format("Jan 02 at 15:04")
 
 		abbr, _ := auction.AuctionEnd.In(loc).Zone()
 
