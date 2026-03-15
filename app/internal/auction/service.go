@@ -428,6 +428,17 @@ Refresh Auctions Phase
 */
 
 func (s *Service) RefreshActiveAuctions(ctx context.Context) error {
+	const (
+		FiveMin   = 5 * time.Minute
+		TenMin    = 10 * time.Minute
+		TwentyMin = 20 * time.Minute
+		OneHour   = 60 * time.Minute
+		FourHours = 4 * time.Hour
+		SixHours  = 6 * time.Hour
+		OneDay    = 24 * time.Hour
+		OneMonth  = 30 * 24 * time.Hour
+	)
+
 	traceID := ctx.Value(middleware.TraceIDKey)
 
 	now := time.Now()
@@ -440,15 +451,17 @@ func (s *Service) RefreshActiveAuctions(ctx context.Context) error {
 	}
 
 	policies := []refreshPolicy{
-		{finishingIn: 10 * time.Minute, updateInterval: 5 * time.Minute},
-		{finishingIn: 60 * time.Minute, updateInterval: 20 * time.Minute},
-		{finishingIn: 24 * time.Hour, updateInterval: 4 * time.Hour},
-		{finishingIn: 30 * 24 * time.Hour, updateInterval: 6 * time.Hour},
+		{finishingIn: TenMin, updateInterval: FiveMin},
+		{finishingIn: OneHour, updateInterval: TwentyMin},
+		{finishingIn: OneDay, updateInterval: FourHours},
+		{finishingIn: OneMonth, updateInterval: SixHours},
 	}
 
 	auctionsToUpdate := NewAuctionLinkSet()
 
 	for _, policy := range policies {
+		auctionAddedCounter := 0
+
 		auctions, err := s.auctionRepository.GetActiveAuctionsFinishingIn(ctx, policy.finishingIn)
 
 		if err != nil {
@@ -465,7 +478,51 @@ func (s *Service) RefreshActiveAuctions(ctx context.Context) error {
 			}
 
 			auctionsToUpdate.Set(auction.AuctionID, auction.TibiaAuctionLink)
+			auctionAddedCounter++
 		}
+
+		s.logger.Printf("TraceID: %s Added %d for policy %s\n", traceID, auctionAddedCounter, policy.finishingIn.String())
+	}
+
+	if auctionsToUpdate.AllowLongTail() {
+		auctionAddedCounter := 0
+
+		longTailPolicy := []refreshPolicy{
+			{finishingIn: OneDay, updateInterval: OneHour},
+			{finishingIn: OneMonth, updateInterval: OneHour},
+		}
+
+		for _, policy := range longTailPolicy {
+			auctions, err := s.auctionRepository.GetActiveAuctionsFinishingIn(ctx, policy.finishingIn)
+
+			if err != nil {
+				return err
+			}
+
+			for _, auction := range auctions {
+				if !auctionsToUpdate.AllowLongTail() {
+					break
+				}
+
+				if _, exists := auctionsToUpdate.Get(auction.AuctionID); exists {
+					continue
+				}
+
+				if auction.DateUpd.After(time.Now().Add(-policy.updateInterval)) {
+					continue
+				}
+
+				auctionsToUpdate.Set(auction.AuctionID, auction.TibiaAuctionLink)
+			}
+		}
+
+		s.logger.Printf("TraceID: %s Added %d for policy long tail\n", traceID, auctionAddedCounter)
+	}
+
+	if auctionsToUpdate.IsEmpty() {
+		s.logger.Printf("TraceID: %s Finish refresh phase in: %s\n", traceID, time.Since(now))
+
+		return nil
 	}
 
 	if err := s.scrapAuctionDetails(auctionsToUpdate); err != nil {
@@ -504,6 +561,12 @@ func (s *Service) ConsolidateAuctions(ctx context.Context) error {
 		}
 
 		auctionsToUpdate.Set(auction.AuctionID, auction.TibiaAuctionLink)
+	}
+
+	if auctionsToUpdate.IsEmpty() {
+		s.logger.Printf("TraceID: %s Finish consolidate phase in: %s\n", traceID, time.Since(now))
+
+		return nil
 	}
 
 	if err := s.scrapAuctionDetails(auctionsToUpdate); err != nil {

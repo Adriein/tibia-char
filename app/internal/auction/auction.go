@@ -492,6 +492,14 @@ func (s *AuctionLinkSet) Has(key int) bool {
 	return ok
 }
 
+func (s *AuctionLinkSet) IsEmpty() bool {
+	return len(s.Data) == 0
+}
+
+func (s *AuctionLinkSet) AllowLongTail() bool {
+	return len(s.Data) < constants.MaxLongTailRefreshAllowance
+}
+
 type ImgDisplay struct {
 	Link string
 	Name string

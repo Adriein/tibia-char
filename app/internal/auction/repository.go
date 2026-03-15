@@ -764,6 +764,8 @@ func (r *PgAuctionRepository) GetActiveAuctionsFinishingIn(ctx context.Context, 
 			tar.tar_status = 'active'
 		AND
 			a.ta_auction_end <= NOW() + make_interval(secs => $1)
+		ORDER BY
+			a.ta_auction_end DESC
 		;
 	`
 

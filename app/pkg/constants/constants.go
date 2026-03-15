@@ -82,3 +82,7 @@ const (
 const (
 	TibiaOfficialWebsite = "www.tibia.com"
 )
+
+const (
+	MaxLongTailRefreshAllowance = 50
+)
