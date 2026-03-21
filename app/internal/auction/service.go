@@ -77,7 +77,7 @@ func (s *Service) ScrapperOrchestrator(ctx context.Context) error {
 
 	now := time.Now().In(loc)
 
-	if now.Hour() >= 10 && now.Hour() <= 10 {
+	if now.Hour() >= 10 && now.Hour() <= 11 {
 		if err := s.ScrapBazaar(ctx); err != nil {
 			return err
 		}
@@ -165,7 +165,7 @@ Scrapper Logic
 func (s *Service) ScrapBazaar(ctx context.Context) error {
 	traceID := ctx.Value(middleware.TraceIDKey)
 
-	s.logger.Printf("TraceID: %s Start Scrap Phase\n", traceID)
+	s.logger.Printf("[ScrapPhase] TraceID: %s Start Scrap Phase\n", traceID)
 
 	now := time.Now()
 
@@ -173,6 +173,8 @@ func (s *Service) ScrapBazaar(ctx context.Context) error {
 	auctionNumberParser := s.parserFactory.CreateAuctionNumberParser(scrapperInstance)
 
 	currentAuctions, err := auctionNumberParser.Scrap()
+
+	s.logger.Printf("[ScrapPhase] TraceID: %s Current active auctions %d\n", traceID, currentAuctions)
 
 	if err != nil {
 		return err
@@ -214,21 +216,23 @@ func (s *Service) ScrapBazaar(ctx context.Context) error {
 		}
 	}
 
+	s.logger.Printf("[ScrapPhase] TraceID: %s Total worlds %d\n", traceID, len(worlds))
+
 	auctionLinkSet, err := s.scrapAuctionLinks(ctx, worlds)
 
 	if err != nil {
-		s.logger.Printf("TraceID: %s Finished Scrap Phase with error time: %s\n", traceID, time.Since(now))
+		s.logger.Printf("[ScrapPhase] TraceID: %s Finished Scrap Phase with error time: %s\n", traceID, time.Since(now))
 
 		return err
 	}
 
 	if err := s.scrapAuctionDetails(auctionLinkSet); err != nil {
-		s.logger.Printf("TraceID: %s Finished Scrap Phase with error time: %s\n", traceID, time.Since(now))
+		s.logger.Printf("[ScrapPhase] TraceID: %s Finished Scrap Phase with error time: %s\n", traceID, time.Since(now))
 
 		return err
 	}
 
-	s.logger.Printf("TraceID: %s Finish Scrap Phase - Links: %d/%d - Time: %s\n", traceID, currentAuctions, len(auctionLinkSet.Data), time.Since(now))
+	s.logger.Printf("[ScrapPhase] TraceID: %s Finish Scrap Phase - Links: %d/%d - Time: %s\n", traceID, currentAuctions, len(auctionLinkSet.Data), time.Since(now))
 
 	return nil
 }
@@ -269,6 +273,8 @@ func (s *Service) scrapAuctionLinks(ctx context.Context, worlds []*World) (*Auct
 					defer func() { <-semaphore }()
 				}
 
+				now := time.Now()
+
 				goroutineNum := atomic.AddInt32(&goroutineCounter, 1)
 				goroutineID := fmt.Sprintf("L-routine%d", goroutineNum)
 
@@ -276,9 +282,14 @@ func (s *Service) scrapAuctionLinks(ctx context.Context, worlds []*World) (*Auct
 
 				linkParser := s.parserFactory.CreateAuctionListParser(scrapperInstance)
 
+				s.logger.Printf("[ScrapPhase] TraceID: %s GRoutine: %s Extract links for world: %s\n", traceID, goroutineID, world.Name)
+
 				if err := linkParser.Scrap(world.Name, auctionLinkSet, storedAuctionLinkSet); err != nil {
 					return eris.Wrapf(err, "Failed to collect link in L-routine%d", goroutineNum)
 				}
+
+				s.logger.Printf("[ScrapPhase] TraceID: %s GRoutine: %s Extracted links for world %s in %s\n", traceID, goroutineID, world.Name, time.Since(now))
+
 				return nil
 			})
 		}
@@ -290,7 +301,7 @@ func (s *Service) scrapAuctionLinks(ctx context.Context, worlds []*World) (*Auct
 		}
 	}
 
-	s.logger.Printf("TraceID: %s Finished Scrapping with error time: %s\n", traceID, time.Since(now))
+	s.logger.Printf("[ScrapPhase] TraceID: %s Finished Scrapping Links in %s\n", traceID, time.Since(now))
 
 	return auctionLinkSet, nil
 }

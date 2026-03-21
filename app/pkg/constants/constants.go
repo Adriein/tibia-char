@@ -20,23 +20,6 @@ const (
 )
 
 const (
-	VolatileMarketStatus     = "Volatile"
-	StableMarketStatus       = "Stable"
-	RiskyMarketStatus        = "Risky"
-	BullMarketType           = "Bull"
-	BearMarketType           = "Bear"
-	SidewaysMarketType       = "Sideways"
-	BullExhaustionMarketType = "Bull Exhaustion"
-	PullbackMarketType       = "Pullback"
-	UnclearMarketType        = "Unclear"
-)
-
-const (
-	EventDataIngestion            = "DATA_INGESTION"
-	EventDataIngestionDescription = "Ingested market data"
-)
-
-const (
 	GenderMale       = 1
 	GenderFemale     = 2
 	VocationKnight   = 1
@@ -45,10 +28,6 @@ const (
 	VocationDruid    = 4
 	VocationMonk     = 5
 	VocationNone     = 6
-)
-
-const (
-	TibiaCoinEuroEquivalence = 0.04
 )
 
 const (
@@ -67,22 +46,18 @@ const (
 	LocalProxy = "local"
 )
 
+const (
+	TibiaOfficialWebsite = "www.tibia.com"
+	IncomingTimeFormat = "20060102150405"
+	TibiaCoinEuroEquivalence = 0.04
+	MaxLongTailRefreshAllowance = 50
+	GRoutineID = "GRoutineID"
+)
+
 // Errors
 
 const (
 	ServerGenericError         = "SERVER_ERROR"
 	NoGoodSearchParamProvided  = "NO_GOOD_SEARCH_PARAM_PROVIDED"
 	NoWorldSearchParamProvided = "NO_WORLD_SEARCH_PARAM_PROVIDED"
-)
-
-const (
-	IncomingTimeFormat = "20060102150405"
-)
-
-const (
-	TibiaOfficialWebsite = "www.tibia.com"
-)
-
-const (
-	MaxLongTailRefreshAllowance = 50
 )
