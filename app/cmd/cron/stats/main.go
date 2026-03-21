@@ -20,8 +20,6 @@ import (
 func main() {
 	app := internal.NewApp()
 
-	logger := log.New(os.Stderr, "[Stats Cron] ", log.LstdFlags|log.LUTC)
-
 	opts := &slog.HandlerOptions{
 		ReplaceAttr: func(groups []string, attr slog.Attr) slog.Attr {
 			if attr.Key == slog.TimeKey {
@@ -34,12 +32,12 @@ func main() {
 		},
 	}
 
-	var l *slog.Logger
+	var logger *slog.Logger
 
 	if os.Getenv(constants.Env) == constants.DEV {
-		l = slog.New(slog.NewTextHandler(os.Stdout, opts))
+		logger = slog.New(slog.NewTextHandler(os.Stdout, opts))
 	} else {
-		l = slog.New(slog.NewJSONHandler(os.Stdout, opts))
+		logger = slog.New(slog.NewJSONHandler(os.Stdout, opts))
 	}
 
 	auctionRepository := auction.NewPgAuctionRepository(app.Database)
@@ -54,7 +52,7 @@ func main() {
 
 	mapper := auction.NewMapper(worldRepository)
 
-	service := auction.NewService(tibiaAPI, auctionRepository, worldRepository, currencyRepository, aggAuctionRepository, mapper, parserFactory, scrapperFactory, logger, l)
+	service := auction.NewService(tibiaAPI, auctionRepository, worldRepository, currencyRepository, aggAuctionRepository, mapper, parserFactory, scrapperFactory, logger)
 
 	ctx := context.WithValue(context.Background(), middleware.TraceIDKey, helper.TraceID())
 

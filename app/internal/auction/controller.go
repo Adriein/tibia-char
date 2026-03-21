@@ -1,7 +1,6 @@
 package auction
 
 import (
-	"log"
 	"log/slog"
 	"net/http"
 	"os"
@@ -11,7 +10,6 @@ import (
 	"github.com/adriein/tibia-char/internal"
 	"github.com/adriein/tibia-char/internal/currency"
 	"github.com/adriein/tibia-char/pkg/constants"
-	"github.com/adriein/tibia-char/pkg/middleware"
 	"github.com/adriein/tibia-char/pkg/vendor"
 	"github.com/gin-gonic/gin"
 	"github.com/rotisserie/eris"
@@ -19,12 +17,10 @@ import (
 
 type Controller struct {
 	service *Service
-	logger  *log.Logger
+	logger  *slog.Logger
 }
 
 func NewController(app *internal.App) *Controller {
-	logger := log.New(os.Stderr, "[Auction] ", log.LstdFlags|log.LUTC)
-
 	opts := &slog.HandlerOptions{
 		ReplaceAttr: func(groups []string, attr slog.Attr) slog.Attr {
 			if attr.Key == slog.TimeKey {
@@ -37,12 +33,12 @@ func NewController(app *internal.App) *Controller {
 		},
 	}
 
-	var l *slog.Logger
+	var logger *slog.Logger
 
 	if os.Getenv(constants.Env) == constants.DEV {
-		l = slog.New(slog.NewTextHandler(os.Stdout, opts))
+		logger = slog.New(slog.NewTextHandler(os.Stdout, opts))
 	} else {
-		l = slog.New(slog.NewJSONHandler(os.Stdout, opts))
+		logger = slog.New(slog.NewJSONHandler(os.Stdout, opts))
 	}
 
 	auctionRepository := NewPgAuctionRepository(app.Database)
@@ -57,7 +53,7 @@ func NewController(app *internal.App) *Controller {
 
 	mapper := NewMapper(worldRepository)
 
-	service := NewService(tibiaAPI, auctionRepository, worldRepository, currencyRepository, aggAuctionRepository, mapper, parserFactory, scrapperFactory, logger, l)
+	service := NewService(tibiaAPI, auctionRepository, worldRepository, currencyRepository, aggAuctionRepository, mapper, parserFactory, scrapperFactory, logger)
 
 	return &Controller{
 		service: service,
@@ -67,18 +63,16 @@ func NewController(app *internal.App) *Controller {
 
 func (c *Controller) Get() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		traceID, _ := ctx.Get(middleware.TraceIDKey)
-
 		qty, err := strconv.Atoi(ctx.DefaultQuery("qty", "20"))
 
 		if err != nil {
-			c.logger.Printf("TraceID %s Error getting auctions: %s\n", traceID, eris.ToString(err, true))
+			c.logger.Error("Error getting auctions", "error", eris.ToString(err, true))
 		}
 
 		pageNum, err := strconv.Atoi(ctx.DefaultQuery("page", "1"))
 
 		if err != nil {
-			c.logger.Printf("TraceID %s Error getting auctions: %s\n", traceID, eris.ToString(err, true))
+			c.logger.Error("Error getting auctions", "error", eris.ToString(err, true))
 		}
 
 		filter := &AuctionFilter{
@@ -94,7 +88,7 @@ func (c *Controller) Get() gin.HandlerFunc {
 
 		if err != nil {
 			//TODO: Temporal logging until I decide what to do
-			c.logger.Printf("TraceID %s Error getting auctions: %s\n", traceID, eris.ToString(err, true))
+			c.logger.Error("Error getting auctions", "error", eris.ToString(err, true))
 		}
 
 		renderer := vendor.NewTemplRenderer(ctx, http.StatusOK, AuctionsView(page))

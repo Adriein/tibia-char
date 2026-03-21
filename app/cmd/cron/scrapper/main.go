@@ -57,7 +57,7 @@ func main() {
 
 	mapper := auction.NewMapper(worldRepository)
 
-	service := auction.NewService(tibiaAPI, auctionRepository, worldRepository, currencyRepository, aggAuctionRepository, mapper, parserFactory, scrapperFactory, log.New(os.Stderr, "[Scrapper Cron] ", log.LstdFlags|log.LUTC), logger)
+	service := auction.NewService(tibiaAPI, auctionRepository, worldRepository, currencyRepository, aggAuctionRepository, mapper, parserFactory, scrapperFactory, logger)
 
 	for true {
 		err := service.ScrapperOrchestrator(ctx)

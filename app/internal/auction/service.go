@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
 	"log/slog"
 	"math/rand"
 	"sort"
@@ -31,8 +30,7 @@ type Service struct {
 	mapper               *Mapper
 	parserFactory        ParserFactory
 	scrapperFactory      *CollyFactory
-	logger               *log.Logger
-	l                    *slog.Logger
+	logger               *slog.Logger
 }
 
 const AuctionDetailMaxConcurrency = 5
@@ -47,8 +45,7 @@ func NewService(
 	mapper *Mapper,
 	parserFactory ParserFactory,
 	scrapperFactory *CollyFactory,
-	logger *log.Logger,
-	l *slog.Logger,
+	logger *slog.Logger,
 ) *Service {
 	return &Service{
 		tibiaAPI:             tibiaAPI,
@@ -60,7 +57,6 @@ func NewService(
 		parserFactory:        parserFactory,
 		scrapperFactory:      scrapperFactory,
 		logger:               logger,
-		l:                    l,
 	}
 }
 
@@ -103,9 +99,7 @@ Stats Agg Logic
 */
 
 func (s *Service) AggregateAuctionStatsPrecompute(ctx context.Context) error {
-	traceID := ctx.Value(middleware.TraceIDKey)
-
-	s.logger.Printf("TraceID: %s Start stats precompute\n", traceID)
+	s.logger.Info("Start auction stats aggregation")
 
 	now := time.Now()
 
@@ -153,7 +147,7 @@ func (s *Service) AggregateAuctionStatsPrecompute(ctx context.Context) error {
 		}
 	}
 
-	s.logger.Printf("TraceID: %s Finish stats precompute - Time: %s\n", traceID, time.Since(now))
+	s.logger.Info("Finish auction stats aggregation", "duration", time.Since(now))
 
 	return nil
 }
@@ -165,7 +159,9 @@ Scrapper Logic
 */
 
 func (s *Service) ScrapBazaar(ctx context.Context) error {
-	s.l.Info("Start", "phase", constants.ScrapPhase)
+	s.logger.Info("Start", "phase", constants.ScrapPhase)
+
+	ctx = context.WithValue(ctx, constants.Phase, constants.ScrapPhase)
 
 	now := time.Now()
 
@@ -174,7 +170,7 @@ func (s *Service) ScrapBazaar(ctx context.Context) error {
 
 	currentAuctions, err := auctionNumberParser.Scrap()
 
-	s.l.Info("Obtained active auctions", "phase", constants.ScrapPhase, "auctions", currentAuctions)
+	s.logger.Info("Obtained active auctions", "phase", constants.ScrapPhase, "auctions", currentAuctions)
 
 	if err != nil {
 		return err
@@ -216,28 +212,28 @@ func (s *Service) ScrapBazaar(ctx context.Context) error {
 		}
 	}
 
-	s.l.Info("Obtained worlds from tibiaAPI", "worlds", len(worlds))
+	s.logger.Info("Obtained worlds from tibiaAPI", "worlds", len(worlds))
 
-	auctionLinkSet, err := s.scrapAuctionLinks(ctx, worlds)
+	auctionLinkSet, err := s.scrapAuctionLinks(worlds)
 
 	if err != nil {
-		s.l.Info("Finish with error", "phase", constants.ScrapPhase, "duration", time.Since(now))
+		s.logger.Info("Finish with error", "phase", constants.ScrapPhase, "duration", time.Since(now))
 
 		return err
 	}
 
-	if err := s.scrapAuctionDetails(auctionLinkSet); err != nil {
-		s.l.Info("Finish with error", "phase", constants.ScrapPhase, "duration", time.Since(now))
+	if err := s.scrapAuctionDetails(ctx, auctionLinkSet); err != nil {
+		s.logger.Info("Finish with error", "phase", constants.ScrapPhase, "duration", time.Since(now))
 
 		return err
 	}
 
-	s.l.Info("Finish", "phase", constants.ScrapPhase, "duration", time.Since(now), "auctions", currentAuctions, "links", len(auctionLinkSet.Data))
+	s.logger.Info("Finish", "phase", constants.ScrapPhase, "duration", time.Since(now), "auctions", currentAuctions, "links", len(auctionLinkSet.Data))
 
 	return nil
 }
 
-func (s *Service) scrapAuctionLinks(ctx context.Context, worlds []*World) (*AuctionLinkSet, error) {
+func (s *Service) scrapAuctionLinks(worlds []*World) (*AuctionLinkSet, error) {
 	now := time.Now()
 
 	semaphore := make(chan struct{}, AuctionLinkMaxConcurrency)
@@ -280,13 +276,13 @@ func (s *Service) scrapAuctionLinks(ctx context.Context, worlds []*World) (*Auct
 
 				linkParser := s.parserFactory.CreateAuctionListParser(scrapperInstance)
 
-				s.l.Info("Start world link extraction", "phase", constants.ScrapPhase, "world", world.Name, "routine_id", goroutineID)
+				s.logger.Info("Start world link extraction", "phase", constants.ScrapPhase, "world", world.Name, "routine_id", goroutineID)
 
 				if err := linkParser.Scrap(world.Name, auctionLinkSet, storedAuctionLinkSet); err != nil {
 					return eris.Wrapf(err, "Failed to collect link in L-routine%d", goroutineNum)
 				}
 
-				s.l.Info("Finish world link extraction", "phase", constants.ScrapPhase, "world", world.Name, "routine_id", goroutineID, "duration", time.Since(now))
+				s.logger.Info("Finish world link extraction", "phase", constants.ScrapPhase, "world", world.Name, "routine_id", goroutineID, "duration", time.Since(now))
 
 				return nil
 			})
@@ -299,22 +295,33 @@ func (s *Service) scrapAuctionLinks(ctx context.Context, worlds []*World) (*Auct
 		}
 	}
 
-	s.l.Info("Finish links extraction", "phase", constants.ScrapPhase, "duration", time.Since(now))
+	s.logger.Info("Finish links extraction", "phase", constants.ScrapPhase, "duration", time.Since(now))
 
 	return auctionLinkSet, nil
 }
 
-func (s *Service) scrapAuctionDetails(auctionLinkSet *AuctionLinkSet) error {
+func (s *Service) scrapAuctionDetails(ctx context.Context, auctionLinkSet *AuctionLinkSet) error {
 	pm := NewProxyManager()
 
 	workload := pm.BalanceLoad(auctionLinkSet.Data)
 
 	failed := NewAuctionLinkSet()
 
-	g, gCtx := errgroup.WithContext(context.Background())
+	g, gCtx := errgroup.WithContext(ctx)
+
+	goroutineCounter := int32(0)
+
+	phase := ctx.Value(constants.Phase)
+
+	start := time.Now()
 
 	for proxyAddr, work := range workload {
+		goroutineNum := atomic.AddInt32(&goroutineCounter, 1)
+		goroutineID := fmt.Sprintf("P-routine%d", goroutineNum)
+
 		ctx := context.WithValue(gCtx, constants.ProxyAddr, proxyAddr)
+
+		s.logger.Info("Balance workload with proxy", "phase", phase, "routine_id", goroutineID, "proxy_addr", proxyAddr)
 
 		g.Go(func() error {
 			s.scrapAuctionDetail(ctx, g, failed, work)
@@ -329,7 +336,7 @@ func (s *Service) scrapAuctionDetails(auctionLinkSet *AuctionLinkSet) error {
 		return err
 	}
 
-	s.logger.Printf("Total to scrap: %d, Failed: %d", len(auctionLinkSet.Data), len(failed.Data))
+	s.logger.Info("Finish scrapping auction details", "phase", phase, "total", len(auctionLinkSet.Data), "failed", len(failed.Data), "duration", time.Since(start))
 
 	return nil
 }
@@ -360,6 +367,9 @@ func (s *Service) scrapAuctionDetail(ctx context.Context, g *errgroup.Group, fai
 					defer func() { <-semaphore }()
 				}
 
+				start := time.Now()
+				phase := ctx.Value(constants.Phase)
+
 				auctionId := kv.Key
 				linkURL := kv.Value
 
@@ -376,11 +386,11 @@ func (s *Service) scrapAuctionDetail(ctx context.Context, g *errgroup.Group, fai
 						return eris.Wrapf(err, "Rate limit reached parsing auctionId %d", auctionId)
 					}
 
-					s.logger.Println(err.Error())
+					s.logger.Error(err.Error())
 
 					failed.Set(auctionId, linkURL)
 
-					s.notifyStatus(totalWorkload, &workDoneCounter)
+					s.notifyStatus(ctx, totalWorkload, &workDoneCounter)
 
 					return nil
 				}
@@ -388,7 +398,9 @@ func (s *Service) scrapAuctionDetail(ctx context.Context, g *errgroup.Group, fai
 				auction, err := s.mapper.FromDTO(dto)
 
 				if err != nil {
-					s.notifyStatus(totalWorkload, &workDoneCounter)
+					s.notifyStatus(ctx, totalWorkload, &workDoneCounter)
+
+					s.logger.Info("Failed auction detail scrapping", "phase", phase, "routine_id", goroutineID, "duration", time.Since(start))
 
 					return eris.Wrapf(err, "Error mapping from DTO auctionId %d", auctionId)
 				}
@@ -398,12 +410,17 @@ func (s *Service) scrapAuctionDetail(ctx context.Context, g *errgroup.Group, fai
 				if err != nil {
 					if errors.Is(err, ErrAggAuctionStatsNotFound) {
 						if err := s.auctionRepository.Save(auction); err != nil {
-							s.notifyStatus(totalWorkload, &workDoneCounter)
+							s.notifyStatus(ctx, totalWorkload, &workDoneCounter)
+
+							s.logger.Info("Failed auction detail scrapping", "phase", phase, "routine_id", goroutineID, "duration", time.Since(start))
+
 							//TODO: all the return errors inside this go routine are being ignored
 							return eris.Wrapf(err, "Error saving to DB auctionId %d", auctionId)
 						}
 
-						s.notifyStatus(totalWorkload, &workDoneCounter)
+						s.notifyStatus(ctx, totalWorkload, &workDoneCounter)
+
+						s.logger.Info("Failed auction detail scrapping", "phase", phase, "routine_id", goroutineID, "duration", time.Since(start))
 
 						return nil
 					}
@@ -412,12 +429,17 @@ func (s *Service) scrapAuctionDetail(ctx context.Context, g *errgroup.Group, fai
 				auction.CalculateFlags(stats)
 
 				if err := s.auctionRepository.Save(auction); err != nil {
-					s.notifyStatus(totalWorkload, &workDoneCounter)
+					s.notifyStatus(ctx, totalWorkload, &workDoneCounter)
+
+					s.logger.Info("Failed auction detail scrapping", "phase", phase, "routine_id", goroutineID, "duration", time.Since(start))
+
 					//TODO: all the return errors inside this go routine are being ignored
 					return eris.Wrapf(err, "Error saving to DB auctionId %d", auctionId)
 				}
 
-				s.notifyStatus(totalWorkload, &workDoneCounter)
+				s.notifyStatus(ctx, totalWorkload, &workDoneCounter)
+
+				s.logger.Info("Finish auction detail scrapping", "phase", phase, "routine_id", goroutineID, "duration", time.Since(start))
 
 				return nil
 			})
@@ -425,9 +447,12 @@ func (s *Service) scrapAuctionDetail(ctx context.Context, g *errgroup.Group, fai
 	}
 }
 
-func (s *Service) notifyStatus(totalWork int, workDoneCounter *int32) {
+func (s *Service) notifyStatus(ctx context.Context, totalWork int, workDoneCounter *int32) {
 	newValue := atomic.AddInt32(workDoneCounter, 1)
-	s.logger.Printf("%d/%d", newValue, totalWork)
+
+	phase := ctx.Value(constants.Phase)
+
+	s.logger.Info(fmt.Sprintf("%d/%d", newValue, totalWork), "phase", phase)
 }
 
 /*
@@ -448,11 +473,11 @@ func (s *Service) WatchActiveAuctions(ctx context.Context) error {
 		OneMonth  = 30 * 24 * time.Hour
 	)
 
-	traceID := ctx.Value(middleware.TraceIDKey)
+	ctx = context.WithValue(ctx, constants.Phase, constants.WatchPhase)
 
 	now := time.Now()
 
-	s.logger.Printf("TraceID: %s Start refresh phase\n", traceID)
+	s.logger.Info("Start", "phase", constants.WatchPhase)
 
 	type refreshPolicy struct {
 		finishingIn    time.Duration
@@ -490,7 +515,7 @@ func (s *Service) WatchActiveAuctions(ctx context.Context) error {
 			auctionAddedCounter++
 		}
 
-		s.logger.Printf("TraceID: %s Added %d for policy %s\n", traceID, auctionAddedCounter, policy.finishingIn.String())
+		s.logger.Info("Added active auctions for policy", "phase", constants.WatchPhase, "policy", policy.finishingIn.String(), "total", auctionAddedCounter)
 	}
 
 	if auctionsToUpdate.AllowLongTail() {
@@ -526,20 +551,22 @@ func (s *Service) WatchActiveAuctions(ctx context.Context) error {
 			}
 		}
 
-		s.logger.Printf("TraceID: %s Added %d for policy long tail\n", traceID, auctionAddedCounter)
+		s.logger.Info("Added active auctions for long tail", "phase", constants.WatchPhase, "policy", "total", auctionAddedCounter)
 	}
 
 	if auctionsToUpdate.IsEmpty() {
-		s.logger.Printf("TraceID: %s Finish refresh phase in: %s\n", traceID, time.Since(now))
+		s.logger.Info("Finish phase", "phase", constants.WatchPhase, "duration", time.Since(now))
 
 		return nil
 	}
 
-	if err := s.scrapAuctionDetails(auctionsToUpdate); err != nil {
+	if err := s.scrapAuctionDetails(ctx, auctionsToUpdate); err != nil {
+		s.logger.Info("Finish phase", "phase", constants.WatchPhase, "duration", time.Since(now))
+
 		return eris.Wrap(err, "Failed to refresh auctions")
 	}
 
-	s.logger.Printf("TraceID: %s Finish refresh phase in: %s\n", traceID, time.Since(now))
+	s.logger.Info("Finish phase", "phase", constants.WatchPhase, "duration", time.Since(now))
 
 	return nil
 }
@@ -551,11 +578,11 @@ Consolidate Auctions Phase
 */
 
 func (s *Service) ConsolidateAuctions(ctx context.Context) error {
-	traceID := ctx.Value(middleware.TraceIDKey)
+	ctx = context.WithValue(ctx, constants.Phase, constants.ConsolidatePhase)
+
+	s.logger.Info("Start", "phase", constants.ConsolidatePhase)
 
 	now := time.Now()
-
-	s.logger.Printf("TraceID: %s Start consolidate phase\n", traceID)
 
 	auctionsToUpdate := NewAuctionLinkSet()
 
@@ -574,16 +601,18 @@ func (s *Service) ConsolidateAuctions(ctx context.Context) error {
 	}
 
 	if auctionsToUpdate.IsEmpty() {
-		s.logger.Printf("TraceID: %s Finish consolidate phase in: %s\n", traceID, time.Since(now))
+		s.logger.Info("Finish phase", "phase", constants.ConsolidatePhase, "duration", time.Since(now))
 
 		return nil
 	}
 
-	if err := s.scrapAuctionDetails(auctionsToUpdate); err != nil {
+	if err := s.scrapAuctionDetails(ctx, auctionsToUpdate); err != nil {
+		s.logger.Info("Finish phase", "phase", constants.ConsolidatePhase, "duration", time.Since(now))
+
 		return eris.Wrap(err, "Failed to consolidate auctions")
 	}
 
-	s.logger.Printf("TraceID: %s Finish consolidate phase in: %s\n", traceID, time.Since(now))
+	s.logger.Info("Finish phase", "phase", constants.ConsolidatePhase, "duration", time.Since(now))
 
 	return nil
 }

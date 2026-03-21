@@ -57,7 +57,10 @@ const (
 	TibiaCoinEuroEquivalence    = 0.04
 	MaxLongTailRefreshAllowance = 50
 	GRoutineID                  = "GRoutineID"
+	Phase                       = "PHASE"
 	ScrapPhase                  = "SCRAP"
+	WatchPhase                  = "WATCH"
+	ConsolidatePhase            = "CONSOLIDATE"
 )
 
 // Errors
