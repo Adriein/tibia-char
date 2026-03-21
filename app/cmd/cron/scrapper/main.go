@@ -3,12 +3,14 @@ package main
 import (
 	"context"
 	"log"
+	"log/slog"
 	"os"
 	"time"
 
 	"github.com/adriein/tibia-char/internal"
 	"github.com/adriein/tibia-char/internal/auction"
 	"github.com/adriein/tibia-char/internal/currency"
+	"github.com/adriein/tibia-char/pkg/constants"
 	"github.com/adriein/tibia-char/pkg/helper"
 	"github.com/adriein/tibia-char/pkg/middleware"
 	"github.com/adriein/tibia-char/pkg/vendor"
@@ -19,7 +21,29 @@ import (
 func main() {
 	app := internal.NewApp()
 
-	logger := log.New(os.Stderr, "[Scrapper Cron] ", log.LstdFlags|log.LUTC)
+	traceID := helper.TraceID()
+
+	ctx := context.WithValue(context.Background(), middleware.TraceIDKey, traceID)
+
+	opts := &slog.HandlerOptions{
+		ReplaceAttr: func(groups []string, attr slog.Attr) slog.Attr {
+			if attr.Key == slog.TimeKey {
+				formatted := attr.Value.Time().UTC().Format(time.DateTime)
+
+				return slog.String(slog.TimeKey, formatted)
+			}
+
+			return attr
+		},
+	}
+
+	var logger *slog.Logger
+
+	if os.Getenv(constants.Env) == constants.DEV {
+		logger = slog.New(slog.NewTextHandler(os.Stdout, opts)).With("source", "SCRAPPER", "trace_id", traceID)
+	} else {
+		logger = slog.New(slog.NewJSONHandler(os.Stdout, opts)).With("source", "SCRAPPER", "trace_id", traceID)
+	}
 
 	auctionRepository := auction.NewPgAuctionRepository(app.Database)
 	worldRepository := auction.NewPgWorldRepository(app.Database)
@@ -33,9 +57,7 @@ func main() {
 
 	mapper := auction.NewMapper(worldRepository)
 
-	service := auction.NewService(tibiaAPI, auctionRepository, worldRepository, currencyRepository, aggAuctionRepository, mapper, parserFactory, scrapperFactory, logger)
-
-	ctx := context.WithValue(context.Background(), middleware.TraceIDKey, helper.TraceID())
+	service := auction.NewService(tibiaAPI, auctionRepository, worldRepository, currencyRepository, aggAuctionRepository, mapper, parserFactory, scrapperFactory, log.New(os.Stderr, "[Scrapper Cron] ", log.LstdFlags|log.LUTC), logger)
 
 	for true {
 		err := service.ScrapperOrchestrator(ctx)

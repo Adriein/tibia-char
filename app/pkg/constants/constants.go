@@ -11,6 +11,11 @@ const (
 	Production       = "PRODUCTION"
 )
 
+const (
+	DEV  = "dev"
+	PROD = "prod"
+)
+
 // Tibia Char
 
 const (
@@ -47,11 +52,12 @@ const (
 )
 
 const (
-	TibiaOfficialWebsite = "www.tibia.com"
-	IncomingTimeFormat = "20060102150405"
-	TibiaCoinEuroEquivalence = 0.04
+	TibiaOfficialWebsite        = "www.tibia.com"
+	IncomingTimeFormat          = "20060102150405"
+	TibiaCoinEuroEquivalence    = 0.04
 	MaxLongTailRefreshAllowance = 50
-	GRoutineID = "GRoutineID"
+	GRoutineID                  = "GRoutineID"
+	ScrapPhase                  = "SCRAP"
 )
 
 // Errors

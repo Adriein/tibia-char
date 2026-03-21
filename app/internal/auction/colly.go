@@ -51,7 +51,9 @@ func (l *TibiaCharCollyLogDebugger) Event(e *debug.Event) {
 type CollyFactory struct{}
 
 func (cf *CollyFactory) CreateScrapper(prefix string) *CollyScrapper {
-	return NewScrapper(WithDebugger(prefix))
+	//TODO: this should work with a flag
+	//return NewScrapper(WithDebugger(prefix))
+	return NewScrapper()
 }
 
 type CollyScrapper struct {

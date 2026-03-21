@@ -2,12 +2,15 @@ package auction
 
 import (
 	"log"
+	"log/slog"
 	"net/http"
 	"os"
 	"strconv"
+	"time"
 
 	"github.com/adriein/tibia-char/internal"
 	"github.com/adriein/tibia-char/internal/currency"
+	"github.com/adriein/tibia-char/pkg/constants"
 	"github.com/adriein/tibia-char/pkg/middleware"
 	"github.com/adriein/tibia-char/pkg/vendor"
 	"github.com/gin-gonic/gin"
@@ -22,6 +25,26 @@ type Controller struct {
 func NewController(app *internal.App) *Controller {
 	logger := log.New(os.Stderr, "[Auction] ", log.LstdFlags|log.LUTC)
 
+	opts := &slog.HandlerOptions{
+		ReplaceAttr: func(groups []string, attr slog.Attr) slog.Attr {
+			if attr.Key == slog.TimeKey {
+				formatted := attr.Value.Time().UTC().Format(time.DateTime)
+
+				return slog.String(slog.TimeKey, formatted)
+			}
+
+			return attr
+		},
+	}
+
+	var l *slog.Logger
+
+	if os.Getenv(constants.Env) == constants.DEV {
+		l = slog.New(slog.NewTextHandler(os.Stdout, opts))
+	} else {
+		l = slog.New(slog.NewJSONHandler(os.Stdout, opts))
+	}
+
 	auctionRepository := NewPgAuctionRepository(app.Database)
 	worldRepository := NewPgWorldRepository(app.Database)
 	currencyRepository := currency.NewPgCurrencyRepository(app.Database)
@@ -34,7 +57,7 @@ func NewController(app *internal.App) *Controller {
 
 	mapper := NewMapper(worldRepository)
 
-	service := NewService(tibiaAPI, auctionRepository, worldRepository, currencyRepository, aggAuctionRepository, mapper, parserFactory, scrapperFactory, logger)
+	service := NewService(tibiaAPI, auctionRepository, worldRepository, currencyRepository, aggAuctionRepository, mapper, parserFactory, scrapperFactory, logger, l)
 
 	return &Controller{
 		service: service,
