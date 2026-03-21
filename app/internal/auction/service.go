@@ -551,7 +551,7 @@ func (s *Service) WatchActiveAuctions(ctx context.Context) error {
 			}
 		}
 
-		s.logger.Info("Added active auctions for long tail", "phase", constants.WatchPhase, "policy", "total", auctionAddedCounter)
+		s.logger.Info("Added active auctions for long tail", "phase", constants.WatchPhase, "total", auctionAddedCounter)
 	}
 
 	if auctionsToUpdate.IsEmpty() {
