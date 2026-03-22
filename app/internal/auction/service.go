@@ -416,7 +416,7 @@ func (s *Service) scrapAuctionDetail(ctx context.Context, g *errgroup.Group, fai
 				}
 
 				if existingAuction != nil && auction.IsEqual(existingAuction) {
-					if auction.ShouldBeArchived() {
+					if auction.ShouldBeArchived(existingAuction) {
 						s.auctionRepository.DeactivateAuctionRecord(ctx, auction.AuctionID)
 
 						s.notifyStatus(ctx, totalWorkload, &workDoneCounter)

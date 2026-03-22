@@ -367,8 +367,8 @@ func (a *Auction) IsEqual(other *Auction) bool {
 		a.Stage == other.Stage
 }
 
-func (a *Auction) ShouldBeArchived() bool {
-	return a.Status == enums.RecordableActive && time.Now().After(a.AuctionEnd)
+func (a *Auction) ShouldBeArchived(other *Auction) bool {
+	return other.Status == enums.RecordableActive && time.Now().After(a.AuctionEnd)
 }
 
 type PaginatedAuctions struct {
