@@ -418,7 +418,8 @@ func (a *Auction) CalculateFlags(stats *AggAuctionStats) {
 func (a *Auction) IsEqual(other *Auction) bool {
 	return a.AuctionEnd.Equal(other.AuctionEnd) &&
 		a.Bid == other.Bid &&
-		a.TibiaAuctionLink == other.TibiaAuctionLink
+		a.TibiaAuctionLink == other.TibiaAuctionLink &&
+		a.Stage == other.Stage
 }
 
 type PaginatedAuctions struct {
