@@ -217,13 +217,13 @@ func (s *Service) ScrapBazaar(ctx context.Context) error {
 	auctionLinkSet, err := s.scrapAuctionLinks(worlds)
 
 	if err != nil {
-		s.logger.Info("Finish with error", "phase", constants.ScrapPhase, "duration", time.Since(now))
+		s.logger.Error("Finish with error", "phase", constants.ScrapPhase, "duration", time.Since(now))
 
 		return err
 	}
 
 	if err := s.scrapAuctionDetails(ctx, auctionLinkSet); err != nil {
-		s.logger.Info("Finish with error", "phase", constants.ScrapPhase, "duration", time.Since(now))
+		s.logger.Error("Finish with error", "phase", constants.ScrapPhase, "duration", time.Since(now))
 
 		return err
 	}
@@ -400,9 +400,27 @@ func (s *Service) scrapAuctionDetail(ctx context.Context, g *errgroup.Group, fai
 				if err != nil {
 					s.notifyStatus(ctx, totalWorkload, &workDoneCounter)
 
-					s.logger.Info("Failed auction detail scrapping", "phase", phase, "routine_id", goroutineID, "duration", time.Since(start))
+					s.logger.Error("Failed auction detail scrapping", "phase", phase, "routine_id", goroutineID, "duration", time.Since(start))
 
 					return eris.Wrapf(err, "Error mapping from DTO auctionId %d", auctionId)
+				}
+
+				existingAuction, err := s.auctionRepository.GetAuctionByAuctionID(ctx, auction.AuctionID)
+
+				if err != nil {
+					s.notifyStatus(ctx, totalWorkload, &workDoneCounter)
+
+					s.logger.Error("Failed auction detail scrapping", "phase", phase, "routine_id", goroutineID, "duration", time.Since(start))
+
+					return eris.Wrapf(err, "Error getting existing auction for auctionId %d", auctionId)
+				}
+
+				if existingAuction != nil && auction.IsEqual(existingAuction) {
+					s.notifyStatus(ctx, totalWorkload, &workDoneCounter)
+
+					s.logger.Info("Skipping auction save, no significant difference detected", "phase", phase, "routine_id", goroutineID, "duration", time.Since(start))
+
+					return nil
 				}
 
 				stats, err := s.aggAuctionRepository.GetByKey(auction.SubsetKey())
@@ -412,7 +430,7 @@ func (s *Service) scrapAuctionDetail(ctx context.Context, g *errgroup.Group, fai
 						if err := s.auctionRepository.Save(auction); err != nil {
 							s.notifyStatus(ctx, totalWorkload, &workDoneCounter)
 
-							s.logger.Info("Failed auction detail scrapping", "phase", phase, "routine_id", goroutineID, "duration", time.Since(start))
+							s.logger.Error("Failed auction detail scrapping", "phase", phase, "routine_id", goroutineID, "duration", time.Since(start))
 
 							//TODO: all the return errors inside this go routine are being ignored
 							return eris.Wrapf(err, "Error saving to DB auctionId %d", auctionId)
@@ -420,19 +438,20 @@ func (s *Service) scrapAuctionDetail(ctx context.Context, g *errgroup.Group, fai
 
 						s.notifyStatus(ctx, totalWorkload, &workDoneCounter)
 
-						s.logger.Info("Failed auction detail scrapping", "phase", phase, "routine_id", goroutineID, "duration", time.Since(start))
+						s.logger.Error("Failed auction detail scrapping", "phase", phase, "routine_id", goroutineID, "duration", time.Since(start))
 
 						return nil
 					}
+
+					return eris.Wrap(err, "Failed getting stats")
 				}
 
 				auction.CalculateFlags(stats)
 
-				//TODO: only save on a difference detected otherwise skip
 				if err := s.auctionRepository.Save(auction); err != nil {
 					s.notifyStatus(ctx, totalWorkload, &workDoneCounter)
 
-					s.logger.Info("Failed auction detail scrapping", "phase", phase, "routine_id", goroutineID, "duration", time.Since(start))
+					s.logger.Error("Failed auction detail scrapping", "phase", phase, "routine_id", goroutineID, "duration", time.Since(start))
 
 					//TODO: all the return errors inside this go routine are being ignored
 					return eris.Wrapf(err, "Error saving to DB auctionId %d", auctionId)

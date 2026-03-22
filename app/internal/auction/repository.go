@@ -133,6 +133,7 @@ type AuctionRepository interface {
 	GetAuctionsWithFilter(ctx context.Context, filter *AuctionFilter) ([]*Auction, error)
 	GetAuctionsPendingToConsolidate(ctx context.Context) ([]*Auction, error)
 	GetHistoricAuctionPrices(ctx context.Context) ([]*Auction, error)
+	GetAuctionByAuctionID(ctx context.Context, auctionID int) (*Auction, error)
 	CountActiveAuctions(ctx context.Context) (int, error)
 }
 
@@ -1339,6 +1340,307 @@ func (r *PgAuctionRepository) GetHistoricAuctionPrices(ctx context.Context) ([]*
 	}
 
 	return result, nil
+}
+
+func (r *PgAuctionRepository) GetAuctionByAuctionID(ctx context.Context, auctionID int) (*Auction, error) {
+	query := `
+		SELECT
+			a.ta_id,
+			a.ta_auction_id,
+			a.ta_tibia_auction_link,
+			a.ta_img,
+			a.ta_char_name,
+			a.ta_char_level,
+			v.*,
+			g.*,
+			w.*,
+			ts.*,
+			a.ta_world_transfer,
+			a.ta_boss_points,
+			a.ta_charm_expansion,
+			a.ta_charm_points,
+			a.ta_task_expansion,
+			a.ta_current_bid,
+			a.ta_current_bid_fiat,
+			a.ta_current_bid_currency,
+			a.ta_auction_stage,
+			a.ta_auction_flags,
+			a.ta_auction_start,
+			a.ta_auction_end,
+			tar.tar_status,
+			tar.tar_date_add,
+			tar.tar_date_upd
+		FROM
+			tc_auction a
+		INNER JOIN
+			tc_vocation v ON a.ta_char_vocation = v.tv_id
+		INNER JOIN
+			tc_gender g ON a.ta_char_gender = g.tg_id
+		INNER JOIN
+			tc_world w ON a.ta_char_world = w.tw_id
+		INNER JOIN
+			tc_auction_recording tar ON a.ta_id = tar.tar_recordable_id
+		INNER JOIN
+			tc_skills ts ON a.ta_auction_id = ts.ts_auction_id
+		WHERE
+			a.ta_auction_id = $1;
+	`
+
+	ctxTimeout, cancel := context.WithTimeout(ctx, time.Second*10)
+	defer cancel()
+
+	var (
+		auction         Auction
+		vocation        Vocation
+		gender          Gender
+		world           World
+		skills          Skills
+		battleEyeString string
+		statusString    string
+	)
+
+	err := r.connection.QueryRowContext(ctxTimeout, query, auctionID).Scan(
+		&auction.ID,
+		&auction.AuctionID,
+		&auction.TibiaAuctionLink,
+		&auction.Img,
+		&auction.CharName,
+		&auction.CharLevel,
+		&vocation.Id,
+		&vocation.Name,
+		&gender.Id,
+		&gender.Name,
+		&world.Id,
+		&world.Name,
+		&world.Location,
+		&battleEyeString,
+		&world.Pvp,
+		&skills.AuctionID,
+		&skills.Axe,
+		&skills.Club,
+		&skills.Distance,
+		&skills.Fishing,
+		&skills.Fist,
+		&skills.MagicLevel,
+		&skills.Shielding,
+		&skills.Sword,
+		&auction.WorldTransfer,
+		&auction.BossPoints,
+		&auction.CharmExpansion,
+		&auction.CharmPoints,
+		&auction.TaskExpansion,
+		&auction.Bid,
+		&auction.BidFiat,
+		&auction.BidCurrency,
+		&auction.Stage,
+		&auction.Flag,
+		&auction.AuctionStart,
+		&auction.AuctionEnd,
+		&statusString,
+		&auction.DateAdd,
+		&auction.DateUpd,
+	)
+
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, nil // No auction found with the given ID
+		}
+		return nil, eris.Wrap(err, "Failed to query auction by ID")
+	}
+
+	status, err := enums.GetAuctionRecordableStatusFromString(statusString)
+	if err != nil {
+		return nil, eris.Wrap(err, "Failed to parse auction status")
+	}
+
+	battleEyeEnum, err := enums.GetBattleEyeFromString(battleEyeString)
+	if err != nil {
+		return nil, eris.Wrap(err, "Failed parsing Battle Eye")
+	}
+
+	auction.Status = status
+	auction.CharVocation = &vocation
+	auction.CharGender = &gender
+	world.BattleEye = battleEyeEnum
+	auction.CharWorld = &world
+	auction.Skills = &skills
+	auction.Charms = make([]*Charm, 0)
+	auction.FeaturedItems = make([]*FeaturedItem, 0)
+	auction.Imbuements = make([]*Imbuement, 0)
+	auction.Quests = make([]*Quest, 0)
+	auction.BidRegistry = make([]*BidRegistry, 0)
+
+	featuredItemsQuery := `
+		SELECT
+			tfi.tfi_id,
+			tfi.tfi_auction_id,
+			tfi.tfi_item_id
+		FROM
+			tc_featured_items tfi
+		WHERE
+			tfi.tfi_auction_id = $1;
+	`
+	featuredItemsRows, err := r.connection.QueryContext(ctxTimeout, featuredItemsQuery, auctionID)
+
+	if err != nil {
+		return nil, eris.Wrap(err, "Failed to query featured items for single auction")
+	}
+
+	defer featuredItemsRows.Close()
+
+	for featuredItemsRows.Next() {
+		var item FeaturedItem
+
+		if err := featuredItemsRows.Scan(&item.ID, &item.AuctionID, &item.ItemID); err != nil {
+			return nil, eris.Wrap(err, "Failed to scan featured item for single auction")
+		}
+
+		auction.FeaturedItems = append(auction.FeaturedItems, &item)
+	}
+
+	if err = featuredItemsRows.Err(); err != nil {
+		return nil, eris.Wrap(err, "Failed iterating featured item rows for single auction")
+	}
+
+	imbuementsQuery := `
+		SELECT
+			tai.tai_auction_id,
+			ti.ti_id,
+			ti.ti_name
+		FROM
+			tc_auction_imbuements tai
+		INNER JOIN
+			tc_imbuements ti ON tai.tai_imbuement_id = ti.ti_id
+		WHERE
+			tai.tai_auction_id = $1;
+	`
+	imbuementRows, err := r.connection.QueryContext(ctxTimeout, imbuementsQuery, auctionID)
+
+	if err != nil {
+		return nil, eris.Wrap(err, "Failed to query imbuements for single auction")
+	}
+
+	defer imbuementRows.Close()
+
+	for imbuementRows.Next() {
+		var imbuement Imbuement
+
+		var scannedAuctionID int
+		if err := imbuementRows.Scan(&scannedAuctionID, &imbuement.ID, &imbuement.Name); err != nil {
+			return nil, eris.Wrap(err, "Failed to scan imbuement for single auction")
+		}
+
+		auction.Imbuements = append(auction.Imbuements, &imbuement)
+	}
+
+	if err = imbuementRows.Err(); err != nil {
+		return nil, eris.Wrap(err, "Failed iterating imbuement rows for single auction")
+	}
+
+	charmsQuery := `
+		SELECT
+			tac.tac_auction_id,
+			tac.tac_charm_id,
+			tac.tac_grade,
+			tc.tc_name,
+			tc.tc_type
+		FROM
+			tc_auction_charms tac
+		INNER JOIN
+			tc_charms tc ON tac.tac_charm_id = tc.tc_id
+		WHERE
+			tac.tac_auction_id = $1;
+	`
+	charmsRows, err := r.connection.QueryContext(ctxTimeout, charmsQuery, auctionID)
+	if err != nil {
+		return nil, eris.Wrap(err, "Failed to query charms for single auction")
+	}
+	defer charmsRows.Close()
+
+	for charmsRows.Next() {
+		var charm Charm
+
+		var scannedAuctionID int
+
+		if err := charmsRows.Scan(&scannedAuctionID, &charm.ID, &charm.Grade, &charm.Name, &charm.Type); err != nil {
+			return nil, eris.Wrap(err, "Failed to scan charm for single auction")
+		}
+		auction.Charms = append(auction.Charms, &charm)
+	}
+	if err = charmsRows.Err(); err != nil {
+		return nil, eris.Wrap(err, "Failed iterating charms rows for single auction")
+	}
+
+	questsQuery := `
+		SELECT
+			taq.taq_auction_id,
+			taq.taq_quest_id,
+			tq.tq_name
+		FROM
+			tc_auction_quests taq
+		INNER JOIN
+			tc_quests tq ON taq.taq_quest_id = tq.tq_id
+		WHERE
+			taq.taq_auction_id = $1;
+	`
+	questsRows, err := r.connection.QueryContext(ctxTimeout, questsQuery, auctionID)
+
+	if err != nil {
+		return nil, eris.Wrap(err, "Failed to query quests for single auction")
+	}
+
+	defer questsRows.Close()
+
+	for questsRows.Next() {
+		var quest Quest
+
+		var scannedAuctionID int
+
+		if err := questsRows.Scan(&scannedAuctionID, &quest.ID, &quest.Name); err != nil {
+			return nil, eris.Wrap(err, "Failed to scan quest for single auction")
+		}
+
+		auction.Quests = append(auction.Quests, &quest)
+	}
+
+	if err = questsRows.Err(); err != nil {
+		return nil, eris.Wrap(err, "Failed iterating quests rows for single auction")
+	}
+
+	bidRegistryQuery := `
+		SELECT
+			ta_current_bid,
+			ta_date_add
+		FROM
+			tc_auction
+		WHERE
+			ta_auction_id = $1
+		ORDER BY
+			ta_date_add ASC;
+	`
+	bidRegistryRows, err := r.connection.QueryContext(ctxTimeout, bidRegistryQuery, auctionID)
+
+	if err != nil {
+		return nil, eris.Wrap(err, "Failed to query bid registry for single auction")
+	}
+
+	defer bidRegistryRows.Close()
+
+	for bidRegistryRows.Next() {
+		var registry BidRegistry
+
+		if err := bidRegistryRows.Scan(&registry.Amount, &registry.DateAdd); err != nil {
+			return nil, eris.Wrap(err, "Failed to scan bid registry for single auction")
+		}
+
+		auction.BidRegistry = append(auction.BidRegistry, &registry)
+	}
+
+	if err = bidRegistryRows.Err(); err != nil {
+		return nil, eris.Wrap(err, "Failed iterating bid registry rows for single auction")
+	}
+
+	return &auction, nil
 }
 
 func (r *PgAuctionRepository) CountActiveAuctions(ctx context.Context) (int, error) {

@@ -415,6 +415,12 @@ func (a *Auction) CalculateFlags(stats *AggAuctionStats) {
 	}
 }
 
+func (a *Auction) IsEqual(other *Auction) bool {
+	return a.AuctionEnd.Equal(other.AuctionEnd) &&
+		a.Bid == other.Bid &&
+		a.TibiaAuctionLink == other.TibiaAuctionLink
+}
+
 type PaginatedAuctions struct {
 	ViewModels []*AuctionViewModel
 	TotalCount int
