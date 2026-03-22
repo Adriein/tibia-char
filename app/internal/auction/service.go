@@ -428,6 +428,7 @@ func (s *Service) scrapAuctionDetail(ctx context.Context, g *errgroup.Group, fai
 
 				auction.CalculateFlags(stats)
 
+				//TODO: only save on a difference detected otherwise skip
 				if err := s.auctionRepository.Save(auction); err != nil {
 					s.notifyStatus(ctx, totalWorkload, &workDoneCounter)
 

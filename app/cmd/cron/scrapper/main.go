@@ -21,30 +21,6 @@ import (
 func main() {
 	app := internal.NewApp()
 
-	traceID := helper.TraceID()
-
-	ctx := context.WithValue(context.Background(), middleware.TraceIDKey, traceID)
-
-	opts := &slog.HandlerOptions{
-		ReplaceAttr: func(groups []string, attr slog.Attr) slog.Attr {
-			if attr.Key == slog.TimeKey {
-				formatted := attr.Value.Time().UTC().Format(time.DateTime)
-
-				return slog.String(slog.TimeKey, formatted)
-			}
-
-			return attr
-		},
-	}
-
-	var logger *slog.Logger
-
-	if os.Getenv(constants.Env) == constants.DEV {
-		logger = slog.New(slog.NewTextHandler(os.Stdout, opts)).With("source", "SCRAPPER", "trace_id", traceID)
-	} else {
-		logger = slog.New(slog.NewJSONHandler(os.Stdout, opts)).With("source", "SCRAPPER", "trace_id", traceID)
-	}
-
 	auctionRepository := auction.NewPgAuctionRepository(app.Database)
 	worldRepository := auction.NewPgWorldRepository(app.Database)
 	currencyRepository := currency.NewPgCurrencyRepository(app.Database)
@@ -57,9 +33,33 @@ func main() {
 
 	mapper := auction.NewMapper(worldRepository)
 
-	service := auction.NewService(tibiaAPI, auctionRepository, worldRepository, currencyRepository, aggAuctionRepository, mapper, parserFactory, scrapperFactory, logger)
-
 	for true {
+		traceID := helper.TraceID()
+
+		ctx := context.WithValue(context.Background(), middleware.TraceIDKey, traceID)
+
+		opts := &slog.HandlerOptions{
+			ReplaceAttr: func(groups []string, attr slog.Attr) slog.Attr {
+				if attr.Key == slog.TimeKey {
+					formatted := attr.Value.Time().UTC().Format(time.DateTime)
+
+					return slog.String(slog.TimeKey, formatted)
+				}
+
+				return attr
+			},
+		}
+
+		var logger *slog.Logger
+
+		if os.Getenv(constants.Env) == constants.DEV {
+			logger = slog.New(slog.NewTextHandler(os.Stdout, opts)).With("source", "SCRAPPER", "trace_id", traceID)
+		} else {
+			logger = slog.New(slog.NewJSONHandler(os.Stdout, opts)).With("source", "SCRAPPER", "trace_id", traceID)
+		}
+
+		service := auction.NewService(tibiaAPI, auctionRepository, worldRepository, currencyRepository, aggAuctionRepository, mapper, parserFactory, scrapperFactory, logger)
+
 		err := service.ScrapperOrchestrator(ctx)
 
 		if err != nil {
