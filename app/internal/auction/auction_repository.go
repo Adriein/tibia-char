@@ -20,6 +20,8 @@ type AuctionRepository interface {
 	GetHistoricAuctionPrices(ctx context.Context) ([]*Auction, error)
 	GetAuctionByAuctionID(ctx context.Context, auctionID int) (*Auction, error)
 	CountActiveAuctions(ctx context.Context) (int, error)
+	DeactivateAuctionRecord(ctx context.Context, auctionID int) error
+	MarkAuctionAsUpdated(ctx context.Context, auctionID int) error
 }
 
 type PgAuctionRepository struct {
@@ -654,6 +656,8 @@ func (r *PgAuctionRepository) GetActiveAuctionsFinishingIn(ctx context.Context, 
 			tar.tar_status = 'active'
 		AND
 			a.ta_auction_end <= NOW() + make_interval(secs => $1)
+		AND
+			a.ta_auction_end >= NOW()
 		ORDER BY
 			a.ta_auction_end DESC
 		;
@@ -1547,4 +1551,49 @@ func (r *PgAuctionRepository) CountActiveAuctions(ctx context.Context) (int, err
 	}
 
 	return count, nil
+}
+
+func (r *PgAuctionRepository) DeactivateAuctionRecord(ctx context.Context, auctionID int) error {
+	//TODO: ensure the date upd gets on the correct timezone
+	query := `
+		UPDATE
+			tc_auction_recording
+		SET
+    		tar_date_upd = NOW(),
+    		tar_status = 'archived'
+		WHERE tar_auction_id = $1;
+	`
+
+	_, err := r.connection.Exec(
+		query,
+		auctionID,
+	)
+
+	if err != nil {
+		return eris.Wrap(err, "Failed deactivating auction record")
+	}
+
+	return nil
+}
+
+func (r *PgAuctionRepository) MarkAuctionAsUpdated(ctx context.Context, auctionID int) error {
+	//TODO: ensure the date upd gets on the correct timezone
+	query := `
+		UPDATE
+			tc_auction_recording
+		SET
+    		tar_date_upd = NOW()
+		WHERE tar_auction_id = $1;
+	`
+
+	_, err := r.connection.Exec(
+		query,
+		auctionID,
+	)
+
+	if err != nil {
+		return eris.Wrap(err, "Failed updating date upd of an auction record")
+	}
+
+	return nil
 }

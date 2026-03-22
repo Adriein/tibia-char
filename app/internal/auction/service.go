@@ -416,6 +416,18 @@ func (s *Service) scrapAuctionDetail(ctx context.Context, g *errgroup.Group, fai
 				}
 
 				if existingAuction != nil && auction.IsEqual(existingAuction) {
+					if auction.ShouldBeArchived() {
+						s.auctionRepository.DeactivateAuctionRecord(ctx, auction.AuctionID)
+
+						s.notifyStatus(ctx, totalWorkload, &workDoneCounter)
+
+						s.logger.Info("Auction deactivated", "phase", phase, "routine_id", goroutineID, "duration", time.Since(start))
+
+						return nil
+					}
+
+					s.auctionRepository.MarkAuctionAsUpdated(ctx, auction.AuctionID)
+
 					s.notifyStatus(ctx, totalWorkload, &workDoneCounter)
 
 					s.logger.Info("Skipping auction save, no significant difference detected", "phase", phase, "routine_id", goroutineID, "duration", time.Since(start))

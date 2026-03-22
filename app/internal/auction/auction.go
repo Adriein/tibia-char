@@ -367,6 +367,10 @@ func (a *Auction) IsEqual(other *Auction) bool {
 		a.Stage == other.Stage
 }
 
+func (a *Auction) ShouldBeArchived() bool {
+	return a.Status == enums.RecordableActive && time.Now().After(a.AuctionEnd)
+}
+
 type PaginatedAuctions struct {
 	ViewModels []*AuctionViewModel
 	TotalCount int
