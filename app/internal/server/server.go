@@ -11,8 +11,8 @@ import (
 	"github.com/rotisserie/eris"
 
 	"github.com/adriein/tibia-char/internal"
-	"github.com/adriein/tibia-char/internal/auction"
 	"github.com/adriein/tibia-char/internal/health"
+	"github.com/adriein/tibia-char/internal/web"
 	"github.com/adriein/tibia-char/pkg/middleware"
 	"github.com/adriein/tibia-char/pkg/vendor"
 )
@@ -61,8 +61,8 @@ func (t *TibiaChar) routeSetup() {
 	cwd, _ := os.Getwd()
 
 	//STATIC
-	t.gin.Static("/assets", fmt.Sprintf("%s/assets", cwd))
+	t.gin.Static("/ui/static", fmt.Sprintf("%s/ui/static", cwd))
 
 	//AUCTIONS
-	t.gin.GET("/index", auction.NewController(t.app).Get())
+	t.gin.GET("/index", web.NewController(t.app).Get())
 }

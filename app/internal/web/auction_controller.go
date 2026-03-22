@@ -1,4 +1,4 @@
-package auction
+package web
 
 import (
 	"log/slog"
@@ -8,15 +8,17 @@ import (
 	"time"
 
 	"github.com/adriein/tibia-char/internal"
+	"github.com/adriein/tibia-char/internal/auction"
 	"github.com/adriein/tibia-char/internal/currency"
 	"github.com/adriein/tibia-char/pkg/constants"
 	"github.com/adriein/tibia-char/pkg/vendor"
+	"github.com/adriein/tibia-char/ui/html"
 	"github.com/gin-gonic/gin"
 	"github.com/rotisserie/eris"
 )
 
 type Controller struct {
-	service *Service
+	service *auction.Service
 	logger  *slog.Logger
 }
 
@@ -41,19 +43,19 @@ func NewController(app *internal.App) *Controller {
 		logger = slog.New(slog.NewJSONHandler(os.Stdout, opts))
 	}
 
-	auctionRepository := NewPgAuctionRepository(app.Database)
-	worldRepository := NewPgWorldRepository(app.Database)
+	auctionRepository := auction.NewPgAuctionRepository(app.Database)
+	worldRepository := auction.NewPgWorldRepository(app.Database)
 	currencyRepository := currency.NewPgCurrencyRepository(app.Database)
-	aggAuctionRepository := NewPgAggAuctionRepository(app.Database)
+	aggAuctionRepository := auction.NewPgAggAuctionRepository(app.Database)
 
 	tibiaAPI := vendor.NewTibiaApi()
 
-	scrapperFactory := &CollyFactory{}
-	parserFactory := &HtmlParserFactory{}
+	scrapperFactory := &auction.CollyFactory{}
+	parserFactory := &auction.HtmlParserFactory{}
 
-	mapper := NewMapper(worldRepository)
+	mapper := auction.NewMapper(worldRepository)
 
-	service := NewService(tibiaAPI, auctionRepository, worldRepository, currencyRepository, aggAuctionRepository, mapper, parserFactory, scrapperFactory, logger)
+	service := auction.NewService(tibiaAPI, auctionRepository, worldRepository, currencyRepository, aggAuctionRepository, mapper, parserFactory, scrapperFactory, logger)
 
 	return &Controller{
 		service: service,
@@ -75,12 +77,12 @@ func (c *Controller) Get() gin.HandlerFunc {
 			c.logger.Error("Error getting auctions", "error", eris.ToString(err, true))
 		}
 
-		filter := &AuctionFilter{
-			Pagination: &FilterPagination{
+		filter := &auction.AuctionFilter{
+			Pagination: &auction.FilterPagination{
 				Limit:     qty,
 				Page:      pageNum - 1,
-				SortBy:    SortByEndTime,
-				SortOrder: SortOrderAsc,
+				SortBy:    auction.SortByEndTime,
+				SortOrder: auction.SortOrderAsc,
 			},
 		}
 
@@ -91,7 +93,7 @@ func (c *Controller) Get() gin.HandlerFunc {
 			c.logger.Error("Error getting auctions", "error", eris.ToString(err, true))
 		}
 
-		renderer := vendor.NewTemplRenderer(ctx, http.StatusOK, AuctionsView(page))
+		renderer := vendor.NewTemplRenderer(ctx, http.StatusOK, html.AuctionsView(page))
 
 		ctx.Render(http.StatusOK, renderer)
 	}

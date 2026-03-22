@@ -1,14 +1,15 @@
-package auction
+package html
 
 import (
 	"strings"
 	"fmt"
-  "time"
+  	"time"
 	"math"
 
 	"github.com/adriein/tibia-char/pkg/enums"
 	"github.com/adriein/tibia-char/pkg/helper/str"
 	"github.com/adriein/tibia-char/pkg/middleware"
+	"github.com/adriein/tibia-char/internal/auction"
 )
 
 func formatTimeAgo(duration time.Duration) string {
@@ -48,7 +49,7 @@ script initTimezone() {
     }
 }
 
-templ AuctionsView(page *PaginatedAuctions) {
+templ AuctionsView(page *auction.PaginatedAuctions) {
   <html>
 		<head>
 			@initTimezone()
@@ -58,8 +59,8 @@ templ AuctionsView(page *PaginatedAuctions) {
 
 			<title>Tibia Char</title>
 
-			<link rel="icon" type="image/x-icon" href="/assets/images/golden_helmet.ico">
-			<link rel="stylesheet" href="/assets/css/main.css">
+			<link rel="icon" type="image/x-icon" href="/ui/static/images/golden_helmet.ico">
+			<link rel="stylesheet" href="/ui/static/css/main.css">
 		</head>
 		<body>
 			<section>
@@ -96,7 +97,7 @@ templ SkillItem(name string, value int, imgSrc string, imgAlt string, threshold 
 	</div>
 }
 
-templ AuctionCard(viewModel *AuctionViewModel) {
+templ AuctionCard(viewModel *auction.AuctionViewModel) {
 	{{
 		auction := viewModel.Auction
 
@@ -169,7 +170,7 @@ templ AuctionCard(viewModel *AuctionViewModel) {
 			<div class="card__header-flags">
 				if auction.IsTrending() {
 				<div class="card__header-flag--trending">
-					<img class="card__header-flag-icon--trending" alt="hot fire elemental icon" src="/assets/images/fire_elemental_trending_icon.png"/>
+					<img class="card__header-flag-icon--trending" alt="hot fire elemental icon" src="/ui/static/images/fire_elemental_trending_icon.png"/>
 					<span class="card__header-flag-text--trending">Hot</span>
 				</div>
 				}
@@ -202,7 +203,7 @@ templ AuctionCard(viewModel *AuctionViewModel) {
 					<img
 						class="card__bid-country-flag"
 						alt="Country flag"
-						src={fmt.Sprintf("/assets/images/%s.png", str.CamelToSnake(strings.ReplaceAll(auction.CharWorld.Location, " ", "")))}
+						src={fmt.Sprintf("/ui/static/images/%s.png", str.CamelToSnake(strings.ReplaceAll(auction.CharWorld.Location, " ", "")))}
 					/>
 					<p>{auction.CharWorld.Name}</p>
 					if auction.WorldTransfer {
@@ -236,14 +237,14 @@ templ AuctionCard(viewModel *AuctionViewModel) {
 	}}
 	<div class="card__body">
 		<div class="card__body-skills-container">
-			@SkillItem("Axe", auction.Skills.Axe, "/assets/images/stonecutter_axe.png", "axe fighting", HighSkillThreshold)
-			@SkillItem("Club", auction.Skills.Club, "/assets/images/thunder_hammer.png", "club fighting", HighSkillThreshold)
-			@SkillItem("Distance", auction.Skills.Distance, "/assets/images/soulbleeder.png", "distance fighting", HighSkillThreshold)
-			@SkillItem("Fishing", auction.Skills.Fishing, "/assets/images/fishing_rod.png", "fishing", HighSkillThreshold)
-			@SkillItem("Fist", auction.Skills.Fist, "/assets/images/grand_sanguine_claws.png", "fist fighting", HighSkillThreshold)
-			@SkillItem("Magic Level", auction.Skills.MagicLevel, "/assets/images/spell_book.png", "magic level", HighSkillThreshold)
-			@SkillItem("Shielding", auction.Skills.Shielding, "/assets/images/demon_shield.png", "shielding", HighSkillThreshold)
-			@SkillItem("Sword", auction.Skills.Sword, "/assets/images/magic_sword.png", "sword fighting", HighSkillThreshold)
+			@SkillItem("Axe", auction.Skills.Axe, "/ui/static/images/stonecutter_axe.png", "axe fighting", HighSkillThreshold)
+			@SkillItem("Club", auction.Skills.Club, "/ui/static/images/thunder_hammer.png", "club fighting", HighSkillThreshold)
+			@SkillItem("Distance", auction.Skills.Distance, "/ui/static/images/soulbleeder.png", "distance fighting", HighSkillThreshold)
+			@SkillItem("Fishing", auction.Skills.Fishing, "/ui/static/images/fishing_rod.png", "fishing", HighSkillThreshold)
+			@SkillItem("Fist", auction.Skills.Fist, "/ui/static/images/grand_sanguine_claws.png", "fist fighting", HighSkillThreshold)
+			@SkillItem("Magic Level", auction.Skills.MagicLevel, "/ui/static/images/spell_book.png", "magic level", HighSkillThreshold)
+			@SkillItem("Shielding", auction.Skills.Shielding, "/ui/static/images/demon_shield.png", "shielding", HighSkillThreshold)
+			@SkillItem("Sword", auction.Skills.Sword, "/ui/static/images/magic_sword.png", "sword fighting", HighSkillThreshold)
 		</div>
 	</div>
 		<div class="card__featured-items">
@@ -274,17 +275,17 @@ templ AuctionCard(viewModel *AuctionViewModel) {
 				<span>{auction.CharmPoints}</span>
 			</div>
 			<div class="card__info-item">
-				<img alt="Imbuement icon" src="/assets/images/imbuement_icon.png"/>
+				<img alt="Imbuement icon" src="/ui/static/images/imbuement_icon.png"/>
 				<span>Imbuements:</span>
 				<span>{fmt.Sprintf("%d/%d", len(auction.Imbuements), MaxImbuements)}</span>
 			</div>
 			<div class="card__info-item">
-				<img alt="Bosstiary icon" src="/assets/images/bosstiary_icon.png"/>
+				<img alt="Bosstiary icon" src="/ui/static/images/bosstiary_icon.png"/>
 				<span>Boss points:</span>
 				<span>{auction.BossPoints}</span>
 			</div>
 			<div class="card__info-item">
-				<img alt="Quest log icon" src="/assets/images/quest_log_icon.png"/>
+				<img alt="Quest log icon" src="/ui/static/images/quest_log_icon.png"/>
 				<span>Quests:</span>
 				<span>{fmt.Sprintf("%d/%d", len(auction.Quests), MaxQuests)}</span>
 			</div>
@@ -300,7 +301,7 @@ templ AuctionCard(viewModel *AuctionViewModel) {
 	</div>
 }
 
-templ Auctions(page *PaginatedAuctions) {
+templ Auctions(page *auction.PaginatedAuctions) {
 	<div class="pagination pagination--auctions">
 		<span>Auctions {page.TotalCount}</span>
 		<div class="pagination__ctrl-container">
