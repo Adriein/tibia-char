@@ -340,7 +340,7 @@ func (p *AuctionHtmlParser) parseAuctionBody(e *colly.HTMLElement, dto *AuctionD
 				imgTitle := itemViewBoxCh.Attr("title")
 				imgLink := itemViewBoxCh.ChildAttr("img", "src")
 
-				dto.FeaturedItems = append(dto.FeaturedItems, &ImgDisplay{Name: imgTitle, Link: imgLink})
+				dto.FeaturedItems = append(dto.FeaturedItems, &ImgDisplayDTO{Name: imgTitle, Link: imgLink})
 			})
 
 		case "ShortAuctionData":
