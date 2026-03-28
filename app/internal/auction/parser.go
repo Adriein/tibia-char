@@ -269,6 +269,12 @@ func (p *AuctionHtmlParser) Parse(ctx context.Context, auctionId int, link strin
 		}
 	})
 
+	c.OnHTML("div[id=Outfits]", func(e *colly.HTMLElement) {
+		if err := p.parseOutfits(e, &dto); err != nil {
+			parseErr = eris.Wrap(err, "Error parsing outfits")
+		}
+	})
+
 	c.OnHTML("div[id=Imbuements]", func(e *colly.HTMLElement) {
 		if err := p.parseAuctionImbuements(e, &dto); err != nil {
 			parseErr = eris.Wrap(err, "Error parsing imbuements")
@@ -670,6 +676,19 @@ func (p *AuctionHtmlParser) parseAuctionQuests(e *colly.HTMLElement, dto *Auctio
 	}
 
 	return nil
+}
+
+func (p *AuctionHtmlParser) parseOutfits(e *colly.HTMLElement, dto *AuctionDTO) error {
+	var auctionGeneralErr error
+
+	outfitPages := e.DOM.Find("div[class=BlockPageNavigationRow]").Find("b").Eq(0).Find("span")
+
+	outfitPages.EachWithBreak(func(_ int, s *goquery.Selection) bool {
+		fmt.Println(s)
+		return true
+	})
+
+	return auctionGeneralErr
 }
 
 type ParserFactory interface {
