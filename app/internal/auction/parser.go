@@ -679,11 +679,11 @@ func (p *AuctionHtmlParser) parseAuctionQuests(e *colly.HTMLElement, dto *Auctio
 }
 
 func (p *AuctionHtmlParser) parseOutfits(e *colly.HTMLElement, dto *AuctionDTO) error {
-	var auctionGeneralErr error
+	var parseOutfitErr error
 
 	outfits := e.DOM.Find("div[class=BlockPage]")
 
-	outfitPages := e.DOM.Find("div[class=BlockPageNavigationRow]").Find("b").Eq(0).Find("span")
+	outfitPages := e.DOM.Find("div[class=BlockPageNavigationRow]").Find("b").Children()
 
 	outfitPages.EachWithBreak(func(_ int, pageSpan *goquery.Selection) bool {
 		if pageSpan.Children().Eq(0).Is("span") && pageSpan.Children().Eq(0).HasClass("CurrentPageLink") {
@@ -704,18 +704,18 @@ func (p *AuctionHtmlParser) parseOutfits(e *colly.HTMLElement, dto *AuctionDTO) 
 
 		c.OnError(func(r *colly.Response, err error) {
 			if r.StatusCode == http.StatusForbidden {
-				auctionGeneralErr = eris.Wrapf(RateLimitError, "Failed to fetch %s: status %d", r.Request.URL, r.StatusCode)
+				parseOutfitErr = eris.Wrapf(RateLimitError, "Failed to fetch %s: status %d", r.Request.URL, r.StatusCode)
 
 				return
 			}
 
-			auctionGeneralErr = eris.Wrapf(err, "Failed to fetch %s: status %d", r.Request.URL, r.StatusCode)
+			parseOutfitErr = eris.Wrapf(err, "Failed to fetch %s: status %d", r.Request.URL, r.StatusCode)
 		})
 
 		outfitPageLink, ok := pageSpan.Children().Eq(0).Attr("href")
 
 		if !ok {
-			//TODO: what to do here
+			return false
 		}
 
 		c.Visit(outfitPageLink)
@@ -723,7 +723,7 @@ func (p *AuctionHtmlParser) parseOutfits(e *colly.HTMLElement, dto *AuctionDTO) 
 		return true
 	})
 
-	return auctionGeneralErr
+	return parseOutfitErr
 }
 
 type ParserFactory interface {
