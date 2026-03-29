@@ -681,10 +681,45 @@ func (p *AuctionHtmlParser) parseAuctionQuests(e *colly.HTMLElement, dto *Auctio
 func (p *AuctionHtmlParser) parseOutfits(e *colly.HTMLElement, dto *AuctionDTO) error {
 	var auctionGeneralErr error
 
+	outfits := e.DOM.Find("div[class=BlockPage]")
+
 	outfitPages := e.DOM.Find("div[class=BlockPageNavigationRow]").Find("b").Eq(0).Find("span")
 
-	outfitPages.EachWithBreak(func(_ int, s *goquery.Selection) bool {
-		fmt.Println(s)
+	outfitPages.EachWithBreak(func(_ int, pageSpan *goquery.Selection) bool {
+		if pageSpan.Children().Eq(0).Is("span") && pageSpan.Children().Eq(0).HasClass("CurrentPageLink") {
+			outfits.Children().Each(func(_ int, outDiv *goquery.Selection) {
+				fmt.Println(outDiv.Attr("title"))
+			})
+
+			return true
+		}
+
+		c := p.collector
+
+		/*proxyAddr := ctx.Value(constants.ProxyAddr).(string)
+
+		if proxyAddr != constants.LocalProxy {
+			c.SetProxy(proxyAddr)
+		}*/
+
+		c.OnError(func(r *colly.Response, err error) {
+			if r.StatusCode == http.StatusForbidden {
+				auctionGeneralErr = eris.Wrapf(RateLimitError, "Failed to fetch %s: status %d", r.Request.URL, r.StatusCode)
+
+				return
+			}
+
+			auctionGeneralErr = eris.Wrapf(err, "Failed to fetch %s: status %d", r.Request.URL, r.StatusCode)
+		})
+
+		outfitPageLink, ok := pageSpan.Children().Eq(0).Attr("href")
+
+		if !ok {
+			//TODO: what to do here
+		}
+
+		c.Visit(outfitPageLink)
+
 		return true
 	})
 
