@@ -41,6 +41,11 @@ type ImgDisplayDTO struct {
 	Name string
 }
 
+type OutfitDTO struct {
+	Name   string
+	Addons int
+}
+
 type AuctionDTO struct {
 	AuctionId        int
 	Link             string
@@ -57,6 +62,7 @@ type AuctionDTO struct {
 	Charms           []*CharmDTO
 	Imbuements       []*ImbuementDTO
 	Quests           []*QuestDTO
+	Outfits          []*OutfitDTO
 	WorldTransfer    bool
 	BossPoints       int
 	Bid              int

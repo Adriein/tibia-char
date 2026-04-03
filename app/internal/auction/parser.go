@@ -218,7 +218,7 @@ func NewAuctionHtmlParser(c *colly.Collector) *AuctionHtmlParser {
 func (p *AuctionHtmlParser) Parse(ctx context.Context, auctionId int, link string) (*AuctionDTO, error) {
 	dto := AuctionDTO{
 		AuctionId:   auctionId,
-		Link:        fmt.Sprintf("https://www.tibia.com/charactertrade/?subtopic=currentcharactertrades&page=details&auctionid=%d", auctionId),
+		Link:        link,
 		Skills:      &SkillsDTO{},
 		CharmPoints: &CharmPointsDTO{},
 	}
@@ -271,11 +271,11 @@ func (p *AuctionHtmlParser) Parse(ctx context.Context, auctionId int, link strin
 		}
 	})
 
-	/*c.OnHTML("div[id=Outfits]", func(e *colly.HTMLElement) {
+	c.OnHTML("div[id=Outfits]", func(e *colly.HTMLElement) {
 		if err := p.parseOutfits(e, &dto); err != nil {
 			parseErr = eris.Wrap(err, "Error parsing outfits")
 		}
-	})*/
+	})
 
 	c.OnHTML("div[id=Imbuements]", func(e *colly.HTMLElement) {
 		if err := p.parseAuctionImbuements(e, &dto); err != nil {
@@ -682,8 +682,9 @@ func (p *AuctionHtmlParser) parseAuctionQuests(e *colly.HTMLElement, dto *Auctio
 
 func (p *AuctionHtmlParser) parseOutfits(e *colly.HTMLElement, dto *AuctionDTO) error {
 	var parseOutfitErr error
+	var outfits []*OutfitDTO
 
-	outfits := e.DOM.Find("div[class=BlockPage]")
+	outfitsDiv := e.DOM.Find("div[class=BlockPage]")
 
 	outfitPages := e.DOM.Find("div[class=BlockPageNavigationRow]").Find("b").Children()
 
@@ -693,8 +694,9 @@ func (p *AuctionHtmlParser) parseOutfits(e *colly.HTMLElement, dto *AuctionDTO) 
 
 	outfitPages.EachWithBreak(func(i int, pageSpan *goquery.Selection) bool {
 		if pageSpan.Children().Eq(0).Is("span") && pageSpan.Children().Eq(0).HasClass("CurrentPageLink") {
-			outfits.Children().Each(func(_ int, outDiv *goquery.Selection) {
-				fmt.Println(outDiv.Attr("title"))
+			outfitsDiv.Children().Each(func(_ int, outDiv *goquery.Selection) {
+				outfitDivTitle := outDiv.AttrOr("title", "")
+				outfits = append(outfits, p.extractOutfit(outfitDivTitle))
 			})
 
 			return true
@@ -731,25 +733,36 @@ func (p *AuctionHtmlParser) parseOutfits(e *colly.HTMLElement, dto *AuctionDTO) 
 		r.Headers.Set("X-Requested-With", "XMLHttpRequest")
 		r.Headers.Set("Accept", "*/*")
 
-		r.Headers.Set("Referer", "https://www.tibia.com/charactertrade/?subtopic=currentcharactertrades&page=details&auctionid=2114648")
+		r.Headers.Set("Referer", fmt.Sprintf("https://www.tibia.com/charactertrade/?subtopic=currentcharactertrades&page=details&auctionid=%d", dto.AuctionId))
 	})
 
 	c.OnResponse(func(r *colly.Response) {
-		type AjaxResponse struct {
-			Content string `json:"Data"`
+		type AjaxObject struct {
+			DataType string `json:"DataType"`
+			Data     string `json:"Data"`
+			Target   string `json:"Target"`
 		}
 
-		var data AjaxResponse
+		type AjaxResponse struct {
+			AjaxObjects []AjaxObject `json:"AjaxObjects"`
+		}
 
-		err := json.Unmarshal(r.Body, &data)
+		var ajaxRes AjaxResponse
+
+		err := json.Unmarshal(r.Body, &ajaxRes)
 
 		if err != nil {
 			parseOutfitErr = eris.Wrap(err, "Failed JSON unmarshall of ajax response")
 		}
 
 		re := regexp.MustCompile(`title="([^"]+)"`)
-		matches := re.FindAllStringSubmatch(data.Content, -1)
-		fmt.Println(matches)
+		matches := re.FindAllStringSubmatch(ajaxRes.AjaxObjects[0].Data, -1)
+
+		for _, match := range matches {
+			rawOutfitMatch := match[len(match)-1]
+
+			outfits = append(outfits, p.extractOutfit(rawOutfitMatch))
+		}
 	})
 
 	for _, ajax := range outfitAjaxLinks {
@@ -757,6 +770,22 @@ func (p *AuctionHtmlParser) parseOutfits(e *colly.HTMLElement, dto *AuctionDTO) 
 	}
 
 	return parseOutfitErr
+}
+
+func (p *AuctionHtmlParser) extractOutfit(rawOutfitInput string) *OutfitDTO {
+	baseRegex := regexp.MustCompile(`^([^\(]+?)\s*\((.*)\)`)
+	matches := baseRegex.FindStringSubmatch(rawOutfitInput)
+
+	name := strings.TrimSpace(matches[1])
+	addonContent := matches[2]
+
+	addonRegex := regexp.MustCompile(`addon \d+`)
+	addonsFound := addonRegex.FindAllString(addonContent, -1)
+
+	return &OutfitDTO{
+		Name:   name,
+		Addons: len(addonsFound),
+	}
 }
 
 type ParserFactory interface {
