@@ -313,15 +313,15 @@ func (r *PgAuctionRepository) Save(auction *Auction) error {
 
 	_, err = tx.Exec(
 		outfitsQuery,
-		auctionID,
-		names,
-		addons,
+		pq.Array(auctionID),
+		pq.Array(names),
+		pq.Array(addons),
 	)
 
 	if err != nil {
 		tx.Rollback()
 
-		return eris.Wrap(err, "Error in upsert on tc_skills")
+		return eris.Wrap(err, "Error in upsert on tc_outfits")
 	}
 
 	return tx.Commit()

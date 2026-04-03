@@ -682,7 +682,6 @@ func (p *AuctionHtmlParser) parseAuctionQuests(e *colly.HTMLElement, dto *Auctio
 
 func (p *AuctionHtmlParser) parseOutfits(e *colly.HTMLElement, dto *AuctionDTO) error {
 	var parseOutfitErr error
-	var outfits []*OutfitDTO
 
 	outfitsDiv := e.DOM.Find("div[class=BlockPage]")
 
@@ -696,7 +695,7 @@ func (p *AuctionHtmlParser) parseOutfits(e *colly.HTMLElement, dto *AuctionDTO) 
 		if pageSpan.Children().Eq(0).Is("span") && pageSpan.Children().Eq(0).HasClass("CurrentPageLink") {
 			outfitsDiv.Children().Each(func(_ int, outDiv *goquery.Selection) {
 				outfitDivTitle := outDiv.AttrOr("title", "")
-				outfits = append(outfits, p.extractOutfit(outfitDivTitle))
+				dto.Outfits = append(dto.Outfits, p.extractOutfit(outfitDivTitle))
 			})
 
 			return true
@@ -761,7 +760,7 @@ func (p *AuctionHtmlParser) parseOutfits(e *colly.HTMLElement, dto *AuctionDTO) 
 		for _, match := range matches {
 			rawOutfitMatch := match[len(match)-1]
 
-			outfits = append(outfits, p.extractOutfit(rawOutfitMatch))
+			dto.Outfits = append(dto.Outfits, p.extractOutfit(rawOutfitMatch))
 		}
 	})
 
