@@ -271,6 +271,12 @@ func (p *AuctionHtmlParser) Parse(ctx context.Context, auctionId int, link strin
 		}
 	})
 
+	c.OnHTML("div[id=Mounts]", func(e *colly.HTMLElement) {
+		if err := p.parseMounts(e, &dto); err != nil {
+			parseErr = eris.Wrap(err, "Error parsing mounts")
+		}
+	})
+
 	c.OnHTML("div[id=Outfits]", func(e *colly.HTMLElement) {
 		if err := p.parseOutfits(e, &dto); err != nil {
 			parseErr = eris.Wrap(err, "Error parsing outfits")
@@ -785,6 +791,101 @@ func (p *AuctionHtmlParser) extractOutfit(rawOutfitInput string) *OutfitDTO {
 		Name:   strings.ToLower(name),
 		Addons: len(addonsFound),
 	}
+}
+
+func (p *AuctionHtmlParser) parseMounts(e *colly.HTMLElement, dto *AuctionDTO) error {
+	var parseMountErr error
+
+	mountDiv := e.DOM.Find("div[class=BlockPage]")
+
+	mountPages := e.DOM.Find("div[class=BlockPageNavigationRow]").Find("b").Children()
+
+	totalPages := len(mountPages.Nodes)
+
+	if totalPages == 0 {
+		return nil
+	}
+
+	mountAjaxLinks := make([]string, totalPages-1)
+
+	mountPages.EachWithBreak(func(i int, pageSpan *goquery.Selection) bool {
+		if pageSpan.Children().Eq(0).Is("span") && pageSpan.Children().Eq(0).HasClass("CurrentPageLink") {
+			mountDiv.Children().Each(func(_ int, mouDiv *goquery.Selection) {
+				mountDivTitle := mouDiv.AttrOr("title", "")
+				dto.Mounts = append(dto.Mounts, &MountDTO{Name: mountDivTitle})
+			})
+
+			return true
+		}
+
+		mountPageLink, ok := pageSpan.Children().Eq(0).Attr("href")
+
+		if !ok {
+			return false
+		}
+
+		mountAjaxLinks[i-1] = mountPageLink
+
+		return true
+	})
+
+	if len(mountAjaxLinks) == 0 {
+		return parseMountErr
+	}
+
+	c := p.collector.Clone()
+
+	c.OnError(func(r *colly.Response, err error) {
+		if r.StatusCode == http.StatusForbidden {
+			parseMountErr = eris.Wrapf(RateLimitError, "Failed to fetch %s: status %d", r.Request.URL, r.StatusCode)
+
+			return
+		}
+
+		parseMountErr = eris.Wrapf(err, "Failed to fetch %s: status %d", r.Request.URL, r.StatusCode)
+	})
+
+	c.OnRequest(func(r *colly.Request) {
+		r.Headers.Set("X-Requested-With", "XMLHttpRequest")
+		r.Headers.Set("Accept", "*/*")
+
+		r.Headers.Set("Referer", fmt.Sprintf("https://www.tibia.com/charactertrade/?subtopic=currentcharactertrades&page=details&auctionid=%d", dto.AuctionId))
+	})
+
+	c.OnResponse(func(r *colly.Response) {
+		type AjaxObject struct {
+			DataType string `json:"DataType"`
+			Data     string `json:"Data"`
+			Target   string `json:"Target"`
+		}
+
+		type AjaxResponse struct {
+			AjaxObjects []AjaxObject `json:"AjaxObjects"`
+		}
+
+		var ajaxRes AjaxResponse
+
+		err := json.Unmarshal(r.Body, &ajaxRes)
+
+		if err != nil {
+			parseMountErr = eris.Wrap(err, "Failed JSON unmarshall of ajax response")
+		}
+
+		re := regexp.MustCompile(`title="([^"]+)"`)
+		matches := re.FindAllStringSubmatch(ajaxRes.AjaxObjects[0].Data, -1)
+
+		for _, match := range matches {
+			rawMountMatch := match[len(match)-1]
+
+			dto.Mounts = append(dto.Mounts, &MountDTO{Name: rawMountMatch})
+		}
+	})
+
+	for _, ajax := range mountAjaxLinks {
+		c.Visit(ajax)
+	}
+
+	return parseMountErr
 }
 
 type ParserFactory interface {

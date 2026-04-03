@@ -46,6 +46,10 @@ type OutfitDTO struct {
 	Addons int
 }
 
+type MountDTO struct {
+	Name string
+}
+
 type AuctionDTO struct {
 	AuctionId        int
 	Link             string
@@ -63,6 +67,7 @@ type AuctionDTO struct {
 	Imbuements       []*ImbuementDTO
 	Quests           []*QuestDTO
 	Outfits          []*OutfitDTO
+	Mounts           []*MountDTO
 	WorldTransfer    bool
 	BossPoints       int
 	Bid              int
