@@ -99,6 +99,12 @@ func (m *Mapper) FromDTO(dto *AuctionDTO) (*Auction, error) {
 		quests = append(quests, quest)
 	}
 
+	var outfits []*Outfit
+
+	for _, outfitDTO := range dto.Outfits {
+		outfits = append(outfits, &Outfit{Name: outfitDTO.Name, Addons: outfitDTO.Addons})
+	}
+
 	eurBidEquivalence := int(math.Round(float64(dto.Bid) * constants.TibiaCoinEuroEquivalence))
 
 	return &Auction{
@@ -136,6 +142,7 @@ func (m *Mapper) FromDTO(dto *AuctionDTO) (*Auction, error) {
 		},
 		Charms:     charms,
 		Quests:     quests,
+		Outfits:    outfits,
 		Imbuements: imbuements,
 		DateAdd:    time.Now(),
 		DateUpd:    time.Now(),

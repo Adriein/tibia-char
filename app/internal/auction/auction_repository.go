@@ -288,6 +288,42 @@ func (r *PgAuctionRepository) Save(auction *Auction) error {
 		return eris.Wrap(err, "Error in insert on tc_auction_quests")
 	}
 
+	outfitsQuery := `
+		INSERT INTO tc_outfits (
+			to_auction_id,
+			to_name,
+			to_addons
+		)
+		SELECT * FROM UNNEST($1::int[], $2::varchar[], $3::int[])
+        ON CONFLICT (to_auction_id, to_name) DO NOTHING
+		;
+	`
+
+	var (
+		auctionID []int
+		names     []string
+		addons    []int
+	)
+
+	for _, outfit := range auction.Outfits {
+		auctionID = append(auctionID, auction.AuctionID)
+		names = append(names, outfit.Name)
+		addons = append(addons, outfit.Addons)
+	}
+
+	_, err = tx.Exec(
+		outfitsQuery,
+		auctionID,
+		names,
+		addons,
+	)
+
+	if err != nil {
+		tx.Rollback()
+
+		return eris.Wrap(err, "Error in upsert on tc_skills")
+	}
+
 	return tx.Commit()
 }
 

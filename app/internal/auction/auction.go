@@ -246,6 +246,11 @@ type BidRegistry struct {
 	DateAdd time.Time
 }
 
+type Outfit struct {
+	Name   string
+	Addons int
+}
+
 type Auction struct {
 	ID               int64
 	AuctionID        int
@@ -262,6 +267,7 @@ type Auction struct {
 	Charms           []*Charm
 	Imbuements       []*Imbuement
 	Quests           []*Quest
+	Outfits          []*Outfit
 	WorldTransfer    bool
 	BossPoints       int
 	CharmExpansion   bool
