@@ -783,7 +783,7 @@ func (p *AuctionHtmlParser) extractOutfit(rawOutfitInput string) *OutfitDTO {
 	addonsFound := addonRegex.FindAllString(addonContent, -1)
 
 	return &OutfitDTO{
-		Name:   name,
+		Name:   strings.ToLower(name),
 		Addons: len(addonsFound),
 	}
 }
