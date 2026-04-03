@@ -2,10 +2,12 @@ package auction
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"math/rand"
 	"net/http"
 	"net/url"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -269,11 +271,11 @@ func (p *AuctionHtmlParser) Parse(ctx context.Context, auctionId int, link strin
 		}
 	})
 
-	c.OnHTML("div[id=Outfits]", func(e *colly.HTMLElement) {
+	/*c.OnHTML("div[id=Outfits]", func(e *colly.HTMLElement) {
 		if err := p.parseOutfits(e, &dto); err != nil {
 			parseErr = eris.Wrap(err, "Error parsing outfits")
 		}
-	})
+	})*/
 
 	c.OnHTML("div[id=Imbuements]", func(e *colly.HTMLElement) {
 		if err := p.parseAuctionImbuements(e, &dto); err != nil {
@@ -685,7 +687,11 @@ func (p *AuctionHtmlParser) parseOutfits(e *colly.HTMLElement, dto *AuctionDTO) 
 
 	outfitPages := e.DOM.Find("div[class=BlockPageNavigationRow]").Find("b").Children()
 
-	outfitPages.EachWithBreak(func(_ int, pageSpan *goquery.Selection) bool {
+	totalPages := len(outfitPages.Nodes)
+
+	outfitAjaxLinks := make([]string, totalPages-1)
+
+	outfitPages.EachWithBreak(func(i int, pageSpan *goquery.Selection) bool {
 		if pageSpan.Children().Eq(0).Is("span") && pageSpan.Children().Eq(0).HasClass("CurrentPageLink") {
 			outfits.Children().Each(func(_ int, outDiv *goquery.Selection) {
 				fmt.Println(outDiv.Attr("title"))
@@ -694,34 +700,61 @@ func (p *AuctionHtmlParser) parseOutfits(e *colly.HTMLElement, dto *AuctionDTO) 
 			return true
 		}
 
-		c := p.collector
-
-		/*proxyAddr := ctx.Value(constants.ProxyAddr).(string)
-
-		if proxyAddr != constants.LocalProxy {
-			c.SetProxy(proxyAddr)
-		}*/
-
-		c.OnError(func(r *colly.Response, err error) {
-			if r.StatusCode == http.StatusForbidden {
-				parseOutfitErr = eris.Wrapf(RateLimitError, "Failed to fetch %s: status %d", r.Request.URL, r.StatusCode)
-
-				return
-			}
-
-			parseOutfitErr = eris.Wrapf(err, "Failed to fetch %s: status %d", r.Request.URL, r.StatusCode)
-		})
-
 		outfitPageLink, ok := pageSpan.Children().Eq(0).Attr("href")
 
 		if !ok {
 			return false
 		}
 
-		c.Visit(outfitPageLink)
+		outfitAjaxLinks[i-1] = outfitPageLink
 
 		return true
 	})
+
+	if len(outfitAjaxLinks) == 0 {
+		return parseOutfitErr
+	}
+
+	c := p.collector.Clone()
+
+	c.OnError(func(r *colly.Response, err error) {
+		if r.StatusCode == http.StatusForbidden {
+			parseOutfitErr = eris.Wrapf(RateLimitError, "Failed to fetch %s: status %d", r.Request.URL, r.StatusCode)
+
+			return
+		}
+
+		parseOutfitErr = eris.Wrapf(err, "Failed to fetch %s: status %d", r.Request.URL, r.StatusCode)
+	})
+
+	c.OnRequest(func(r *colly.Request) {
+		r.Headers.Set("X-Requested-With", "XMLHttpRequest")
+		r.Headers.Set("Accept", "*/*")
+
+		r.Headers.Set("Referer", "https://www.tibia.com/charactertrade/?subtopic=currentcharactertrades&page=details&auctionid=2114648")
+	})
+
+	c.OnResponse(func(r *colly.Response) {
+		type AjaxResponse struct {
+			Content string `json:"Data"`
+		}
+
+		var data AjaxResponse
+
+		err := json.Unmarshal(r.Body, &data)
+
+		if err != nil {
+			parseOutfitErr = eris.Wrap(err, "Failed JSON unmarshall of ajax response")
+		}
+
+		re := regexp.MustCompile(`title="([^"]+)"`)
+		matches := re.FindAllStringSubmatch(data.Content, -1)
+		fmt.Println(matches)
+	})
+
+	for _, ajax := range outfitAjaxLinks {
+		c.Visit(ajax)
+	}
 
 	return parseOutfitErr
 }
