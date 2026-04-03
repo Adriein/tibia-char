@@ -75,7 +75,7 @@ func (s *Service) ScrapperOrchestrator(ctx context.Context) error {
 
 	now := time.Now().In(loc)
 
-	if now.Hour() >= 10 && now.Hour() <= 11 {
+	if now.Hour() >= 10 && now.Hour() <= 12 {
 		if err := s.ScrapBazaar(ctx); err != nil {
 			return err
 		}
@@ -386,7 +386,7 @@ func (s *Service) scrapAuctionDetail(ctx context.Context, g *errgroup.Group, fai
 						return eris.Wrapf(err, "Rate limit reached parsing auctionId %d", auctionId)
 					}
 
-					s.logger.Error(err.Error())
+					s.logger.Error(fmt.Sprintf("Failed auction detail scrapping: %s", eris.ToString(err, true)), "phase", phase, "routine_id", goroutineID, "auction_id", auctionId, "duration", time.Since(start))
 
 					failed.Set(auctionId, linkURL)
 
@@ -400,9 +400,9 @@ func (s *Service) scrapAuctionDetail(ctx context.Context, g *errgroup.Group, fai
 				if err != nil {
 					s.notifyStatus(ctx, totalWorkload, &workDoneCounter)
 
-					s.logger.Error("Failed auction detail scrapping", "phase", phase, "routine_id", goroutineID, "duration", time.Since(start))
+					s.logger.Error(fmt.Sprintf("Failed mapping DTO to auction: %s", eris.ToString(err, true)), "phase", phase, "routine_id", goroutineID, "auction_id", auctionId, "duration", time.Since(start))
 
-					return eris.Wrapf(err, "Error mapping from DTO auctionId %d", auctionId)
+					return nil
 				}
 
 				existingAuction, err := s.auctionRepository.GetAuctionByAuctionID(ctx, auction.AuctionID)
@@ -410,27 +410,39 @@ func (s *Service) scrapAuctionDetail(ctx context.Context, g *errgroup.Group, fai
 				if err != nil {
 					s.notifyStatus(ctx, totalWorkload, &workDoneCounter)
 
-					s.logger.Error("Failed auction detail scrapping", "phase", phase, "routine_id", goroutineID, "duration", time.Since(start))
+					s.logger.Error(fmt.Sprintf("Failed finding auction by auction ID: %s", eris.ToString(err, true)), "phase", phase, "routine_id", goroutineID, "auction_id", auctionId, "duration", time.Since(start))
 
-					return eris.Wrapf(err, "Error getting existing auction for auctionId %d", auctionId)
+					return nil
 				}
 
 				if existingAuction != nil && auction.IsEqual(existingAuction) {
 					if auction.ShouldBeArchived(existingAuction) {
-						s.auctionRepository.DeactivateAuctionRecord(ctx, auction.AuctionID)
+						if err := s.auctionRepository.DeactivateAuctionRecord(ctx, auction.AuctionID); err != nil {
+							s.logger.Error(fmt.Sprintf("Failed deactivating auction: %s", eris.ToString(err, true)), "phase", phase, "routine_id", goroutineID, "auction_id", auctionId, "duration", time.Since(start))
+
+							s.notifyStatus(ctx, totalWorkload, &workDoneCounter)
+
+							return nil
+						}
 
 						s.notifyStatus(ctx, totalWorkload, &workDoneCounter)
 
-						s.logger.Info("Auction deactivated", "phase", phase, "routine_id", goroutineID, "duration", time.Since(start))
+						s.logger.Info("Auction deactivated", "phase", phase, "routine_id", goroutineID, "auction_id", auctionId, "duration", time.Since(start))
 
 						return nil
 					}
 
-					s.auctionRepository.MarkAuctionAsUpdated(ctx, auction.AuctionID)
+					if err := s.auctionRepository.MarkAuctionAsUpdated(ctx, auction.AuctionID); err != nil {
+						s.logger.Error(fmt.Sprintf("Failed marking auction as updated: %s", eris.ToString(err, true)), "phase", phase, "routine_id", goroutineID, "auction_id", auctionId, "duration", time.Since(start))
+
+						s.notifyStatus(ctx, totalWorkload, &workDoneCounter)
+
+						return nil
+					}
 
 					s.notifyStatus(ctx, totalWorkload, &workDoneCounter)
 
-					s.logger.Info("Skipping auction save, no significant difference detected", "phase", phase, "routine_id", goroutineID, "duration", time.Since(start))
+					s.logger.Info("Skipping auction save, no significant difference detected", "phase", phase, "routine_id", goroutineID, "auction_id", auctionId, "duration", time.Since(start))
 
 					return nil
 				}
@@ -440,38 +452,38 @@ func (s *Service) scrapAuctionDetail(ctx context.Context, g *errgroup.Group, fai
 				if err != nil {
 					if errors.Is(err, ErrAggAuctionStatsNotFound) {
 						if err := s.auctionRepository.Save(auction); err != nil {
+							s.logger.Error(fmt.Sprintf("Failed saving auction: %s", eris.ToString(err, true)), "phase", phase, "routine_id", goroutineID, "auction_id", auctionId, "duration", time.Since(start))
+
 							s.notifyStatus(ctx, totalWorkload, &workDoneCounter)
 
-							s.logger.Error("Failed auction detail scrapping", "phase", phase, "routine_id", goroutineID, "duration", time.Since(start))
-
-							//TODO: all the return errors inside this go routine are being ignored
-							return eris.Wrapf(err, "Error saving to DB auctionId %d", auctionId)
+							return nil
 						}
 
 						s.notifyStatus(ctx, totalWorkload, &workDoneCounter)
 
-						s.logger.Error("Failed auction detail scrapping", "phase", phase, "routine_id", goroutineID, "duration", time.Since(start))
-
 						return nil
 					}
 
-					return eris.Wrap(err, "Failed getting stats")
+					s.logger.Error(fmt.Sprintf("Failed getting stats: %s", eris.ToString(err, true)), "phase", phase, "routine_id", goroutineID, "auction_id", auctionId, "duration", time.Since(start))
+
+					s.notifyStatus(ctx, totalWorkload, &workDoneCounter)
+
+					return nil
 				}
 
 				auction.CalculateFlags(stats)
 
 				if err := s.auctionRepository.Save(auction); err != nil {
+					s.logger.Error(fmt.Sprintf("Failed getting stats: %s", eris.ToString(err, true)), "phase", phase, "routine_id", goroutineID, "auction_id", auctionId, "duration", time.Since(start))
+
 					s.notifyStatus(ctx, totalWorkload, &workDoneCounter)
 
-					s.logger.Error("Failed auction detail scrapping", "phase", phase, "routine_id", goroutineID, "duration", time.Since(start))
-
-					//TODO: all the return errors inside this go routine are being ignored
-					return eris.Wrapf(err, "Error saving to DB auctionId %d", auctionId)
+					return nil
 				}
 
 				s.notifyStatus(ctx, totalWorkload, &workDoneCounter)
 
-				s.logger.Info("Finish auction detail scrapping", "phase", phase, "routine_id", goroutineID, "duration", time.Since(start))
+				s.logger.Info("Finish auction detail scrapping", "phase", phase, "routine_id", goroutineID, "auction_id", auctionId, "duration", time.Since(start))
 
 				return nil
 			})
