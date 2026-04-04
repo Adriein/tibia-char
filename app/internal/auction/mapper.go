@@ -149,6 +149,7 @@ func (m *Mapper) FromDTO(dto *AuctionDTO) (*Auction, error) {
 		Charms:     charms,
 		Quests:     quests,
 		Outfits:    outfits,
+		Mounts:     mounts,
 		Imbuements: imbuements,
 		DateAdd:    time.Now(),
 		DateUpd:    time.Now(),
