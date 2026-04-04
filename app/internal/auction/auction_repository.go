@@ -300,21 +300,21 @@ func (r *PgAuctionRepository) Save(auction *Auction) error {
 	`
 
 	var (
-		auctionID []int
-		names     []string
-		addons    []int
+		outfitAuctionID []int
+		outfitNames     []string
+		addons          []int
 	)
 
 	for _, outfit := range auction.Outfits {
-		auctionID = append(auctionID, auction.AuctionID)
-		names = append(names, outfit.Name)
+		outfitAuctionID = append(outfitAuctionID, auction.AuctionID)
+		outfitNames = append(outfitNames, outfit.Name)
 		addons = append(addons, outfit.Addons)
 	}
 
 	_, err = tx.Exec(
 		outfitsQuery,
-		pq.Array(auctionID),
-		pq.Array(names),
+		pq.Array(outfitAuctionID),
+		pq.Array(outfitNames),
 		pq.Array(addons),
 	)
 
@@ -322,6 +322,38 @@ func (r *PgAuctionRepository) Save(auction *Auction) error {
 		tx.Rollback()
 
 		return eris.Wrap(err, "Error in upsert on tc_outfits")
+	}
+
+	mountsQuery := `
+		INSERT INTO tc_outfits (
+			tm_auction_id,
+			tm_name
+		)
+		SELECT * FROM UNNEST($1::int[], $2::varchar[])
+        ON CONFLICT (tm_auction_id, tm_name) DO NOTHING
+		;
+	`
+
+	var (
+		auctionID []int
+		names     []string
+	)
+
+	for _, mount := range auction.Mounts {
+		auctionID = append(auctionID, auction.AuctionID)
+		names = append(names, mount.Name)
+	}
+
+	_, err = tx.Exec(
+		mountsQuery,
+		pq.Array(auctionID),
+		pq.Array(names),
+	)
+
+	if err != nil {
+		tx.Rollback()
+
+		return eris.Wrap(err, "Error in upsert on tc_mounts")
 	}
 
 	return tx.Commit()
