@@ -1259,7 +1259,9 @@ func (r *PgAuctionRepository) GetHistoricAuctionPrices(ctx context.Context) ([]*
 
 	defer rows.Close()
 
-	var result []*Auction
+	auctionMap := make(map[int]*Auction)
+
+	var orderedIDs []int
 
 	for rows.Next() {
 		var (
@@ -1293,10 +1295,87 @@ func (r *PgAuctionRepository) GetHistoricAuctionPrices(ctx context.Context) ([]*
 		auction.CharVocation = &vocation
 		auction.Skills = &skills
 
-		result = append(result, &auction)
+		auctionMap[auction.AuctionID] = &auction
+
+		orderedIDs = append(orderedIDs, auction.AuctionID)
 	}
 
-	return result, nil
+	outfitsQuery := `
+		SELECT
+			tco.to_auction_id,
+			tco.to_name,
+			tco.to_addons
+		FROM
+			tc_outfits tco
+		WHERE
+			tco.to_auction_id = ANY($1);
+	`
+	outfitsRows, err := r.connection.QueryContext(ctx, outfitsQuery, pq.Array(orderedIDs))
+
+	if err != nil {
+		return nil, eris.Wrap(err, "Failed to query outfits")
+	}
+
+	defer outfitsRows.Close()
+
+	for outfitsRows.Next() {
+		var outfit Outfit
+		var auctionID int
+
+		if err := outfitsRows.Scan(&auctionID, &outfit.Name, &outfit.Addons); err != nil {
+			return nil, eris.Wrap(err, "Failed to scan outfit")
+		}
+
+		if auction, ok := auctionMap[auctionID]; ok {
+			auction.Outfits = append(auction.Outfits, &outfit)
+		}
+	}
+
+	if err = outfitsRows.Err(); err != nil {
+		return nil, eris.Wrap(err, "Failed iterating outfits rows")
+	}
+
+	mountsQuery := `
+		SELECT
+			tcm.tm_auction_id,
+			tcm.tm_name
+		FROM
+			tc_mounts tcm
+		WHERE
+			tcm.tm_auction_id = ANY($1);
+	`
+	mountsRows, err := r.connection.QueryContext(ctx, mountsQuery, pq.Array(orderedIDs))
+
+	if err != nil {
+		return nil, eris.Wrap(err, "Failed to query mounts")
+	}
+
+	defer mountsRows.Close()
+
+	for mountsRows.Next() {
+		var mount Mount
+		var auctionID int
+
+		if err := mountsRows.Scan(&auctionID, &mount.Name); err != nil {
+			return nil, eris.Wrap(err, "Failed to scan mount")
+		}
+
+		if auction, ok := auctionMap[auctionID]; ok {
+			auction.Mounts = append(auction.Mounts, &mount)
+		}
+	}
+
+	if err = mountsRows.Err(); err != nil {
+		return nil, eris.Wrap(err, "Failed iterating mounts rows")
+	}
+
+	auctions := make([]*Auction, 0, len(orderedIDs))
+
+	for _, auctionID := range orderedIDs {
+		auctions = append(auctions, auctionMap[auctionID])
+	}
+
+	return auctions, nil
 }
 
 func (r *PgAuctionRepository) GetAuctionByAuctionID(ctx context.Context, auctionID int) (*Auction, error) {
