@@ -251,6 +251,10 @@ type Outfit struct {
 	Addons int
 }
 
+type Mount struct {
+	Name string
+}
+
 type Auction struct {
 	ID               int64
 	AuctionID        int
@@ -268,6 +272,7 @@ type Auction struct {
 	Imbuements       []*Imbuement
 	Quests           []*Quest
 	Outfits          []*Outfit
+	Mounts           []*Mount
 	WorldTransfer    bool
 	BossPoints       int
 	CharmExpansion   bool
