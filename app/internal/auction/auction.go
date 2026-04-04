@@ -251,8 +251,32 @@ type Outfit struct {
 	Addons int
 }
 
+func (o *Outfit) isRare(isMale bool) bool {
+	if o.Name == string(enums.Golden) && o.Addons == 2 {
+		return true
+	}
+
+	if o.Name == string(enums.Royal) && o.Addons == 2 {
+		return true
+	}
+
+	if isMale && o.Name == string(enums.FeruMale) && o.Addons == 2 {
+		return true
+	}
+
+	if !isMale && o.Name == string(enums.FeruFemale) && o.Addons == 2 {
+		return true
+	}
+
+	return false
+}
+
 type Mount struct {
 	Name string
+}
+
+func (m *Mount) isRare() bool {
+	return false
 }
 
 type Auction struct {

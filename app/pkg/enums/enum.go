@@ -115,3 +115,12 @@ const (
 	Hot      Flag = 4
 	Featured Flag = 8
 )
+
+type RareOutfit string
+
+const (
+	Golden     RareOutfit = "golden outfit"
+	FeruMale   RareOutfit = "mage"
+	FeruFemale RareOutfit = "summoner"
+	Royal      RareOutfit = "royal costume"
+)
