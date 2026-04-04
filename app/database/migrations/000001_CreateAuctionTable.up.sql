@@ -182,6 +182,16 @@ CREATE TABLE IF NOT EXISTS tc_outfits (
         REFERENCES tc_auction_recording (tar_auction_id) ON DELETE CASCADE
 );
 
+CREATE TABLE IF NOT EXISTS tc_mounts (
+    tm_auction_id INT NOT NULL,
+    tm_name VARCHAR NOT NULL,
+    PRIMARY KEY(tm_auction_id, tm_name),
+
+    CONSTRAINT fk_mounts_auction_recording
+        FOREIGN KEY (tm_auction_id)
+        REFERENCES tc_auction_recording (tar_auction_id) ON DELETE CASCADE
+);
+
 CREATE TABLE IF NOT EXISTS tc_aggregated_auction_stats (
     taas_subset_key VARCHAR PRIMARY KEY,
     taas_median_price NUMERIC(20, 2) NOT NULL,
