@@ -474,7 +474,7 @@ func (s *Service) scrapAuctionDetail(ctx context.Context, g *errgroup.Group, fai
 				auction.CalculateFlags(stats)
 
 				if err := s.auctionRepository.Save(auction); err != nil {
-					s.logger.Error(fmt.Sprintf("Failed getting stats: %s", eris.ToString(err, true)), "phase", phase, "routine_id", goroutineID, "auction_id", auctionId, "duration", time.Since(start))
+					s.logger.Error(fmt.Sprintf("Failed saving auction: %s", eris.ToString(err, true)), "phase", phase, "routine_id", goroutineID, "auction_id", auctionId, "duration", time.Since(start))
 
 					s.notifyStatus(ctx, totalWorkload, &workDoneCounter)
 
