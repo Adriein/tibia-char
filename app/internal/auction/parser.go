@@ -812,7 +812,7 @@ func (p *AuctionHtmlParser) parseMounts(e *colly.HTMLElement, dto *AuctionDTO) e
 		if pageSpan.Children().Eq(0).Is("span") && pageSpan.Children().Eq(0).HasClass("CurrentPageLink") {
 			mountDiv.Children().Each(func(_ int, mouDiv *goquery.Selection) {
 				mountDivTitle := mouDiv.AttrOr("title", "")
-				dto.Mounts = append(dto.Mounts, &MountDTO{Name: mountDivTitle})
+				dto.Mounts = append(dto.Mounts, &MountDTO{Name: strings.ToLower(mountDivTitle)})
 			})
 
 			return true
@@ -877,7 +877,7 @@ func (p *AuctionHtmlParser) parseMounts(e *colly.HTMLElement, dto *AuctionDTO) e
 		for _, match := range matches {
 			rawMountMatch := match[len(match)-1]
 
-			dto.Mounts = append(dto.Mounts, &MountDTO{Name: rawMountMatch})
+			dto.Mounts = append(dto.Mounts, &MountDTO{Name: strings.ToLower(rawMountMatch)})
 		}
 	})
 
