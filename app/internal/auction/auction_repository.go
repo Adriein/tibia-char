@@ -325,7 +325,7 @@ func (r *PgAuctionRepository) Save(auction *Auction) error {
 	}
 
 	mountsQuery := `
-		INSERT INTO tc_outfits (
+		INSERT INTO tc_mounts (
 			tm_auction_id,
 			tm_name
 		)
