@@ -428,27 +428,6 @@ func (a *Auction) ShouldBeArchived(other *Auction) bool {
 	return other.Status == enums.RecordableActive && time.Now().After(a.AuctionEnd)
 }
 
-type PaginatedAuctions struct {
-	ViewModels []*AuctionViewModel
-	TotalCount int
-	Page       int
-	PageSize   int
-	TotalPages int
-}
-
-type AuctionViewModel struct {
-	Auction *Auction
-	ZScore  float64
-}
-
-func (av *AuctionViewModel) IsGoodDeal() bool {
-	return av.ZScore <= -1
-}
-
-func (av *AuctionViewModel) IsBadDeal() bool {
-	return av.ZScore >= 1.5
-}
-
 type AuctionStats struct {
 	Median       float64
 	StdDeviation float64
