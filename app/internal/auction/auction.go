@@ -279,6 +279,10 @@ func (m *Mount) isRare() bool {
 	return false
 }
 
+type Flag struct {
+	Name enums.Flag
+}
+
 type Auction struct {
 	ID               int64
 	AuctionID        int
@@ -310,7 +314,7 @@ type Auction struct {
 	AuctionStart     time.Time
 	AuctionEnd       time.Time
 	Status           enums.AuctionRecordableStatus
-	Flag             enums.Flag
+	Flag             []*Flag
 	DateAdd          time.Time
 	DateUpd          time.Time
 }
@@ -382,16 +386,34 @@ func (a *Auction) getRangeLabel(val int, thresholds []int) string {
 }
 
 func (a *Auction) CalculateFlags(stats *AggAuctionStats) {
-	a.Flag = enums.None
-
 	ZScore := float64(a.Bid-int(stats.Median)) / stats.StdDeviation
 
 	if ZScore <= -1 {
-		a.Flag = enums.GoodDeal
+		a.Flag = append(a.Flag, &Flag{Name: enums.GoodDeal})
 	}
 
 	if ZScore >= 1.5 {
-		a.Flag = enums.BadDeal
+		a.Flag = append(a.Flag, &Flag{Name: enums.BadDeal})
+	}
+
+	isMale := a.CharGender.Id == constants.GenderMale
+
+	for _, outfit := range a.Outfits {
+		if !outfit.isRare(isMale) {
+			continue
+		}
+
+		a.Flag = append(a.Flag, &Flag{Name: enums.ROutfit})
+		break
+	}
+
+	for _, mount := range a.Mounts {
+		if !mount.isRare() {
+			continue
+		}
+
+		a.Flag = append(a.Flag, &Flag{Name: enums.RMount})
+		break
 	}
 }
 

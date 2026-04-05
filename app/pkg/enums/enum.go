@@ -106,14 +106,16 @@ func (c Currency) Valid() bool {
 	return false
 }
 
-type Flag int
+type Flag string
 
 const (
-	None     Flag = 0
-	GoodDeal Flag = 1
-	BadDeal  Flag = 2
-	Hot      Flag = 4
-	Featured Flag = 8
+	None     Flag = "none"
+	GoodDeal Flag = "good_deal"
+	BadDeal  Flag = "bad_deal"
+	Hot      Flag = "hot"
+	Featured Flag = "featured"
+	ROutfit  Flag = "rare_outfit"
+	RMount   Flag = "rare_mount"
 )
 
 type RareOutfit string
