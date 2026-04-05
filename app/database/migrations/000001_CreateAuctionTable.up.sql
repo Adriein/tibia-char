@@ -52,7 +52,6 @@ CREATE TABLE IF NOT EXISTS tc_auction (
     ta_current_bid_fiat INT NOT NULL,
     ta_current_bid_currency VARCHAR NOT NULL,
     ta_auction_stage VARCHAR NOT NULL,
-    ta_auction_flags INT NOT NULL DEFAULT 0,
     ta_auction_start TIMESTAMP(0) WITHOUT TIME ZONE NOT NULL,
     ta_auction_end TIMESTAMP(0) WITHOUT TIME ZONE NOT NULL,
     ta_date_add TIMESTAMP(0) WITHOUT TIME ZONE NOT NULL,
@@ -204,6 +203,25 @@ CREATE TABLE IF NOT EXISTS tc_aggregated_auction_stats (
     taas_date_upd TIMESTAMP(0) WITHOUT TIME ZONE NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS tc_flags (
+    tf_id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    tf_name VARCHAR NOT NULL,
+);
+
+CREATE TABLE IF NOT EXISTS tc_auction_flags (
+    taf_auction_id INT NOT NULL,
+    taf_flag_id INT NOT NULL,
+    PRIMARY KEY (taf_auction_id, taf_flag_id),
+
+    CONSTRAINT fk_auction_flags_auction_recording
+        FOREIGN KEY (taf_auction_id)
+        REFERENCES tc_auction_recording (tar_auction_id) ON DELETE CASCADE,
+
+    CONSTRAINT fk_auction_flags_flags
+        FOREIGN KEY (taf_flag_id)
+        REFERENCES tc_flags (tf_id)
+);
+
 /*
 ================================================================================
 INDEX
@@ -332,3 +350,12 @@ INSERT INTO tc_charms (tc_type, tc_name) VALUES
 ('Major', 'Wound'),
 ('Major', 'Zap'),
 ('Major', 'Curse');
+
+INSERT INTO tc_flags (tf_name) VALUES
+('none')
+('good_deal')
+('bad_deal')
+('hot')
+('featured')
+('rare_outfit')
+('rare_mount')

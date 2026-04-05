@@ -280,7 +280,7 @@ func (m *Mount) isRare() bool {
 }
 
 type Flag struct {
-	Name enums.Flag
+	ID enums.Flag
 }
 
 type Auction struct {
@@ -314,7 +314,7 @@ type Auction struct {
 	AuctionStart     time.Time
 	AuctionEnd       time.Time
 	Status           enums.AuctionRecordableStatus
-	Flag             []*Flag
+	Flags            []*Flag
 	DateAdd          time.Time
 	DateUpd          time.Time
 }
@@ -389,11 +389,11 @@ func (a *Auction) CalculateFlags(stats *AggAuctionStats) {
 	ZScore := float64(a.Bid-int(stats.Median)) / stats.StdDeviation
 
 	if ZScore <= -1 {
-		a.Flag = append(a.Flag, &Flag{Name: enums.GoodDeal})
+		a.Flags = append(a.Flags, &Flag{ID: enums.GoodDeal})
 	}
 
 	if ZScore >= 1.5 {
-		a.Flag = append(a.Flag, &Flag{Name: enums.BadDeal})
+		a.Flags = append(a.Flags, &Flag{ID: enums.BadDeal})
 	}
 
 	isMale := a.CharGender.Id == constants.GenderMale
@@ -403,7 +403,7 @@ func (a *Auction) CalculateFlags(stats *AggAuctionStats) {
 			continue
 		}
 
-		a.Flag = append(a.Flag, &Flag{Name: enums.ROutfit})
+		a.Flags = append(a.Flags, &Flag{ID: enums.ROutfit})
 		break
 	}
 
@@ -412,7 +412,7 @@ func (a *Auction) CalculateFlags(stats *AggAuctionStats) {
 			continue
 		}
 
-		a.Flag = append(a.Flag, &Flag{Name: enums.RMount})
+		a.Flags = append(a.Flags, &Flag{ID: enums.RMount})
 		break
 	}
 }

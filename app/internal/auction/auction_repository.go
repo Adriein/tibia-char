@@ -60,13 +60,12 @@ func (r *PgAuctionRepository) Save(auction *Auction) error {
 			ta_current_bid_fiat,
 			ta_current_bid_currency,
 			ta_auction_stage,
-			ta_auction_flags,
 			ta_auction_start,
 			ta_auction_end,
 			ta_date_add,
 			ta_date_upd
 		)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, TIMEZONE('UTC', NOW()))
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, TIMEZONE('UTC', NOW()))
 		RETURNING ta_id;
 	`
 
@@ -91,7 +90,6 @@ func (r *PgAuctionRepository) Save(auction *Auction) error {
 		auction.BidFiat,
 		auction.BidCurrency,
 		auction.Stage,
-		auction.Flag,
 		auction.AuctionStart,
 		auction.AuctionEnd,
 		auction.DateAdd,
@@ -356,6 +354,38 @@ func (r *PgAuctionRepository) Save(auction *Auction) error {
 		return eris.Wrap(err, "Error in upsert on tc_mounts")
 	}
 
+	flagsQuery := `
+		INSERT INTO tc_auction_flags (
+			taf_auction_id,
+			taf_id
+		)
+		SELECT * FROM UNNEST($1::int[], $2::int[])
+        ON CONFLICT (taf_auction_id, taf_id) DO NOTHING
+		;
+	`
+
+	var (
+		flagAuctionID []int
+		flags         []int
+	)
+
+	for _, flag := range auction.Flags {
+		flagAuctionID = append(flagAuctionID, auction.AuctionID)
+		flags = append(flags, int(flag.ID))
+	}
+
+	_, err = tx.Exec(
+		flagsQuery,
+		pq.Array(flagAuctionID),
+		pq.Array(flags),
+	)
+
+	if err != nil {
+		tx.Rollback()
+
+		return eris.Wrap(err, "Error in upsert on tc_auction_flags")
+	}
+
 	return tx.Commit()
 }
 
@@ -381,7 +411,6 @@ func (r *PgAuctionRepository) GetActiveAuctions(ctx context.Context) ([]*Auction
 			a.ta_current_bid_fiat,
 			a.ta_current_bid_currency,
 			a.ta_auction_stage,
-			a.ta_auction_flags,
 			a.ta_auction_start,
 			a.ta_auction_end,
 			tar.tar_status,
@@ -466,7 +495,6 @@ func (r *PgAuctionRepository) GetActiveAuctions(ctx context.Context) ([]*Auction
 			&auction.BidFiat,
 			&auction.BidCurrency,
 			&auction.Stage,
-			&auction.Flag,
 			&auction.AuctionStart,
 			&auction.AuctionEnd,
 			&statusString,
@@ -694,6 +722,41 @@ func (r *PgAuctionRepository) GetActiveAuctions(ctx context.Context) ([]*Auction
 
 	if err = bidRegistryRows.Err(); err != nil {
 		return nil, eris.Wrap(err, "Failed iterating bid registry rows")
+	}
+
+	flagsQuery := `
+		SELECT
+			taf.taf_auction_id,
+			taf.taf_id
+		FROM
+			tc_auction_flags taf
+		WHERE
+			taf.taf_auction_id = ANY($1);
+	`
+
+	flagRows, err := r.connection.QueryContext(ctx, flagsQuery, pq.Array(orderedIDs))
+
+	if err != nil {
+		return nil, eris.Wrap(err, "Failed to query flags")
+	}
+
+	defer flagRows.Close()
+
+	for flagRows.Next() {
+		var flag Flag
+		var auctionID int
+
+		if err := flagRows.Scan(&auctionID, &flag.ID); err != nil {
+			return nil, eris.Wrap(err, "Failed to scan flag")
+		}
+
+		if auction, ok := auctionMap[auctionID]; ok {
+			auction.Flags = append(auction.Flags, &flag)
+		}
+	}
+
+	if err = flagRows.Err(); err != nil {
+		return nil, eris.Wrap(err, "Failed iterating flag rows")
 	}
 
 	auctions := make([]*Auction, 0, len(orderedIDs))
@@ -800,7 +863,6 @@ func (r *PgAuctionRepository) GetAuctionsWithFilter(ctx context.Context, filter 
 			a.ta_current_bid_fiat,
 			a.ta_current_bid_currency,
 			a.ta_auction_stage,
-			a.ta_auction_flags,
 			a.ta_auction_start,
 			a.ta_auction_end,
 			tar.tar_status,
@@ -888,7 +950,6 @@ func (r *PgAuctionRepository) GetAuctionsWithFilter(ctx context.Context, filter 
 			&auction.BidFiat,
 			&auction.BidCurrency,
 			&auction.Stage,
-			&auction.Flag,
 			&auction.AuctionStart,
 			&auction.AuctionEnd,
 			&statusString,
@@ -1116,6 +1177,41 @@ func (r *PgAuctionRepository) GetAuctionsWithFilter(ctx context.Context, filter 
 
 	if err = bidRegistryRows.Err(); err != nil {
 		return nil, eris.Wrap(err, "Failed iterating bid registry rows")
+	}
+
+	flagsQuery := `
+		SELECT
+			taf.taf_auction_id,
+			taf.taf_id
+		FROM
+			tc_auction_flags taf
+		WHERE
+			taf.taf_auction_id = ANY($1);
+	`
+
+	flagRows, err := r.connection.QueryContext(ctx, flagsQuery, pq.Array(orderedIDs))
+
+	if err != nil {
+		return nil, eris.Wrap(err, "Failed to query flags")
+	}
+
+	defer flagRows.Close()
+
+	for flagRows.Next() {
+		var flag Flag
+		var auctionID int
+
+		if err := flagRows.Scan(&auctionID, &flag.ID); err != nil {
+			return nil, eris.Wrap(err, "Failed to scan flag")
+		}
+
+		if auction, ok := auctionMap[auctionID]; ok {
+			auction.Flags = append(auction.Flags, &flag)
+		}
+	}
+
+	if err = flagRows.Err(); err != nil {
+		return nil, eris.Wrap(err, "Failed iterating flag rows")
 	}
 
 	auctions := make([]*Auction, 0, len(orderedIDs))
@@ -1400,7 +1496,6 @@ func (r *PgAuctionRepository) GetAuctionByAuctionID(ctx context.Context, auction
 			a.ta_current_bid_fiat,
 			a.ta_current_bid_currency,
 			a.ta_auction_stage,
-			a.ta_auction_flags,
 			a.ta_auction_start,
 			a.ta_auction_end,
 			tar.tar_status,
@@ -1469,7 +1564,6 @@ func (r *PgAuctionRepository) GetAuctionByAuctionID(ctx context.Context, auction
 		&auction.BidFiat,
 		&auction.BidCurrency,
 		&auction.Stage,
-		&auction.Flag,
 		&auction.AuctionStart,
 		&auction.AuctionEnd,
 		&statusString,
@@ -1674,6 +1768,39 @@ func (r *PgAuctionRepository) GetAuctionByAuctionID(ctx context.Context, auction
 
 	if err = bidRegistryRows.Err(); err != nil {
 		return nil, eris.Wrap(err, "Failed iterating bid registry rows for single auction")
+	}
+
+	flagsQuery := `
+		SELECT
+			taf.taf_auction_id,
+			taf.taf_id
+		FROM
+			tc_auction_flags taf
+		WHERE
+			taf.taf_auction_id = $1;
+	`
+
+	flagRows, err := r.connection.QueryContext(ctx, flagsQuery, auctionID)
+
+	if err != nil {
+		return nil, eris.Wrap(err, "Failed to query flags")
+	}
+
+	defer flagRows.Close()
+
+	for flagRows.Next() {
+		var flag Flag
+		var auctionID int
+
+		if err := flagRows.Scan(&auctionID, &flag.ID); err != nil {
+			return nil, eris.Wrap(err, "Failed to scan flag")
+		}
+
+		auction.Flags = append(auction.Flags, &flag)
+	}
+
+	if err = flagRows.Err(); err != nil {
+		return nil, eris.Wrap(err, "Failed iterating flag rows")
 	}
 
 	return &auction, nil
