@@ -786,9 +786,9 @@ func (r *PgAuctionRepository) GetActiveAuctionsFinishingIn(ctx context.Context, 
 		WHERE
 			tar.tar_status = 'active'
 		AND
-			a.ta_auction_end <= NOW() + make_interval(secs => $1)
+			a.ta_auction_end <= TIMEZONE('UTC', NOW()) + make_interval(secs => $1)
 		AND
-			a.ta_auction_end >= NOW()
+			a.ta_auction_end >= TIMEZONE('UTC', NOW())
 		ORDER BY
 			a.ta_auction_end DESC
 		;
@@ -1235,7 +1235,7 @@ func (r *PgAuctionRepository) GetAuctionsPendingToConsolidate(ctx context.Contex
 		WHERE
     		tar.tar_status = 'active'
 		AND
-    		a.ta_auction_end < now()
+    		a.ta_auction_end < TIMEZONE('UTC', NOW())
 		ORDER BY tar.tar_auction_id, a.ta_date_add DESC
 	`
 
@@ -1284,7 +1284,7 @@ func (r *PgAuctionRepository) GetAuctionsPendingToConsolidate(ctx context.Contex
 			AND
 	    		a.ta_auction_stage = 'current'
 			AND
-				a.ta_date_add <= NOW() - INTERVAL '24 hours'
+				a.ta_date_add <= TIMEZONE('UTC', NOW()) - INTERVAL '24 hours'
 			ORDER BY tar.tar_auction_id, a.ta_date_add DESC
 		`
 

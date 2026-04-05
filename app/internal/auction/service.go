@@ -75,7 +75,7 @@ func (s *Service) ScrapperOrchestrator(ctx context.Context) error {
 
 	now := time.Now().In(loc)
 
-	if now.Hour() >= 10 && now.Hour() <= 12 {
+	if now.Hour() == 10 && now.Minute() <= 59 {
 		if err := s.ScrapBazaar(ctx); err != nil {
 			return err
 		}
