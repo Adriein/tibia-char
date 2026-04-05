@@ -727,7 +727,7 @@ func (r *PgAuctionRepository) GetActiveAuctions(ctx context.Context) ([]*Auction
 	flagsQuery := `
 		SELECT
 			taf.taf_auction_id,
-			taf.taf_id
+			taf.taf_flag_id
 		FROM
 			tc_auction_flags taf
 		WHERE
@@ -1182,7 +1182,7 @@ func (r *PgAuctionRepository) GetAuctionsWithFilter(ctx context.Context, filter 
 	flagsQuery := `
 		SELECT
 			taf.taf_auction_id,
-			taf.taf_id
+			taf.taf_flag_id
 		FROM
 			tc_auction_flags taf
 		WHERE
@@ -1773,7 +1773,7 @@ func (r *PgAuctionRepository) GetAuctionByAuctionID(ctx context.Context, auction
 	flagsQuery := `
 		SELECT
 			taf.taf_auction_id,
-			taf.taf_id
+			taf.taf_flag_id
 		FROM
 			tc_auction_flags taf
 		WHERE
