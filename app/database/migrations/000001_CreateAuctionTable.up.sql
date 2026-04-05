@@ -205,7 +205,7 @@ CREATE TABLE IF NOT EXISTS tc_aggregated_auction_stats (
 
 CREATE TABLE IF NOT EXISTS tc_flags (
     tf_id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    tf_name VARCHAR NOT NULL,
+    tf_name VARCHAR NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS tc_auction_flags (
