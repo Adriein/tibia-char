@@ -101,7 +101,7 @@ Stats Agg Logic
 func (s *Service) AggregateAuctionStatsPrecompute(ctx context.Context) error {
 	s.logger.Info("Start auction stats aggregation")
 
-	now := time.Now()
+	start := time.Now()
 
 	historicAucPrices, err := s.auctionRepository.GetHistoricAuctionPrices(ctx)
 
@@ -147,7 +147,7 @@ func (s *Service) AggregateAuctionStatsPrecompute(ctx context.Context) error {
 		}
 	}
 
-	s.logger.Info("Finish auction stats aggregation", "duration", time.Since(now))
+	s.logger.Info("Finish auction stats aggregation", "duration", time.Since(start))
 
 	return nil
 }
@@ -163,7 +163,7 @@ func (s *Service) ScrapBazaar(ctx context.Context) error {
 
 	ctx = context.WithValue(ctx, constants.Phase, constants.ScrapPhase)
 
-	now := time.Now()
+	start := time.Now()
 
 	scrapperInstance := s.scrapperFactory.CreateScrapper("N")
 	auctionNumberParser := s.parserFactory.CreateAuctionNumberParser(scrapperInstance)
@@ -217,24 +217,24 @@ func (s *Service) ScrapBazaar(ctx context.Context) error {
 	auctionLinkSet, err := s.scrapAuctionLinks(worlds)
 
 	if err != nil {
-		s.logger.Error("Finish with error", "phase", constants.ScrapPhase, "duration", time.Since(now))
+		s.logger.Error("Finish with error", "phase", constants.ScrapPhase, "duration", time.Since(start))
 
 		return err
 	}
 
 	if err := s.scrapAuctionDetails(ctx, auctionLinkSet); err != nil {
-		s.logger.Error("Finish with error", "phase", constants.ScrapPhase, "duration", time.Since(now))
+		s.logger.Error("Finish with error", "phase", constants.ScrapPhase, "duration", time.Since(start))
 
 		return err
 	}
 
-	s.logger.Info("Finish", "phase", constants.ScrapPhase, "duration", time.Since(now), "auctions", currentAuctions, "links", len(auctionLinkSet.Data))
+	s.logger.Info("Finish", "phase", constants.ScrapPhase, "duration", time.Since(start), "auctions", currentAuctions, "links", len(auctionLinkSet.Data))
 
 	return nil
 }
 
 func (s *Service) scrapAuctionLinks(worlds []*World) (*AuctionLinkSet, error) {
-	now := time.Now()
+	start := time.Now()
 
 	semaphore := make(chan struct{}, AuctionLinkMaxConcurrency)
 
@@ -267,7 +267,7 @@ func (s *Service) scrapAuctionLinks(worlds []*World) (*AuctionLinkSet, error) {
 					defer func() { <-semaphore }()
 				}
 
-				now := time.Now()
+				start := time.Now()
 
 				goroutineNum := atomic.AddInt32(&goroutineCounter, 1)
 				goroutineID := fmt.Sprintf("L-routine%d", goroutineNum)
@@ -282,7 +282,7 @@ func (s *Service) scrapAuctionLinks(worlds []*World) (*AuctionLinkSet, error) {
 					return eris.Wrapf(err, "Failed to collect link in L-routine%d", goroutineNum)
 				}
 
-				s.logger.Info("Finish world link extraction", "phase", constants.ScrapPhase, "world", world.Name, "routine_id", goroutineID, "duration", time.Since(now))
+				s.logger.Info("Finish world link extraction", "phase", constants.ScrapPhase, "world", world.Name, "routine_id", goroutineID, "duration", time.Since(start))
 
 				return nil
 			})
@@ -295,7 +295,7 @@ func (s *Service) scrapAuctionLinks(worlds []*World) (*AuctionLinkSet, error) {
 		}
 	}
 
-	s.logger.Info("Finish links extraction", "phase", constants.ScrapPhase, "duration", time.Since(now))
+	s.logger.Info("Finish links extraction", "phase", constants.ScrapPhase, "duration", time.Since(start))
 
 	return auctionLinkSet, nil
 }
@@ -519,7 +519,7 @@ func (s *Service) WatchActiveAuctions(ctx context.Context) error {
 
 	ctx = context.WithValue(ctx, constants.Phase, constants.WatchPhase)
 
-	now := time.Now()
+	start := time.Now()
 
 	s.logger.Info("Start", "phase", constants.WatchPhase)
 
@@ -551,7 +551,7 @@ func (s *Service) WatchActiveAuctions(ctx context.Context) error {
 				continue
 			}
 
-			if auction.DateUpd.After(time.Now().Add(-policy.updateInterval)) {
+			if auction.DateUpd.After(time.Now().UTC().Add(-policy.updateInterval)) {
 				continue
 			}
 
@@ -586,7 +586,7 @@ func (s *Service) WatchActiveAuctions(ctx context.Context) error {
 					continue
 				}
 
-				if auction.DateUpd.After(time.Now().Add(-policy.updateInterval)) {
+				if auction.DateUpd.After(time.Now().UTC().Add(-policy.updateInterval)) {
 					continue
 				}
 
@@ -599,18 +599,18 @@ func (s *Service) WatchActiveAuctions(ctx context.Context) error {
 	}
 
 	if auctionsToUpdate.IsEmpty() {
-		s.logger.Info("Finish phase", "phase", constants.WatchPhase, "duration", time.Since(now))
+		s.logger.Info("Finish phase", "phase", constants.WatchPhase, "duration", time.Since(start))
 
 		return nil
 	}
 
 	if err := s.scrapAuctionDetails(ctx, auctionsToUpdate); err != nil {
-		s.logger.Info("Finish phase", "phase", constants.WatchPhase, "duration", time.Since(now))
+		s.logger.Info("Finish phase", "phase", constants.WatchPhase, "duration", time.Since(start))
 
 		return eris.Wrap(err, "Failed to refresh auctions")
 	}
 
-	s.logger.Info("Finish phase", "phase", constants.WatchPhase, "duration", time.Since(now))
+	s.logger.Info("Finish phase", "phase", constants.WatchPhase, "duration", time.Since(start))
 
 	return nil
 }
@@ -626,7 +626,7 @@ func (s *Service) ConsolidateAuctions(ctx context.Context) error {
 
 	s.logger.Info("Start", "phase", constants.ConsolidatePhase)
 
-	now := time.Now()
+	start := time.Now()
 
 	auctionsToUpdate := NewAuctionLinkSet()
 
@@ -645,18 +645,18 @@ func (s *Service) ConsolidateAuctions(ctx context.Context) error {
 	}
 
 	if auctionsToUpdate.IsEmpty() {
-		s.logger.Info("Finish phase", "phase", constants.ConsolidatePhase, "duration", time.Since(now))
+		s.logger.Info("Finish phase", "phase", constants.ConsolidatePhase, "duration", time.Since(start))
 
 		return nil
 	}
 
 	if err := s.scrapAuctionDetails(ctx, auctionsToUpdate); err != nil {
-		s.logger.Info("Finish phase", "phase", constants.ConsolidatePhase, "duration", time.Since(now))
+		s.logger.Info("Finish phase", "phase", constants.ConsolidatePhase, "duration", time.Since(start))
 
 		return eris.Wrap(err, "Failed to consolidate auctions")
 	}
 
-	s.logger.Info("Finish phase", "phase", constants.ConsolidatePhase, "duration", time.Since(now))
+	s.logger.Info("Finish phase", "phase", constants.ConsolidatePhase, "duration", time.Since(start))
 
 	return nil
 }

@@ -151,7 +151,7 @@ func (m *Mapper) FromDTO(dto *AuctionDTO) (*Auction, error) {
 		Outfits:    outfits,
 		Mounts:     mounts,
 		Imbuements: imbuements,
-		DateAdd:    time.Now(),
-		DateUpd:    time.Now(),
+		DateAdd:    time.Now().UTC(),
+		DateUpd:    time.Now().UTC(),
 	}, nil
 }

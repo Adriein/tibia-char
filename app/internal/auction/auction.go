@@ -425,7 +425,8 @@ func (a *Auction) IsEqual(other *Auction) bool {
 }
 
 func (a *Auction) ShouldBeArchived(other *Auction) bool {
-	return other.Status == enums.RecordableActive && time.Now().After(a.AuctionEnd)
+	now := time.Now().UTC()
+	return other.Status == enums.RecordableActive && now.After(a.AuctionEnd)
 }
 
 type AuctionStats struct {

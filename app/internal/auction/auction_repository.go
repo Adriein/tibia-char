@@ -1828,12 +1828,11 @@ func (r *PgAuctionRepository) CountActiveAuctions(ctx context.Context) (int, err
 }
 
 func (r *PgAuctionRepository) DeactivateAuctionRecord(ctx context.Context, auctionID int) error {
-	//TODO: ensure the date upd gets on the correct timezone
 	query := `
 		UPDATE
 			tc_auction_recording
 		SET
-    		tar_date_upd = NOW(),
+    		tar_date_upd = TIMEZONE('UTC', NOW()),
     		tar_status = 'archived'
 		WHERE tar_auction_id = $1;
 	`
@@ -1851,12 +1850,11 @@ func (r *PgAuctionRepository) DeactivateAuctionRecord(ctx context.Context, aucti
 }
 
 func (r *PgAuctionRepository) MarkAuctionAsUpdated(ctx context.Context, auctionID int) error {
-	//TODO: ensure the date upd gets on the correct timezone
 	query := `
 		UPDATE
 			tc_auction_recording
 		SET
-    		tar_date_upd = NOW()
+    		tar_date_upd = TIMEZONE('UTC', NOW())
 		WHERE tar_auction_id = $1;
 	`
 
