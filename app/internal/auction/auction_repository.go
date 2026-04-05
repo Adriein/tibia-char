@@ -357,10 +357,10 @@ func (r *PgAuctionRepository) Save(auction *Auction) error {
 	flagsQuery := `
 		INSERT INTO tc_auction_flags (
 			taf_auction_id,
-			taf_id
+			taf_flag_id
 		)
 		SELECT * FROM UNNEST($1::int[], $2::int[])
-        ON CONFLICT (taf_auction_id, taf_id) DO NOTHING
+        ON CONFLICT (taf_auction_id, taf_flag_id) DO NOTHING
 		;
 	`
 
