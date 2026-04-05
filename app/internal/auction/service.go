@@ -698,35 +698,8 @@ func (s *Service) GetAuctions(ctx context.Context, filter *AuctionFilter) (*Pagi
 		auction.BidFiat = conRate.Exchange(auction.BidFiat, targetCurrency)
 		auction.BidCurrency = targetCurrency
 
-		stats, err := s.aggAuctionRepository.GetByKey(auction.SubsetKey())
-
-		if err != nil {
-			if errors.Is(err, ErrAggAuctionStatsNotFound) {
-				viewModels = append(viewModels, &AuctionViewModel{
-					Auction: auction,
-					ZScore:  0,
-				})
-
-				continue
-			}
-			//TODO: decide what to do because this will cause 0 auctions to the frontend maybe we can be more optimistic
-			return nil, err
-		}
-
-		if auction.CharVocation.Id == constants.VocationNone {
-			viewModels = append(viewModels, &AuctionViewModel{
-				Auction: auction,
-				ZScore:  0,
-			})
-
-			continue
-		}
-
-		ZScore := float64(auction.Bid-int(stats.Median)) / stats.StdDeviation
-
 		viewModels = append(viewModels, &AuctionViewModel{
 			Auction: auction,
-			ZScore:  ZScore,
 		})
 	}
 

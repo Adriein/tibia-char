@@ -1,5 +1,11 @@
 package auction
 
+import (
+	"slices"
+
+	"github.com/adriein/tibia-char/pkg/enums"
+)
+
 type PaginatedAuctions struct {
 	ViewModels []*AuctionViewModel
 	TotalCount int
@@ -10,13 +16,16 @@ type PaginatedAuctions struct {
 
 type AuctionViewModel struct {
 	Auction *Auction
-	ZScore  float64
 }
 
 func (av *AuctionViewModel) IsGoodDeal() bool {
-	return av.ZScore <= -1
+	return slices.ContainsFunc(av.Auction.Flags, func(f *Flag) bool {
+		return f.ID == enums.GoodDeal
+	})
 }
 
 func (av *AuctionViewModel) IsBadDeal() bool {
-	return av.ZScore >= 1.5
+	return slices.ContainsFunc(av.Auction.Flags, func(f *Flag) bool {
+		return f.ID == enums.BadDeal
+	})
 }
