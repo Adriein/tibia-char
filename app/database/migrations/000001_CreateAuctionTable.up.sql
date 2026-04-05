@@ -352,10 +352,10 @@ INSERT INTO tc_charms (tc_type, tc_name) VALUES
 ('Major', 'Curse');
 
 INSERT INTO tc_flags (tf_name) VALUES
-('none')
-('good_deal')
-('bad_deal')
-('hot')
-('featured')
-('rare_outfit')
-('rare_mount')
+('none'),
+('good_deal'),
+('bad_deal'),
+('hot'),
+('featured'),
+('rare_outfit'),
+('rare_mount');
