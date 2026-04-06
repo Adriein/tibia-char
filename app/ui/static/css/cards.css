@@ -273,21 +273,24 @@
 
     .card__body-skills-container {
       display: grid;
-      grid-template-columns: repeat(2, 1fr);
+      grid-template-columns: repeat(4, 1fr);
+      grid-template-rows: repeat(2, auto);
       gap: var(--inline-space);
+      background-color: var(--color-muted);
+      border-radius: var(--radius-sm);
+      padding: var(--block-space-half) var(--inline-space);
 
       .skill-item {
         display: flex;
-        justify-content: space-between;
+        flex-direction: column;
+        justify-content: center;
         align-items: center;
-        background-color: var(--color-muted);
-        color: var(--color-ink);
-        border: 1px solid var(--color-border);
         border-radius: var(--radius-sm);
+        gap: var(--inline-space);
+
         font-size: var(--text-x-small);
         padding: var(--block-space-half) var(--inline-space);
         transition: background-color var(--dialog-duration) var(--ease-out-expo);
-
         /* Subtle hover effect makes the UI feel alive */
         /*&:hover {
           background-color: oklch(from var(--color-muted) calc(l + 0.05) c h);
@@ -313,8 +316,8 @@
       }
 
       .skill-item--high {
-        background-color: oklch(from var(--color-brand-main) l c h / 12%);
-        border-color: oklch(from var(--color-brand-main) l c h / 40%);
+        color: var(--color-brand-main);
+        font-weight: var(--text-weight-xl);
       }
     }
 
@@ -378,6 +381,22 @@
 
     .card__footer .btn {
       width: 100%;
+    }
+
+    .card__footer {
+      display: flex;
+      justify-content: center;
+      gap: var(--inline-space-double);
+      padding: var(--block-space-half) var(--inline-space);
+    }
+
+    .card__footer-bid-container {
+      display: flex;
+      flex-direction: column;
+    }
+    .card__footer-bid-fiat {
+      --card__bid-amount-text-w: var(--text-weight-normal);
+      font-size: var(--text-x-small);
     }
 
     @media (max-width: 400px) {
