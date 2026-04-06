@@ -279,14 +279,6 @@ templ AuctionCard(viewModel *auction.AuctionViewModel) {
 			</div>
 		</div>
 		<div class="card__footer">
-			<a
-				target="_blank"
-				href={fmt.Sprintf("https://www.tibia.com/charactertrade/?subtopic=currentcharactertrades&page=details&auctionid=%d", auction.AuctionID)}
-			>
-				<button class="btn btn--primary">View on Tibia.com</button>
-			</a>
-		</div>
-		<div class="card__footer">
 			<div class="card__footer-bid-container">
 				<div class="card__bid-amount">
 					<img src="https://static.tibia.com/images/charactertrade/objects/37317.gif"/>
