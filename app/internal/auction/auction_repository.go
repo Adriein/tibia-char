@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"strconv"
 	"time"
 
 	"github.com/adriein/tibia-char/pkg/enums"
@@ -842,7 +843,13 @@ func (r *PgAuctionRepository) GetActiveAuctionsFinishingIn(ctx context.Context, 
 }
 
 func (r *PgAuctionRepository) GetAuctionsWithFilter(ctx context.Context, filter *AuctionFilter) ([]*Auction, error) {
-	query := `
+	whereClause, orderClause, filterArgs, err := filter.ToSQL()
+
+	if err != nil {
+		return nil, eris.Wrap(err, "Failed to build filter query")
+	}
+
+	baseQuery := `
 		SELECT
 			a.ta_id,
 			a.ta_auction_id,
@@ -881,11 +888,9 @@ func (r *PgAuctionRepository) GetAuctionsWithFilter(ctx context.Context, filter 
 		INNER JOIN
 			tc_skills ts ON a.ta_auction_id = ts.ts_auction_id
 		WHERE
-			tar.tar_status = 'active'
-		ORDER BY
-			a.ta_auction_end ASC
-		LIMIT $1 OFFSET $2;
 	`
+
+	query := baseQuery + whereClause + orderClause + ` LIMIT $` + strconv.Itoa(len(filterArgs)+1) + ` OFFSET $` + strconv.Itoa(len(filterArgs)+2)
 
 	ctxTimeout, cancel := context.WithTimeout(ctx, time.Second*10)
 
@@ -893,7 +898,9 @@ func (r *PgAuctionRepository) GetAuctionsWithFilter(ctx context.Context, filter 
 
 	offset := filter.Pagination.Page * filter.Pagination.Limit
 
-	rows, err := r.connection.QueryContext(ctxTimeout, query, filter.Pagination.Limit, offset)
+	args := append(filterArgs, filter.Pagination.Limit, offset)
+
+	rows, err := r.connection.QueryContext(ctxTimeout, query, args...)
 
 	if err != nil {
 		return nil, eris.Wrap(err, "Failed to query auctions with filter")

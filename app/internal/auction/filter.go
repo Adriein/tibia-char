@@ -1,19 +1,34 @@
 package auction
 
 import (
+	"fmt"
 	"strconv"
+	"strings"
 
+	"github.com/adriein/tibia-char/pkg/enums"
 	"github.com/rotisserie/eris"
 )
 
-const QueryFilter = "f"
+const QueryFilter = "filter"
 
 type SortField string
 
 const (
-	SortByEndTime SortField = "end_time"
-	SortByFlags   SortField = "flags"
+	SortByEndTime  SortField = "end_time"
+	SortByGoodDeal SortField = "good_deal"
+	SortByFlags    SortField = "flags"
 )
+
+func (sf SortField) sql() string {
+	switch sf {
+	case SortByEndTime:
+		return "a.ta_auction_end"
+	case SortByGoodDeal:
+		return "a.ta_current_bid"
+	default:
+		return "a.ta_auction_end"
+	}
+}
 
 type SortOrder string
 
@@ -21,6 +36,17 @@ const (
 	SortOrderAsc  SortOrder = "asc"
 	SortOrderDesc SortOrder = "desc"
 )
+
+func (so SortOrder) sql() string {
+	switch so {
+	case SortOrderAsc:
+		return "ASC"
+	case SortOrderDesc:
+		return "DESC"
+	default:
+		return "ASC"
+	}
+}
 
 type PaginationParam string
 
@@ -64,7 +90,7 @@ func FilterFromQueryParams(qDict map[string]string) (*AuctionFilter, error) {
 		return &AuctionFilter{
 			Pagination:   pagination,
 			OnlyGoodDeal: onlyGoodDeal,
-			SortBy:       SortByFlags,
+			SortBy:       SortByGoodDeal,
 			SortOrder:    SortOrderDesc,
 		}, nil
 	}
@@ -128,4 +154,29 @@ func buildPagination(qDict map[string]string) (*FilterPagination, error) {
 	}
 
 	return pagination, nil
+}
+
+func (f *AuctionFilter) ToSQL() (string, string, []any, error) {
+	var whereClauses []string
+	var orderParts []string
+	var args []any
+
+	argIndex := 1
+
+	whereClauses = append(whereClauses, "tar.tar_status = 'active'")
+
+	if f.OnlyGoodDeal {
+		gdWhere := fmt.Sprintf("EXISTS (SELECT 1 FROM tc_auction_flags WHERE taf_auction_id = a.ta_auction_id AND taf_flag_id = $%d)", argIndex)
+		whereClauses = append(whereClauses, gdWhere)
+		args = append(args, enums.GoodDeal)
+		argIndex++
+	}
+
+	whereClause := strings.Join(whereClauses, " AND ")
+
+	orderParts = append(orderParts, f.SortBy.sql()+" "+f.SortOrder.sql())
+
+	orderClause := " ORDER BY " + strings.Join(orderParts, ", ")
+
+	return whereClause, orderClause, args, nil
 }
