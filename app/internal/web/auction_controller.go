@@ -4,7 +4,6 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
-	"strconv"
 	"time"
 
 	"github.com/adriein/tibia-char/internal"
@@ -65,25 +64,11 @@ func NewController(app *internal.App) *Controller {
 
 func (c *Controller) Get() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		qty, err := strconv.Atoi(ctx.DefaultQuery("qty", "20"))
+		filter, err := auction.FilterFromQueryParams(ctx.QueryMap(auction.QueryFilter))
 
 		if err != nil {
+			//TODO: Temporal logging until I decide what to do
 			c.logger.Error("Error getting auctions", "error", eris.ToString(err, true))
-		}
-
-		pageNum, err := strconv.Atoi(ctx.DefaultQuery("page", "1"))
-
-		if err != nil {
-			c.logger.Error("Error getting auctions", "error", eris.ToString(err, true))
-		}
-
-		filter := &auction.AuctionFilter{
-			Pagination: &auction.FilterPagination{
-				Limit:     qty,
-				Page:      pageNum - 1,
-				SortBy:    auction.SortByEndTime,
-				SortOrder: auction.SortOrderAsc,
-			},
 		}
 
 		page, err := c.service.GetAuctions(ctx, filter)
