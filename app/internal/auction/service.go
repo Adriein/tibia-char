@@ -668,10 +668,6 @@ Get Auctions Logic
 */
 
 func (s *Service) GetAuctions(ctx context.Context, filter *AuctionFilter) (*PaginatedAuctions, error) {
-	if filter == nil {
-		filter = DefaultAuctionFilter()
-	}
-
 	auctions, err := s.auctionRepository.GetAuctionsWithFilter(ctx, filter)
 
 	if err != nil {
