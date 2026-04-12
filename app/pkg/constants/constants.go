@@ -20,6 +20,10 @@ const (
 	AuctionModule = "AUCTION_MODULE"
 )
 
+const (
+	SourceKey = "source"
+)
+
 // Tibia Char
 
 const (

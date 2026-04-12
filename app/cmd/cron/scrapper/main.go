@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/adriein/tibia-char/internal"
+	"github.com/adriein/tibia-char/pkg/constants"
 	"github.com/adriein/tibia-char/pkg/helper"
 	"github.com/adriein/tibia-char/pkg/middleware"
 	_ "github.com/lib/pq"
@@ -19,6 +20,7 @@ func main() {
 		traceID := helper.TraceID()
 
 		ctx := context.WithValue(context.Background(), middleware.TraceIDKey, traceID)
+		ctx = context.WithValue(ctx, constants.SourceKey, "SCRAP_CRON")
 
 		service := app.Modules.Auction
 
