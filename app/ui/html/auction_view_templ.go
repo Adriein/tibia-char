@@ -736,11 +736,10 @@ func Auctions(page *auction.PaginatedAuctions) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-<<<<<<< HEAD
 		var templ_7745c5c3_Var34 templ.SafeURL
-		templ_7745c5c3_Var34, templ_7745c5c3_Err = templ.JoinURLErrs(fmt.Sprintf("/index?page=%d&qty=%d", page.Page-1, page.PageSize))
+		templ_7745c5c3_Var34, templ_7745c5c3_Err = templ.JoinURLErrs(fmt.Sprintf("/index?filter[page]=%d&filter[qty]=%d", page.Page-1, page.PageSize))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/ui/html/auction_view.templ`, Line: 306, Col: 76}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/ui/html/auction_view.templ`, Line: 306, Col: 92}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var34))
 		if templ_7745c5c3_Err != nil {
@@ -754,12 +753,6 @@ func Auctions(page *auction.PaginatedAuctions) templ.Component {
 		templ_7745c5c3_Var35, templ_7745c5c3_Err = templ.JoinStringErrs(templ.CSSClasses(templ_7745c5c3_Var33).String())
 		if templ_7745c5c3_Err != nil {
 			return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/ui/html/auction_view.templ`, Line: 1, Col: 0}
-=======
-		var templ_7745c5c3_Var35 templ.SafeURL
-		templ_7745c5c3_Var35, templ_7745c5c3_Err = templ.JoinURLErrs(fmt.Sprintf("/index?filter[page]=%d&filter[qty]=%d", page.Page-1, page.PageSize))
-		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/ui/html/auction_view.templ`, Line: 308, Col: 92}
->>>>>>> a7a8335 (feat: working filters)
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var35))
 		if templ_7745c5c3_Err != nil {
@@ -805,9 +798,9 @@ func Auctions(page *auction.PaginatedAuctions) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var39 templ.SafeURL
-		templ_7745c5c3_Var39, templ_7745c5c3_Err = templ.JoinURLErrs(fmt.Sprintf("/index?page=%d&qty=%d", page.Page+1, page.PageSize))
+		templ_7745c5c3_Var39, templ_7745c5c3_Err = templ.JoinURLErrs(fmt.Sprintf("/index?filter[page]=%d&filter[qty]=%d", page.Page+1, page.PageSize))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/ui/html/auction_view.templ`, Line: 310, Col: 76}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/ui/html/auction_view.templ`, Line: 310, Col: 92}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var39))
 		if templ_7745c5c3_Err != nil {
@@ -817,17 +810,10 @@ func Auctions(page *auction.PaginatedAuctions) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-<<<<<<< HEAD
 		var templ_7745c5c3_Var40 string
 		templ_7745c5c3_Var40, templ_7745c5c3_Err = templ.JoinStringErrs(templ.CSSClasses(templ_7745c5c3_Var38).String())
 		if templ_7745c5c3_Err != nil {
 			return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/ui/html/auction_view.templ`, Line: 1, Col: 0}
-=======
-		var templ_7745c5c3_Var40 templ.SafeURL
-		templ_7745c5c3_Var40, templ_7745c5c3_Err = templ.JoinURLErrs(fmt.Sprintf("/index?filter[page]=%d&filter[qty]=%d", page.Page+1, page.PageSize))
-		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/ui/html/auction_view.templ`, Line: 312, Col: 92}
->>>>>>> a7a8335 (feat: working filters)
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var40))
 		if templ_7745c5c3_Err != nil {
