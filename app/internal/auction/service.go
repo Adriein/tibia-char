@@ -21,6 +21,14 @@ import (
 	"golang.org/x/sync/errgroup"
 )
 
+type AuctionService interface {
+	ScrapperOrchestrator(ctx context.Context) error
+	GetAuctions(ctx context.Context, filter *AuctionFilter) (*PaginatedAuctions, error)
+	AggregateAuctionStatsPrecompute(ctx context.Context) error
+	WatchActiveAuctions(ctx context.Context) error
+	ConsolidateAuctions(ctx context.Context) error
+}
+
 type Service struct {
 	tibiaAPI             *vendor.TibiaApi
 	auctionRepository    AuctionRepository

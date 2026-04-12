@@ -16,6 +16,10 @@ const (
 	PROD = "prod"
 )
 
+const (
+	AuctionModule = "AUCTION_MODULE"
+)
+
 // Tibia Char
 
 const (
