@@ -13,6 +13,7 @@
   }
 
   .card__header,
+  .card__subheader,
   .card__body,
   .card__footer {
     padding: var(--card-padding-block) var(--card-padding-inline);
@@ -57,11 +58,15 @@
     border-top: 1px solid var(--color-border);
   }
 
+  .card__subheader {
+    display: flex;
+    align-items: center;
+    gap: var(--inline-space);
+  }
+
+
   .card__footer {
     display: flex;
-    padding: var(--block-space-half) var(--inline-space);
-    justify-content: center;
-    gap: var(--inline-space-double);
   }
 
   .card--auction {
@@ -72,8 +77,8 @@
       width: 56px;
       height: 56px;
       border-radius: var(--card-border-radius, var(--radius-md));
-      overflow: hidden;
-      flex-shrink: 0;
+      overflow: hidden; /* Prevent image overflow */
+      flex-shrink: 0; /* Prevent avatar from shrinking */
 
       img {
         width: 64px;
@@ -160,47 +165,15 @@
     }
 
     .card__bid,
-    .card__body,
-    .card__footer,
     .card__featured-items,
     .card__info {
       padding: var(--card-padding-block) var(--card-padding-inline);
     }
 
     .card__bid {
+      padding: var(--card-padding-block) var(--card-padding-inline);
       display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: var(--inline-space);
-    }
-
-    .card__bid-item {
-      display: flex;
-      gap: var(--inline-space-half);
-      align-items: center;
-      font-size: var(--text-x-small);
-      min-height: 24px;
-    }
-
-    .card__bid-item.card__bid-world {
-      display: flex;
-      gap: var(--inline-space-half);
-      align-items: center;
-    }
-
-    .card__bid-item.card__bid-world p {
-      margin: 0;
-    }
-
-    .card__bid-item.card__bid-world img,
-    .card__bid-item.card__bid-world svg {
-      block-size: 18px;
-      inline-size: 18px;
-      flex-shrink: 0;
-    }
-
-    .card__bid-item.card__bid-world .card__bid-country-flag {
-      width: 16px;
-      height: 10px;
+      grid-template-columns: repeat(2, auto);
     }
 
     .card__bid-section {
@@ -208,7 +181,6 @@
       flex-direction: column;
       gap: var(--inline-space);
       font-size: var(--text-x-small);
-      align-items: center;
     }
 
     .card__bid-badge {
@@ -223,7 +195,7 @@
       }
 
       &.card__bid-badge--winning {
-        --badge-bg: oklch(from var(--color-success) l c h / 20%);
+        --badge-bg: oklch(from var(--color-success) l c h / 20%);;
         --badge-color: var(--color-success);
       }
     }
@@ -256,10 +228,39 @@
       }
     }
 
-    .card__bid-time svg {
-      width: 20px;
-      height: 20px;
+    .card__bid-time {
+      display: flex;
+      gap: var(--inline-space);
+      align-items: center;
+
+      svg {
+        width: 20px;
+        height: 20px;
+        flex-shrink: 0;
+      }
+    }
+
+    .car__bid-world {
+      align-items: center;
+      display: flex;
+      gap: var(--inline-space);
+      font-size: var(--text-x-small);
+
+      p {
+        margin: 0;
+      }
+    }
+
+    .car__bid-world img,
+    .car__bid-world svg {
+      block-size: 18px;
+      inline-size: 18px;
       flex-shrink: 0;
+    }
+
+    .car__bid-world .card__bid-country-flag {
+      width: 16px;
+      height: 10px;
     }
 
     .card__bid-transfer--allowed {
@@ -272,24 +273,21 @@
 
     .card__body-skills-container {
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      grid-template-rows: repeat(2, auto);
+      grid-template-columns: repeat(2, 1fr);
       gap: var(--inline-space);
-      background-color: var(--color-muted);
-      border-radius: var(--radius-sm);
-      padding: var(--block-space-half) var(--inline-space);
 
       .skill-item {
         display: flex;
-        flex-direction: column;
-        justify-content: center;
+        justify-content: space-between;
         align-items: center;
+        background-color: var(--color-muted);
+        color: var(--color-ink);
+        border: 1px solid var(--color-border);
         border-radius: var(--radius-sm);
-        gap: var(--inline-space);
-
         font-size: var(--text-x-small);
         padding: var(--block-space-half) var(--inline-space);
         transition: background-color var(--dialog-duration) var(--ease-out-expo);
+
         /* Subtle hover effect makes the UI feel alive */
         /*&:hover {
           background-color: oklch(from var(--color-muted) calc(l + 0.05) c h);
@@ -315,8 +313,8 @@
       }
 
       .skill-item--high {
-        color: var(--color-brand-main);
-        font-weight: var(--text-weight-xl);
+        background-color: oklch(from var(--color-brand-main) l c h / 12%);
+        border-color: oklch(from var(--color-brand-main) l c h / 40%);
       }
     }
 
@@ -373,19 +371,13 @@
       }
     }
 
-    .card__footer a,
-    .card__footer .btn {
+    .card__footer a {
+      display: block;
       width: 100%;
     }
 
-    .card__footer-bid-container {
-      display: flex;
-      flex-direction: column;
-    }
-
-    .card__footer-bid-fiat {
-      --card__bid-amount-text-w: var(--text-weight-normal);
-      font-size: var(--text-x-small);
+    .card__footer .btn {
+      width: 100%;
     }
 
     @media (max-width: 400px) {
