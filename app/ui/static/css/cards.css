@@ -174,13 +174,13 @@
       padding: var(--card-padding-block) var(--card-padding-inline);
       display: grid;
       grid-template-columns: repeat(2, auto);
-      font-size: var(--text-x-small);
     }
 
     .card__bid-section {
       display: flex;
       flex-direction: column;
       gap: var(--inline-space);
+      font-size: var(--text-x-small);
     }
 
     .card__bid-badge {
