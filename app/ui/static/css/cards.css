@@ -13,7 +13,6 @@
   }
 
   .card__header,
-  .card__subheader,
   .card__body,
   .card__footer {
     padding: var(--card-padding-block) var(--card-padding-inline);
@@ -56,12 +55,6 @@
   .card__body ~ *,
   .card__footer {
     border-top: 1px solid var(--color-border);
-  }
-
-  .card__subheader {
-    display: flex;
-    align-items: center;
-    gap: var(--inline-space);
   }
 
   .card__footer {
@@ -180,7 +173,7 @@
       gap: var(--inline-space);
     }
 
-    .card__bid .card__bid-item {
+    .card__bid-item {
       display: flex;
       gap: var(--inline-space);
       align-items: center;
@@ -241,10 +234,6 @@
     }
 
     .card__bid-time {
-      display: flex;
-      gap: var(--inline-space);
-      align-items: center;
-
       svg {
         width: 20px;
         height: 20px;
@@ -252,12 +241,7 @@
       }
     }
 
-    .card__bid-item .card__bid-world {
-      align-items: center;
-      display: flex;
-      gap: var(--inline-space);
-      font-size: var(--text-x-small);
-
+    .card__bid-world {
       p {
         margin: 0;
       }
