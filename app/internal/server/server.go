@@ -64,5 +64,5 @@ func (t *TibiaChar) routeSetup() {
 	t.gin.Static("/ui/static", fmt.Sprintf("%s/ui/static", cwd))
 
 	//AUCTIONS
-	t.gin.GET("/index", web.NewController(t.app).Get())
+	t.gin.GET("/index", web.NewAuctionController(t.app).Get())
 }

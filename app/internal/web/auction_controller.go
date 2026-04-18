@@ -13,19 +13,19 @@ import (
 	"github.com/rotisserie/eris"
 )
 
-type Controller struct {
+type AuctionController struct {
 	service auction.AuctionService
 	logger  *slog.Logger
 }
 
-func NewController(app *internal.App) *Controller {
-	return &Controller{
+func NewAuctionController(app *internal.App) *AuctionController {
+	return &AuctionController{
 		service: app.Modules.Auction,
 		logger:  app.Logger,
 	}
 }
 
-func (c *Controller) Get() gin.HandlerFunc {
+func (c *AuctionController) Get() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		traceID := ctx.Value(middleware.TraceIDKey)
 
