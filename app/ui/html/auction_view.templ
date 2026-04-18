@@ -63,11 +63,26 @@ templ AuctionsView(page *auction.PaginatedAuctions) {
 			<link rel="stylesheet" href="/ui/static/css/main.css">
 		</head>
 		<body>
-			<section>
-				@Auctions(page)
-			</section>
+			<main>
+				@Filters()
+				<section class="main-content">
+					@Auctions(page)
+				</section>
+			</main>
 		</body>
 	</html>
+}
+
+templ Filters() {
+	<aside class="sidebar">
+		<div class="sidebar__content">
+			Filters
+		</div>
+	</aside>
+}
+
+templ Filter() {
+
 }
 
 /**
