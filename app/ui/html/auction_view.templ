@@ -76,13 +76,38 @@ templ AuctionsView(page *auction.PaginatedAuctions) {
 templ Filters() {
 	<aside class="sidebar">
 		<div class="sidebar__content">
-			Filters
+			<div class="sidebar__title">
+				<h3>Filters</h3>
+			</div>
+			<div class="sidebar__filters-container">
+				<div class="sidebar__filter-section">
+					<p>Flags</p>
+					@Filter("Best deals")
+				</div>
+				<div class="sidebar__filter-section">
+					<p>Auction status</p>
+					@Filter("Bidded")
+					@Filter("Initial")
+					@Filter("Hotº")
+				</div>
+				<div class="sidebar__filter-section">
+					<p>Vocations</p>
+					@Filter("Knight")
+					@Filter("Paladin")
+					@Filter("Monk")
+					@Filter("Druid")
+					@Filter("Sorcerer")
+				</div>
+			</div>
 		</div>
 	</aside>
 }
 
-templ Filter() {
-
+templ Filter(name string) {
+	<div>
+		<input type="checkbox" id={name} name={name}>
+		<label for={name}>{name}</label>
+	</div>
 }
 
 /**
