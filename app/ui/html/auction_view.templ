@@ -153,6 +153,8 @@ templ AuctionCard(viewModel *auction.AuctionViewModel) {
 		}
 
 		lastUpdated := formatTimeAgo(time.Since(auction.DateUpd))
+
+		const HighSkillThreshold = 110
 	}}
 	<div class="card card--auction">
 		<div class="card__header">
@@ -186,7 +188,36 @@ templ AuctionCard(viewModel *auction.AuctionViewModel) {
 			</div>
 		</div>
 		<div class="card__bid">
-			<div class="card__bid-section">
+			<div class="card__bid-item card__bid-time">
+				<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-clock"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0" /><path d="M12 7v5l3 3" /></svg>
+				<span>{auctionEnd}</span>
+			</div>
+			<div class="card__bid-item card__bid-time">
+				<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-hourglass-high"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M6.5 7h11" /><path d="M6 20v-2a6 6 0 1 1 12 0v2a1 1 0 0 1 -1 1h-10a1 1 0 0 1 -1 -1" /><path d="M6 4v2a6 6 0 1 0 12 0v-2a1 1 0 0 0 -1 -1h-10a1 1 0 0 0 -1 1" /></svg>
+				<span>{timeLeft}</span>
+			</div>
+			<div class="card__bid-item card__bid-world">
+				<img
+					class="card__bid-country-flag"
+					alt="Country flag"
+					src={fmt.Sprintf("/ui/static/images/%s.png", str.CamelToSnake(strings.ReplaceAll(auction.CharWorld.Location, " ", "")))}
+				/>
+				<p>{auction.CharWorld.Name}</p>
+				if auction.WorldTransfer {
+					<svg class="card__bid-transfer--allowed" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-world-check"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M20.946 12.99a9 9 0 1 0 -9.46 7.995" /><path d="M3.6 9h16.8" /><path d="M3.6 15h13.9" /><path d="M11.5 3a17 17 0 0 0 0 18" /><path d="M12.5 3a16.997 16.997 0 0 1 2.311 12.001" /><path d="M15 19l2 2l4 -4" /></svg>
+				} else {
+					<svg class="card__bid-transfer--forbidden" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-world-cancel"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M21 12a9 9 0 1 0 -8.985 9" /><path d="M3.6 9h16.8" /><path d="M3.6 15h9.9" /><path d="M11.5 3a17 17 0 0 0 0 18" /><path d="M12.5 3a16.991 16.991 0 0 1 2.53 10.275" /><path d="M19 19m-3 0a3 3 0 1 0 6 0a3 3 0 1 0 -6 0" /><path d="M17 21l4 -4" /></svg>
+				}
+			</div>
+			<div class="card__bid-item card__bid-world">
+				if auction.CharWorld.BattleEye == enums.BattleEyeGreen {
+					<img alt="Green battle eye" src="https://static.tibia.com/images/global/content/icon_battleyeinitial.gif"/>
+				} else {
+					<img alt="Yellow battle eye" src="https://static.tibia.com/images/global/content/icon_battleye.gif"/>
+				}
+				<p>{strings.ReplaceAll(auction.CharWorld.Pvp, "Pvp", "")}</p>
+			</div>
+			/*<div class="card__bid-section">
 				<div class="card__bid-time">
 					<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-clock"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0" /><path d="M12 7v5l3 3" /></svg>
 					<span>{auctionEnd}</span>
@@ -218,11 +249,8 @@ templ AuctionCard(viewModel *auction.AuctionViewModel) {
 					}
 					<p>{strings.ReplaceAll(auction.CharWorld.Pvp, "Pvp", "")}</p>
 				</div>
-			</div>
+			</div>*/
 		</div>
-		{{
-		const HighSkillThreshold = 110
-	}}
 	<div class="card__body">
 		<div class="card__body-skills-container">
 			@SkillItem(auction.Skills.Axe, "/ui/static/images/stonecutter_axe.png", "axe fighting", HighSkillThreshold)

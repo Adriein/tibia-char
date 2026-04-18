@@ -175,6 +175,14 @@
     .card__bid {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
+      gap: var(--inline-space);
+    }
+
+    .card__bid .card__bid-item {
+      display: flex;
+      gap: var(--inline-space);
+      align-items: center;
+      font-size: var(--text-x-small);
     }
 
     .card__bid-section {
@@ -182,6 +190,7 @@
       flex-direction: column;
       gap: var(--inline-space);
       font-size: var(--text-x-small);
+      align-items: center;
     }
 
     .card__bid-badge {
@@ -241,7 +250,7 @@
       }
     }
 
-    .car__bid-world {
+    .card__bid-item .card__bid-world {
       align-items: center;
       display: flex;
       gap: var(--inline-space);
@@ -252,14 +261,14 @@
       }
     }
 
-    .car__bid-world img,
-    .car__bid-world svg {
+    .card__bid-world img,
+    .card__bid-world svg {
       block-size: 18px;
       inline-size: 18px;
       flex-shrink: 0;
     }
 
-    .car__bid-world .card__bid-country-flag {
+    .card__bid-world .card__bid-country-flag {
       width: 16px;
       height: 10px;
     }
