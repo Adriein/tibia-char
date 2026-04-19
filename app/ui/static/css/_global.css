@@ -1,6 +1,7 @@
 @layer reset, base, components, utilities;
 
 :root {
+  color-scheme: dark;
   /* Spacing */
   --inline-space: 1ch;
   --inline-space-half: calc(var(--inline-space) / 2);

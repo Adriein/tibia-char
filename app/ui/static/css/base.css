@@ -40,15 +40,19 @@
 
   main {
     display: flex;
+    height: 100vh;
   }
 
   .main-content {
     flex: 1;
+    overflow-y: auto;
+    height: 100vh;
   }
 
   @media (max-width: 768px) {
     main {
       display: block;
+      height: auto;
     }
 
     .sidebar {
@@ -57,6 +61,8 @@
 
     .main-content {
       width: 100%;
+      height: auto;
+      overflow-y: visible;
     }
   }
 }
