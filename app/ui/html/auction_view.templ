@@ -75,40 +75,45 @@ templ AuctionsView(page *auction.PaginatedAuctions) {
 
 templ Filters() {
 	<aside class="sidebar">
-		<div class="sidebar__content">
-			<div class="sidebar__title">
-				<h3 class="sidebar__title-text">Filters</h3>
+		<form method="GET" action="/index">
+			<input type="hidden" name="filter[page]" value="1">
+			<input type="hidden" name="filter[qty]" value="20">
+			<div class="sidebar__content">
+				<div class="sidebar__title">
+					<h3 class="sidebar__title-text">Filters</h3>
+				</div>
+				<div class="sidebar__filters-container">
+					<div class="sidebar__filter-section">
+						<span class="sidebar__filter-section-title">Flags</span>
+						@Filter("Best deals", "flags")
+						@Filter("Rare outfits", "flags")
+						@Filter("Rare mounts", "flags")
+					</div>
+					<div class="sidebar__filter-section">
+						<span class="sidebar__filter-section-title">Auction status</span>
+						@Filter("Bidded", "status")
+						@Filter("Initial", "status")
+						@Filter("Hot", "status")
+					</div>
+					<div class="sidebar__filter-section">
+						<span class="sidebar__filter-section-title">Vocations</span>
+						@Filter("Knight", "vocation")
+						@Filter("Paladin", "vocation")
+						@Filter("Monk", "vocation")
+						@Filter("Druid", "vocation")
+						@Filter("Sorcerer", "vocation")
+					</div>
+				</div>
+				<button type="submit" class="btn btn--primary sidebar__submit">Apply Filters</button>
 			</div>
-			<div class="sidebar__filters-container">
-				<div class="sidebar__filter-section">
-					<span class="sidebar__filter-section-title">Flags</span>
-					@Filter("Best deals")
-					@Filter("Rare outfits")
-					@Filter("Rare mounts")
-				</div>
-				<div class="sidebar__filter-section">
-					<span class="sidebar__filter-section-title">Auction status</span>
-					@Filter("Bidded")
-					@Filter("Initial")
-					@Filter("Hot")
-				</div>
-				<div class="sidebar__filter-section">
-					<span class="sidebar__filter-section-title">Vocations</span>
-					@Filter("Knight")
-					@Filter("Paladin")
-					@Filter("Monk")
-					@Filter("Druid")
-					@Filter("Sorcerer")
-				</div>
-			</div>
-		</div>
+		</form>
 	</aside>
 }
 
-templ Filter(name string) {
+templ Filter(name string, category string) {
 	<label class="sidebar__filter">
-		<input type="checkbox" class="input">
-  		{name}
+		<input class="input" type="checkbox" name={fmt.Sprintf("filter[%s]", category)} value={name}>
+		{name}
 	</label>
 }
 

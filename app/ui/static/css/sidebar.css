@@ -56,4 +56,9 @@
     .sidebar__filter:hover {
         background-color: var(--color-muted);
     }
+
+    .sidebar__submit {
+        margin-top: var(--block-space);
+        width: 100%;
+    }
 }
