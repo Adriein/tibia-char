@@ -137,7 +137,7 @@ func Filters() templ.Component {
 			templ_7745c5c3_Var2 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "<aside class=\"sidebar\"><div class=\"sidebar__content\"><div class=\"sidebar__title\"><h3>Filters</h3></div><div class=\"sidebar__filters-container\"><div class=\"sidebar__filter-section\"><span>Flags</span>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "<aside class=\"sidebar\"><div class=\"sidebar__content\"><div class=\"sidebar__title\"><h3 class=\"sidebar__title-text\">Filters</h3></div><div class=\"sidebar__filters-container\"><div class=\"sidebar__filter-section\"><span class=\"sidebar__filter-section-title\">Flags</span>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -145,7 +145,7 @@ func Filters() templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "</div><div class=\"sidebar__filter-section\"><span>Auction status</span>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "</div><div class=\"sidebar__filter-section\"><span class=\"sidebar__filter-section-title\">Auction status</span>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -161,7 +161,7 @@ func Filters() templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "</div><div class=\"sidebar__filter-section\"><span>Vocations</span>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "</div><div class=\"sidebar__filter-section\"><span class=\"sidebar__filter-section-title\">Vocations</span>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

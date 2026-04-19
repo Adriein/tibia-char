@@ -66,10 +66,8 @@
 
   /* Form */
   --color-input: oklch(0.21 0.006 285.885);
-  --color-primary: oklch(0.795 0.184 86.047);
-  --color-primary-foreground: oklch(0.421 0.095 57.708);
-  --color-ring: oklch(0.795 0.184 86.047);
-  --color-destructive: oklch(0.704 0.191 22.216);
+  --color-ring: var(--color-brand-main);
+  --color-destructive: var(--color-error);
 
   /* Form inputs */
   --shadow-xs: 0 0 0 1px oklch(var(--lch-black) / 5%);
