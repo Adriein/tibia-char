@@ -355,6 +355,7 @@ func (r *PgAuctionRepository) Save(auction *Auction) error {
 		return eris.Wrap(err, "Error in upsert on tc_mounts")
 	}
 
+	//TODO: right now it's possible to have good deal and bad deal in the same character think how to solve that
 	flagsQuery := `
 		INSERT INTO tc_auction_flags (
 			taf_auction_id,

@@ -63,14 +63,17 @@ type FilterPagination struct {
 type FilterParam string
 
 const (
-	OnlyGoodDeal FilterParam = "gdeal"
+	GoodDealFilter      FilterParam = "gdeal"
+	RareOutfitFilter    FilterParam = "routfit"
+	AuctionStatusFilter FilterParam = "status"
 )
 
 type AuctionFilter struct {
-	Pagination   *FilterPagination
-	OnlyGoodDeal bool
-	SortBy       SortField
-	SortOrder    SortOrder
+	Pagination *FilterPagination
+	GoodDeal   bool
+	RareOutfit bool
+	SortBy     SortField
+	SortOrder  SortOrder
 }
 
 func FilterFromQueryParams(qDic map[string]string) (*AuctionFilter, error) {
@@ -80,27 +83,44 @@ func FilterFromQueryParams(qDic map[string]string) (*AuctionFilter, error) {
 		return nil, err
 	}
 
-	onlyGoodDeal, err := getBool(qDic, string(OnlyGoodDeal), false)
+	filter := AuctionFilter{
+		Pagination: pagination,
+		SortBy:     SortByEndTime,
+		SortOrder:  SortOrderAsc,
+	}
+
+	goodDealFilter, err := getBool(qDic, string(GoodDealFilter), false)
 
 	if err != nil {
 		return nil, err
 	}
 
-	if onlyGoodDeal {
-		return &AuctionFilter{
-			Pagination:   pagination,
-			OnlyGoodDeal: onlyGoodDeal,
-			SortBy:       SortByGoodDeal,
-			SortOrder:    SortOrderDesc,
-		}, nil
+	if goodDealFilter {
+		filter = AuctionFilter{
+			Pagination: pagination,
+			GoodDeal:   goodDealFilter,
+			SortBy:     SortByEndTime,
+			SortOrder:  SortOrderDesc,
+		}
 	}
 
-	return &AuctionFilter{
-		Pagination:   pagination,
-		OnlyGoodDeal: onlyGoodDeal,
-		SortBy:       SortByEndTime,
-		SortOrder:    SortOrderAsc,
-	}, nil
+	rareOutfitFilter, err := getBool(qDic, string(RareOutfitFilter), false)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if rareOutfitFilter {
+		filter = AuctionFilter{
+			Pagination: pagination,
+			GoodDeal:   goodDealFilter,
+			RareOutfit: rareOutfitFilter,
+			SortBy:     SortByEndTime,
+			SortOrder:  SortOrderAsc,
+		}
+	}
+
+	return &filter, nil
 }
 
 func getInt(m map[string]string, key string, fallback int) (int, error) {
@@ -165,7 +185,7 @@ func (f *AuctionFilter) ToSQL() (string, string, []any, error) {
 
 	whereClauses = append(whereClauses, "tar.tar_status = 'active'")
 
-	if f.OnlyGoodDeal {
+	if f.GoodDeal {
 		gdWhere := fmt.Sprintf("EXISTS (SELECT 1 FROM tc_auction_flags WHERE taf_auction_id = a.ta_auction_id AND taf_flag_id = $%d)", argIndex)
 		whereClauses = append(whereClauses, gdWhere)
 		args = append(args, enums.GoodDeal)
