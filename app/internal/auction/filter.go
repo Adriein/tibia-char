@@ -73,14 +73,14 @@ type AuctionFilter struct {
 	SortOrder    SortOrder
 }
 
-func FilterFromQueryParams(qDict map[string]string) (*AuctionFilter, error) {
-	pagination, err := buildPagination(qDict)
+func FilterFromQueryParams(qDic map[string]string) (*AuctionFilter, error) {
+	pagination, err := buildPagination(qDic)
 
 	if err != nil {
 		return nil, err
 	}
 
-	onlyGoodDeal, err := getBool(qDict, string(OnlyGoodDeal), false)
+	onlyGoodDeal, err := getBool(qDic, string(OnlyGoodDeal), false)
 
 	if err != nil {
 		return nil, err

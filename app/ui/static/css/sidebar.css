@@ -1,0 +1,50 @@
+@layer components {
+    .sidebar {
+        min-height: 100vh;
+        width: 10%;
+        background-color: var(--color-surface);
+        border-inline-end: 1px solid var(--color-border);
+        padding: var(--block-space) var(--inline-space);
+    }
+
+    .sidebar__content {
+        color: var(--color-surface-ink);
+        display: flex;
+        flex-direction: column;
+        gap: var(--block-space)
+    }
+
+    .sidebar__title {
+        .h3 {
+            font-size: var(--text-normal);
+            font-weight: var(--text-weight-normal);
+        }
+
+        padding: var(--block-space-half) var(--inline-space);
+        border-bottom: 1px solid var(--color-border);
+    }
+
+    .sidebar__filters-container {
+        display: flex;
+        flex-direction: column;
+        gap: var(--block-space);
+    }
+
+    .sidebar__filter-section {
+        .span {
+            font-size: var(--text-normal);
+        }
+
+        display: flex;
+        flex-direction: column;
+        gap: var(--block-space);
+        border-bottom: 1px solid var(--color-border);
+    }
+
+    .sidebar__filter {
+        display: flex;
+        flex-direction: row;
+        gap: var(--inline-space);
+        font-size: var(--text-small);
+    }
+}

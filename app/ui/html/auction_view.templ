@@ -88,7 +88,7 @@ templ Filters() {
 					<span>Auction status</span>
 					@Filter("Bidded")
 					@Filter("Initial")
-					@Filter("Hotº")
+					@Filter("Hot")
 				</div>
 				<div class="sidebar__filter-section">
 					<span>Vocations</span>
@@ -104,10 +104,10 @@ templ Filters() {
 }
 
 templ Filter(name string) {
-	<div>
-		<input type="checkbox" id={name} name={name}>
-		<label for={name}>{name}</label>
-	</div>
+	<label class="sidebar__filter">
+		<input type="checkbox" class="input">
+  		{name}
+	</label>
 }
 
 /**

@@ -1,0 +1,57 @@
+@layer components {
+  :is(.form, .field) input[type="checkbox"]:not([role="switch"]),
+  .input[type="checkbox"]:not([role="switch"]) {
+    appearance: none;
+    background-color: var(--color-input, var(--color-surface));
+    background-color: var(--color-input-alpha, var(--color-input, var(--color-surface)) / 30%);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm, 4px);
+    box-shadow: var(--shadow-xs, 0 0 0 1px oklch(var(--lch-black) / 5%));
+    height: 1rem;
+    width: 1rem;
+    outline: none;
+    outline-offset: 2px;
+    transition: box-shadow 0.15s ease;
+  }
+
+  :is(.form, .field) input[type="checkbox"]:not([role="switch"]):checked,
+  .input[type="checkbox"]:not([role="switch"]):checked {
+    background-color: var(--color-primary, var(--color-brand-main));
+    border-color: var(--color-primary, var(--color-brand-main));
+  }
+
+  :is(.form, .field) input[type="checkbox"]:not([role="switch"]):checked:after,
+  .input[type="checkbox"]:not([role="switch"]):checked:after {
+    content: "";
+    display: block;
+    height: 0.875rem;
+    width: 0.875rem;
+    background-color: var(--color-primary-foreground, var(--color-brand-ink));
+    -webkit-mask-image: var(--check-icon);
+    -webkit-mask-size: 0.875rem;
+    -webkit-mask-repeat: no-repeat;
+    -webkit-mask-position: center;
+  }
+
+  :is(.form, .field) input[type="checkbox"]:not([role="switch"]):focus-visible,
+  .input[type="checkbox"]:not([role="switch"]):focus-visible {
+    border-color: var(--color-ring, var(--color-link));
+    outline: 3px solid oklch(from var(--color-ring, var(--color-link)) l c h / 50%);
+  }
+
+  :is(.form, .field) input[type="checkbox"]:not([role="switch"])[aria-invalid="true"],
+  .input[type="checkbox"]:not([role="switch"])[aria-invalid="true"] {
+    outline-color: oklch(from var(--color-destructive, var(--color-error)) l c h / 20%);
+  }
+
+  :is(.form, .field) input[type="checkbox"]:not([role="switch"])[aria-invalid="true"],
+  .input[type="checkbox"]:not([role="switch"])[aria-invalid="true"] {
+    border-color: var(--color-destructive, var(--color-error));
+  }
+
+  :is(.form, .field) input[type="checkbox"]:not([role="switch"]):disabled,
+  .input[type="checkbox"]:not([role="switch"]):disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+}
