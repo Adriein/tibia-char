@@ -41,6 +41,15 @@ func formatTimeAgo(duration time.Duration) string {
 	return fmt.Sprintf("%dy ago", years)
 }
 
+func formatFilter(filter string) string {
+	switch filter {
+		case "Best deals":
+			return "gdeal"
+		default:
+		 return filter
+	}
+}
+
 script initTimezone() {
     if (!document.cookie.includes("User_Tz=")) {
         const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -109,10 +118,11 @@ templ Filters() {
 		</form>
 	</aside>
 }
-
+//TODO: the url is encoded and is ugly as fuck consider or js or htmx
 templ Filter(name string, category string) {
+	{{ value := formatFilter(name)}}
 	<label class="sidebar__filter">
-		<input class="input" type="checkbox" name={fmt.Sprintf("filter[%s]", category)} value={name}>
+		<input class="input" type="checkbox" name={fmt.Sprintf("filter[%s]", category)} value={value}>
 		{name}
 	</label>
 }
