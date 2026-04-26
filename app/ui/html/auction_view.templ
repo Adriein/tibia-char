@@ -1,9 +1,10 @@
 package html
 
 import (
+	"slices"
 	"strings"
 	"fmt"
-  	"time"
+   	"time"
 	"math"
 
 	"github.com/adriein/tibia-char/pkg/enums"
@@ -44,7 +45,7 @@ func formatTimeAgo(duration time.Duration) string {
 func formatFilter(filter string) string {
 	switch filter {
 		case "Best deals":
-			return "gdeal"
+			return string(auction.GoodDealFilter)
 		default:
 		 return filter
 	}
@@ -73,7 +74,7 @@ templ AuctionsView(page *auction.PaginatedAuctions) {
 		</head>
 		<body>
 			<main>
-				@Filters()
+				@Filters(page.Filters)
 				<section class="main-content">
 					@Auctions(page)
 				</section>
@@ -82,7 +83,7 @@ templ AuctionsView(page *auction.PaginatedAuctions) {
 	</html>
 }
 
-templ Filters() {
+templ Filters(filters auction.FilterParams) {
 	<aside class="sidebar">
 		<form method="GET" action="/index">
 			<input type="hidden" name="pag" value="1">
@@ -94,23 +95,23 @@ templ Filters() {
 				<div class="sidebar__filters-container">
 					<div class="sidebar__filter-section">
 						<span class="sidebar__filter-section-title">Flags</span>
-						@Filter("Best deals", "flg")
-						@Filter("Rare outfits", "flg")
-						@Filter("Rare mounts", "flg")
+						@Filter("Best deals", "flg", filters.Flags)
+						@Filter("Rare outfits", "flg", filters.Flags)
+						@Filter("Rare mounts", "flg", filters.Flags)
 					</div>
 					<div class="sidebar__filter-section">
 						<span class="sidebar__filter-section-title">Auction status</span>
-						@Filter("Bidded", "status")
-						@Filter("Initial", "status")
-						@Filter("Hot", "status")
+						@Filter("Bidded", "status", filters.Status)
+						@Filter("Initial", "status", filters.Status)
+						@Filter("Hot", "status", filters.Status)
 					</div>
 					<div class="sidebar__filter-section">
 						<span class="sidebar__filter-section-title">Vocations</span>
-						@Filter("Knight", "vocation")
-						@Filter("Paladin", "vocation")
-						@Filter("Monk", "vocation")
-						@Filter("Druid", "vocation")
-						@Filter("Sorcerer", "vocation")
+						@Filter("Knight", "vocation", filters.Vocation)
+						@Filter("Paladin", "vocation", filters.Vocation)
+						@Filter("Monk", "vocation", filters.Vocation)
+						@Filter("Druid", "vocation", filters.Vocation)
+						@Filter("Sorcerer", "vocation", filters.Vocation)
 					</div>
 				</div>
 				<button type="submit" class="btn btn--primary sidebar__submit">Apply Filters</button>
@@ -118,12 +119,16 @@ templ Filters() {
 		</form>
 	</aside>
 }
-//TODO: the url is encoded and is ugly as fuck consider or js or htmx
-templ Filter(name string, category string) {
-	{{ value := formatFilter(name)}}
+
+templ Filter(label string, filter string, activeFilters []string) {
+	{{
+		value := formatFilter(label)
+		checked := slices.Contains(activeFilters, value)
+		fmt.Printf("value: %s, checked: %t \n", value, checked)
+	}}
 	<label class="sidebar__filter">
-		<input class="input" type="checkbox" name={category} value={value}>
-		{name}
+		<input class="input" type="checkbox" name={filter} value={value} checked?={checked}>
+		{label}
 	</label>
 }
 

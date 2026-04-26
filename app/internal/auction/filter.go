@@ -10,9 +10,9 @@ import (
 )
 
 type UrlQueryParamsDto struct {
-	Page  int      `form:"pag"`
-	Qty   int      `form:"qty"`
-	Flags []string `form:"flg"`
+	Page     int      `form:"pag"`
+	Qty      int      `form:"qty"`
+	Flags    []string `form:"flg"`
 }
 
 const QueryFilter = "filter"
@@ -82,6 +82,45 @@ type AuctionFilter struct {
 	SortOrder  SortOrder
 }
 
+func (f *AuctionFilter) ToSQL() (string, string, []any, error) {
+	var whereClauses []string
+	var orderParts []string
+	var args []any
+
+	argIndex := 1
+
+	whereClauses = append(whereClauses, "tar.tar_status = 'active'")
+
+	if f.GoodDeal {
+		gdWhere := fmt.Sprintf("EXISTS (SELECT 1 FROM tc_auction_flags WHERE taf_auction_id = a.ta_auction_id AND taf_flag_id = $%d)", argIndex)
+		whereClauses = append(whereClauses, gdWhere)
+		args = append(args, enums.GoodDeal)
+		argIndex++
+	}
+
+	whereClause := strings.Join(whereClauses, " AND ")
+
+	orderParts = append(orderParts, f.SortBy.sql()+" "+f.SortOrder.sql())
+
+	orderClause := " ORDER BY " + strings.Join(orderParts, ", ")
+
+	return whereClause, orderClause, args, nil
+}
+
+func (f *AuctionFilter) Flags() []string {
+	var result []string
+
+	if f.GoodDeal {
+		result = append(result, string(GoodDealFilter))
+	}
+
+	if f.RareOutfit {
+		result = append(result, string(RareOutfitFilter))
+	}
+
+	return result
+}
+
 func FilterFromQueryParams(dto *UrlQueryParamsDto) (*AuctionFilter, error) {
 	pagination, err := buildPagination(dto)
 
@@ -116,29 +155,4 @@ func buildPagination(dto *UrlQueryParamsDto) (*FilterPagination, error) {
 	}
 
 	return pagination, nil
-}
-
-func (f *AuctionFilter) ToSQL() (string, string, []any, error) {
-	var whereClauses []string
-	var orderParts []string
-	var args []any
-
-	argIndex := 1
-
-	whereClauses = append(whereClauses, "tar.tar_status = 'active'")
-
-	if f.GoodDeal {
-		gdWhere := fmt.Sprintf("EXISTS (SELECT 1 FROM tc_auction_flags WHERE taf_auction_id = a.ta_auction_id AND taf_flag_id = $%d)", argIndex)
-		whereClauses = append(whereClauses, gdWhere)
-		args = append(args, enums.GoodDeal)
-		argIndex++
-	}
-
-	whereClause := strings.Join(whereClauses, " AND ")
-
-	orderParts = append(orderParts, f.SortBy.sql()+" "+f.SortOrder.sql())
-
-	orderClause := " ORDER BY " + strings.Join(orderParts, ", ")
-
-	return whereClause, orderClause, args, nil
 }

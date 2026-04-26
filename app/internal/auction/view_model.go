@@ -12,6 +12,13 @@ type PaginatedAuctions struct {
 	Page       int
 	PageSize   int
 	TotalPages int
+	Filters    FilterParams
+}
+
+type FilterParams struct {
+	Flags    []string
+	Status   []string
+	Vocation []string
 }
 
 type AuctionViewModel struct {

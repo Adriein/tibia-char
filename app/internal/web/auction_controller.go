@@ -43,14 +43,14 @@ func (c *AuctionController) Get() gin.HandlerFunc {
 			c.logger.Error("Error getting auctions", "trace_id", traceID, "error", eris.ToString(err, true))
 		}
 
-		page, err := c.service.GetAuctions(ctx, filter)
+		dto, err := c.service.GetAuctions(ctx, filter)
 
 		if err != nil {
 			//TODO: Temporal logging until I decide what to do
 			c.logger.Error("Error getting auctions", "trace_id", traceID, "error", eris.ToString(err, true))
 		}
 
-		renderer := vendor.NewTemplRenderer(ctx, http.StatusOK, html.AuctionsView(page))
+		renderer := vendor.NewTemplRenderer(ctx, http.StatusOK, html.AuctionsView(dto))
 
 		ctx.Render(http.StatusOK, renderer)
 	}
