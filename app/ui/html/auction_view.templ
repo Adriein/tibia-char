@@ -85,8 +85,8 @@ templ AuctionsView(page *auction.PaginatedAuctions) {
 templ Filters() {
 	<aside class="sidebar">
 		<form method="GET" action="/index">
-			<input type="hidden" name="filter[page]" value="1">
-			<input type="hidden" name="filter[qty]" value="20">
+			<input type="hidden" name="pag" value="1">
+			<input type="hidden" name="qty" value="20">
 			<div class="sidebar__content">
 				<div class="sidebar__title">
 					<h3 class="sidebar__title-text">Filters</h3>
@@ -94,9 +94,9 @@ templ Filters() {
 				<div class="sidebar__filters-container">
 					<div class="sidebar__filter-section">
 						<span class="sidebar__filter-section-title">Flags</span>
-						@Filter("Best deals", "flags")
-						@Filter("Rare outfits", "flags")
-						@Filter("Rare mounts", "flags")
+						@Filter("Best deals", "flg")
+						@Filter("Rare outfits", "flg")
+						@Filter("Rare mounts", "flg")
 					</div>
 					<div class="sidebar__filter-section">
 						<span class="sidebar__filter-section-title">Auction status</span>
@@ -122,7 +122,7 @@ templ Filters() {
 templ Filter(name string, category string) {
 	{{ value := formatFilter(name)}}
 	<label class="sidebar__filter">
-		<input class="input" type="checkbox" name={fmt.Sprintf("filter[%s]", category)} value={value}>
+		<input class="input" type="checkbox" name={category} value={value}>
 		{name}
 	</label>
 }
@@ -362,11 +362,11 @@ templ Auctions(page *auction.PaginatedAuctions) {
 	<div class="pagination pagination--auctions">
 		<span>Auctions {page.TotalCount}</span>
 		<div class="pagination__ctrl-container">
-			<a href={fmt.Sprintf("/index?filter[page]=%d&filter[qty]=%d", page.Page-1, page.PageSize)} class={"pagination__ctrl", templ.KV("pagination__ctrl--disabled", page.Page <= 1)}>
+			<a href={fmt.Sprintf("/index?pag=%d&qty=%d", page.Page-1, page.PageSize)} class={"pagination__ctrl", templ.KV("pagination__ctrl--disabled", page.Page <= 1)}>
 				<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-chevron-left"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M15 6l-6 6l6 6" /></svg>
 			</a>
 			<span>{page.Page} / {page.TotalPages}</span>
-			<a href={fmt.Sprintf("/index?filter[page]=%d&filter[qty]=%d", page.Page+1, page.PageSize)} class={"pagination__ctrl", templ.KV("pagination__ctrl--disabled", page.Page >= page.TotalPages)}>
+			<a href={fmt.Sprintf("/index?pag=%d&qty=%d", page.Page+1, page.PageSize)} class={"pagination__ctrl", templ.KV("pagination__ctrl--disabled", page.Page >= page.TotalPages)}>
 				<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-chevron-right"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M9 6l6 6l-6 6" /></svg>
 			</a>
 		</div>

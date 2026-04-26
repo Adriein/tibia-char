@@ -2,12 +2,18 @@ package auction
 
 import (
 	"fmt"
-	"strconv"
+	"slices"
 	"strings"
 
 	"github.com/adriein/tibia-char/pkg/enums"
-	"github.com/rotisserie/eris"
+	"github.com/adriein/tibia-char/pkg/helper/numbers"
 )
+
+type UrlQueryParamsDto struct {
+	Page  int      `form:"pag"`
+	Qty   int      `form:"qty"`
+	Flags []string `form:"flg"`
+}
 
 const QueryFilter = "filter"
 
@@ -76,8 +82,8 @@ type AuctionFilter struct {
 	SortOrder  SortOrder
 }
 
-func FilterFromQueryParams(qDic map[string]string) (*AuctionFilter, error) {
-	pagination, err := buildPagination(qDic)
+func FilterFromQueryParams(dto *UrlQueryParamsDto) (*AuctionFilter, error) {
+	pagination, err := buildPagination(dto)
 
 	if err != nil {
 		return nil, err
@@ -89,11 +95,7 @@ func FilterFromQueryParams(qDic map[string]string) (*AuctionFilter, error) {
 		SortOrder:  SortOrderAsc,
 	}
 
-	goodDealFilter, err := getBool(qDic, string(GoodDealFilter), false)
-
-	if err != nil {
-		return nil, err
-	}
+	goodDealFilter := slices.Contains(dto.Flags, string(GoodDealFilter))
 
 	if goodDealFilter {
 		filter = AuctionFilter{
@@ -104,73 +106,13 @@ func FilterFromQueryParams(qDic map[string]string) (*AuctionFilter, error) {
 		}
 	}
 
-	rareOutfitFilter, err := getBool(qDic, string(RareOutfitFilter), false)
-
-	if err != nil {
-		return nil, err
-	}
-
-	if rareOutfitFilter {
-		filter = AuctionFilter{
-			Pagination: pagination,
-			GoodDeal:   goodDealFilter,
-			RareOutfit: rareOutfitFilter,
-			SortBy:     SortByEndTime,
-			SortOrder:  SortOrderAsc,
-		}
-	}
-
 	return &filter, nil
 }
 
-func getInt(m map[string]string, key string, fallback int) (int, error) {
-	val, ok := m[key]
-
-	if !ok {
-		return fallback, nil
-	}
-
-	i, err := strconv.Atoi(val)
-
-	if err != nil {
-		return fallback, eris.Wrap(err, "cannot convert string to int")
-	}
-
-	return i, nil
-}
-
-func getBool(m map[string]string, key string, fallback bool) (bool, error) {
-	val, ok := m[key]
-
-	if !ok {
-		return fallback, nil
-	}
-
-	i, err := strconv.ParseBool(val)
-
-	if err != nil {
-		return fallback, eris.Wrap(err, "cannot convert string to bool")
-	}
-
-	return i, nil
-}
-
-func buildPagination(qDict map[string]string) (*FilterPagination, error) {
-	page, err := getInt(qDict, string(Page), 1)
-
-	if err != nil {
-		return nil, err
-	}
-
-	qty, err := getInt(qDict, string(Qty), 20)
-
-	if err != nil {
-		return nil, err
-	}
-
+func buildPagination(dto *UrlQueryParamsDto) (*FilterPagination, error) {
 	pagination := &FilterPagination{
-		Limit: qty,
-		Page:  page - 1,
+		Limit: numbers.DefaultInt(dto.Qty, 20),
+		Page:  numbers.DefaultInt(dto.Page, 1) - 1,
 	}
 
 	return pagination, nil

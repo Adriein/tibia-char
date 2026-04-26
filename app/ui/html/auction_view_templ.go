@@ -146,19 +146,19 @@ func Filters() templ.Component {
 			templ_7745c5c3_Var2 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "<aside class=\"sidebar\"><form method=\"GET\" action=\"/index\"><input type=\"hidden\" name=\"filter[page]\" value=\"1\"> <input type=\"hidden\" name=\"filter[qty]\" value=\"20\"><div class=\"sidebar__content\"><div class=\"sidebar__title\"><h3 class=\"sidebar__title-text\">Filters</h3></div><div class=\"sidebar__filters-container\"><div class=\"sidebar__filter-section\"><span class=\"sidebar__filter-section-title\">Flags</span>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "<aside class=\"sidebar\"><form method=\"GET\" action=\"/index\"><input type=\"hidden\" name=\"pag\" value=\"1\"> <input type=\"hidden\" name=\"qty\" value=\"20\"><div class=\"sidebar__content\"><div class=\"sidebar__title\"><h3 class=\"sidebar__title-text\">Filters</h3></div><div class=\"sidebar__filters-container\"><div class=\"sidebar__filter-section\"><span class=\"sidebar__filter-section-title\">Flags</span>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = Filter("Best deals", "flags").Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = Filter("Best deals", "flg").Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = Filter("Rare outfits", "flags").Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = Filter("Rare outfits", "flg").Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = Filter("Rare mounts", "flags").Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = Filter("Rare mounts", "flg").Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -210,7 +210,7 @@ func Filters() templ.Component {
 	})
 }
 
-// TODO: apr 19 this is failing to build the correct URL
+// TODO: the url is encoded and is ugly as fuck consider or js or htmx
 func Filter(name string, category string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -238,9 +238,9 @@ func Filter(name string, category string) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var4 string
-		templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("filter[%s]", category))
+		templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(category)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/ui/html/auction_view.templ`, Line: 125, Col: 80}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/ui/html/auction_view.templ`, Line: 125, Col: 53}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 		if templ_7745c5c3_Err != nil {
@@ -253,7 +253,7 @@ func Filter(name string, category string) templ.Component {
 		var templ_7745c5c3_Var5 string
 		templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(value)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/ui/html/auction_view.templ`, Line: 125, Col: 94}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/ui/html/auction_view.templ`, Line: 125, Col: 67}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 		if templ_7745c5c3_Err != nil {
@@ -922,9 +922,9 @@ func Auctions(page *auction.PaginatedAuctions) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var40 templ.SafeURL
-		templ_7745c5c3_Var40, templ_7745c5c3_Err = templ.JoinURLErrs(fmt.Sprintf("/index?filter[page]=%d&filter[qty]=%d", page.Page-1, page.PageSize))
+		templ_7745c5c3_Var40, templ_7745c5c3_Err = templ.JoinURLErrs(fmt.Sprintf("/index?pag=%d&qty=%d", page.Page-1, page.PageSize))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/ui/html/auction_view.templ`, Line: 365, Col: 92}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/ui/html/auction_view.templ`, Line: 365, Col: 75}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var40))
 		if templ_7745c5c3_Err != nil {
@@ -983,9 +983,9 @@ func Auctions(page *auction.PaginatedAuctions) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var45 templ.SafeURL
-		templ_7745c5c3_Var45, templ_7745c5c3_Err = templ.JoinURLErrs(fmt.Sprintf("/index?filter[page]=%d&filter[qty]=%d", page.Page+1, page.PageSize))
+		templ_7745c5c3_Var45, templ_7745c5c3_Err = templ.JoinURLErrs(fmt.Sprintf("/index?pag=%d&qty=%d", page.Page+1, page.PageSize))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/ui/html/auction_view.templ`, Line: 369, Col: 92}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/ui/html/auction_view.templ`, Line: 369, Col: 75}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var45))
 		if templ_7745c5c3_Err != nil {

@@ -29,7 +29,14 @@ func (c *AuctionController) Get() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		traceID := ctx.Value(middleware.TraceIDKey)
 
-		filter, err := auction.FilterFromQueryParams(ctx.QueryMap(auction.QueryFilter))
+		var rawFilter auction.UrlQueryParamsDto
+
+		if err := ctx.ShouldBindQuery(&rawFilter); err != nil {
+			//TODO: Temporal logging until I decide what to do
+			c.logger.Error("Error binding filters", "trace_id", traceID, "error", eris.ToString(err, true))
+		}
+
+		filter, err := auction.FilterFromQueryParams(&rawFilter)
 
 		if err != nil {
 			//TODO: Temporal logging until I decide what to do

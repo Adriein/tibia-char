@@ -120,6 +120,7 @@ func (s *Service) AggregateAuctionStatsPrecompute(ctx context.Context) error {
 		return err
 	}
 
+	//TODO: i need to create subset takeing into account the world battleye green or not from the start + rare outfits flags
 	priceSubsets := s.subsetPricesMap(historicAucPrices)
 
 	stats := statistics.New()
