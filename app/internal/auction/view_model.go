@@ -22,7 +22,10 @@ type FilterParams struct {
 }
 
 type AuctionViewModel struct {
-	Auction *Auction
+	Auction         *Auction
+	AucEndFormatted string
+	LastUpdated     string
+	TimeLeft        string
 }
 
 func (av *AuctionViewModel) IsGoodDeal() bool {

@@ -4,43 +4,11 @@ import (
 	"slices"
 	"strings"
 	"fmt"
-   	"time"
-	"math"
 
 	"github.com/adriein/tibia-char/pkg/enums"
 	"github.com/adriein/tibia-char/pkg/helper/str"
-	"github.com/adriein/tibia-char/pkg/middleware"
 	"github.com/adriein/tibia-char/internal/auction"
 )
-
-func formatTimeAgo(duration time.Duration) string {
-	if duration < time.Minute {
-		return "just now"
-	}
-
-	minutes := int(duration.Minutes())
-	if minutes < 60 {
-		return fmt.Sprintf("%dm ago", minutes)
-	}
-
-	hours := int(duration.Hours())
-	if hours < 24 {
-		return fmt.Sprintf("%dh ago", hours)
-	}
-
-	days := hours / 24
-	if days < 30 {
-		return fmt.Sprintf("%dd ago", days)
-	}
-
-	months := days / 30
-	if months < 12 {
-		return fmt.Sprintf("%dmo ago", months)
-	}
-
-	years := months / 12
-	return fmt.Sprintf("%dy ago", years)
-}
 
 func formatFilter(filter string) string {
 	switch filter {
@@ -167,40 +135,6 @@ templ AuctionCard(viewModel *auction.AuctionViewModel) {
 			MaxQuests = 42
 		)
 
-		loc, ok := ctx.Value(middleware.TimezoneKey).(*time.Location)
-
-		if !ok {
-			loc = time.UTC
-		}
-
-		formattedAuctionEnd := auction.AuctionEnd.In(loc).Format("Jan 02 at 15:04")
-
-		abbr, _ := auction.AuctionEnd.In(loc).Zone()
-
-		auctionEnd := fmt.Sprintf("%s %s", formattedAuctionEnd, abbr)
-
-		var timeLeft string
-
-		duration := time.Until(auction.AuctionEnd)
-
-		if duration <= 0 {
-			timeLeft = "Finished"
-		} else {
-			days := int(duration.Hours() / 24)
-			hours := int(math.Mod(duration.Hours(), 24))
-			minutes := int(math.Mod(duration.Minutes(), 60))
-
-			if days > 0 {
-				timeLeft = fmt.Sprintf("%dd %dh", days, hours)
-			}
-
-			if days <= 0 && hours > 0 {
-				timeLeft =  fmt.Sprintf("%dh %dm", hours, minutes)
-			} else {
-				timeLeft = fmt.Sprintf("%dm", minutes)
-			}
-		}
-
 		var auctionStage string
 		var stageBadgeClass string
 
@@ -216,7 +150,10 @@ templ AuctionCard(viewModel *auction.AuctionViewModel) {
 			stageBadgeClass = "card__bid-badge card__bid-badge--winning"
 		}
 
-		lastUpdated := formatTimeAgo(time.Since(auction.DateUpd))
+		lastUpdated := viewModel.LastUpdated
+		timeLeft := viewModel.TimeLeft
+		auctionEnd := viewModel.AucEndFormatted
+
 	}}
 	<div class="card card--auction">
 		<div class="card__header">

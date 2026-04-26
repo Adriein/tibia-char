@@ -13,6 +13,7 @@ import (
 	"github.com/adriein/tibia-char/internal/currency"
 	"github.com/adriein/tibia-char/pkg/constants"
 	"github.com/adriein/tibia-char/pkg/enums"
+	"github.com/adriein/tibia-char/pkg/helper/beautify"
 	"github.com/adriein/tibia-char/pkg/helper/collections"
 	"github.com/adriein/tibia-char/pkg/helper/statistics"
 	"github.com/adriein/tibia-char/pkg/middleware"
@@ -727,8 +728,14 @@ func (s *Service) GetAuctions(ctx context.Context, filter *AuctionFilter) (*Pagi
 		auction.BidFiat = conRate.Exchange(auction.BidFiat, targetCurrency)
 		auction.BidCurrency = targetCurrency
 
+		formattedAuctionEnd := auction.AuctionEnd.In(loc).Format("Jan 02 at 15:04")
+		abbr, _ := auction.AuctionEnd.In(loc).Zone()
+
 		viewModels = append(viewModels, &AuctionViewModel{
-			Auction: auction,
+			Auction:         auction,
+			LastUpdated:     beautify.FormatTimeAgo(time.Since(auction.DateUpd)),
+			TimeLeft:        beautify.TimeLeft(auction.AuctionEnd),
+			AucEndFormatted: fmt.Sprintf("%s %s", formattedAuctionEnd, abbr),
 		})
 	}
 
