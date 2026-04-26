@@ -124,7 +124,6 @@ templ Filter(label string, filter string, activeFilters []string) {
 	{{
 		value := formatFilter(label)
 		checked := slices.Contains(activeFilters, value)
-		fmt.Printf("value: %s, checked: %t \n", value, checked)
 	}}
 	<label class="sidebar__filter">
 		<input class="input" type="checkbox" name={filter} value={value} checked?={checked}>
