@@ -152,6 +152,14 @@ templ AuctionCard(viewModel *auction.AuctionViewModel) {
 			stageBadgeClass = "card__bid-badge card__bid-badge--winning"
 		}
 
+		var isHotAuction bool
+
+		for _, flag := range auction.Flags {
+			if flag.ID == enums.Hot {
+				isHotAuction = true
+			}
+		}
+
 		lastUpdated := viewModel.LastUpdated
 		timeLeft := viewModel.TimeLeft
 		auctionEnd := viewModel.AucEndFormatted
@@ -168,7 +176,7 @@ templ AuctionCard(viewModel *auction.AuctionViewModel) {
 				<span class="card__updated">{lastUpdated}</span>
 			</div>
 			<div class="card__header-flags">
-				if auction.IsTrending() {
+				if isHotAuction {
 				<div class="card__header-flag--trending">
 					<img class="card__header-flag-icon--trending" alt="hot fire elemental icon" src="/ui/static/images/fire_elemental_trending_icon.png"/>
 					<span class="card__header-flag-text--trending">Hot</span>
