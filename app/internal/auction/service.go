@@ -748,7 +748,8 @@ func (s *Service) GetAuctions(ctx context.Context, filter *AuctionFilter) (*Pagi
 	totalPages := totalCount / filter.Pagination.Limit
 
 	viewFilters := FilterParams{
-		Flags: filter.Flags(),
+		Flags:  filter.Flags(),
+		Status: filter.Status(),
 	}
 
 	result := &PaginatedAuctions{

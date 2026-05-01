@@ -10,9 +10,10 @@ import (
 )
 
 type UrlQueryParamsDto struct {
-	Page     int      `form:"pag"`
-	Qty      int      `form:"qty"`
-	Flags    []string `form:"flg"`
+	Page   int      `form:"pag"`
+	Qty    int      `form:"qty"`
+	Flags  []string `form:"flg"`
+	Status []string `form:"sts"`
 }
 
 const QueryFilter = "filter"
@@ -69,15 +70,16 @@ type FilterPagination struct {
 type FilterParam string
 
 const (
-	GoodDealFilter      FilterParam = "gdeal"
-	RareOutfitFilter    FilterParam = "routfit"
-	AuctionStatusFilter FilterParam = "status"
+	GoodDealFilter         FilterParam = "gdeal"
+	RareOutfitFilter       FilterParam = "routfit"
+	AuctionHotStatusFilter FilterParam = "hot"
 )
 
 type AuctionFilter struct {
 	Pagination *FilterPagination
 	GoodDeal   bool
 	RareOutfit bool
+	HotDeal    bool
 	SortBy     SortField
 	SortOrder  SortOrder
 }
@@ -95,6 +97,13 @@ func (f *AuctionFilter) ToSQL() (string, string, []any, error) {
 		gdWhere := fmt.Sprintf("EXISTS (SELECT 1 FROM tc_auction_flags WHERE taf_auction_id = a.ta_auction_id AND taf_flag_id = $%d)", argIndex)
 		whereClauses = append(whereClauses, gdWhere)
 		args = append(args, enums.GoodDeal)
+		argIndex++
+	}
+
+	if f.HotDeal {
+		hdWhere := fmt.Sprintf("EXISTS (SELECT 1 FROM tc_auction_flags WHERE taf_auction_id = a.ta_auction_id AND taf_flag_id = $%d)", argIndex)
+		whereClauses = append(whereClauses, hdWhere)
+		args = append(args, enums.Hot)
 		argIndex++
 	}
 
@@ -121,6 +130,16 @@ func (f *AuctionFilter) Flags() []string {
 	return result
 }
 
+func (f *AuctionFilter) Status() []string {
+	var result []string
+
+	if f.HotDeal {
+		result = append(result, string(AuctionHotStatusFilter))
+	}
+
+	return result
+}
+
 func FilterFromQueryParams(dto *UrlQueryParamsDto) (*AuctionFilter, error) {
 	pagination, err := buildPagination(dto)
 
@@ -141,7 +160,19 @@ func FilterFromQueryParams(dto *UrlQueryParamsDto) (*AuctionFilter, error) {
 			Pagination: pagination,
 			GoodDeal:   goodDealFilter,
 			SortBy:     SortByEndTime,
-			SortOrder:  SortOrderDesc,
+			SortOrder:  SortOrderAsc,
+		}
+	}
+
+	statusHotFilter := slices.Contains(dto.Status, string(AuctionHotStatusFilter))
+
+	if statusHotFilter {
+		filter = AuctionFilter{
+			Pagination: pagination,
+			GoodDeal:   goodDealFilter,
+			HotDeal:    statusHotFilter,
+			SortBy:     SortByEndTime,
+			SortOrder:  SortOrderAsc,
 		}
 	}
 
