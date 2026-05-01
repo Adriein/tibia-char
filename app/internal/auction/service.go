@@ -440,9 +440,16 @@ func (s *Service) scrapAuctionDetail(ctx context.Context, g *errgroup.Group, fai
 					return nil
 				}
 
-				if existingAuction != nil && auction.IsEqual(existingAuction) {
+				if existingAuction != nil {
+					auction.BidRegistry = existingAuction.BidRegistry
+				}
+
+				if auction.IsEqual(existingAuction) {
 					if auction.ShouldBeArchived(existingAuction) {
-						if err := s.auctionRepository.DeactivateAuctionRecord(ctx, auction.AuctionID); err != nil {
+
+						err := s.auctionRepository.DeactivateAuctionRecord(ctx, auction.AuctionID)
+
+						if err != nil {
 							s.logger.Error(fmt.Sprintf("Failed deactivating auction: %s", eris.ToString(err, true)), "trace_id", traceID, "source", source, "phase", phase, "routine_id", goroutineID, "auction_id", auctionId, "duration", time.Since(start))
 
 							s.notifyStatus(ctx, totalWorkload, &workDoneCounter)
@@ -457,7 +464,9 @@ func (s *Service) scrapAuctionDetail(ctx context.Context, g *errgroup.Group, fai
 						return nil
 					}
 
-					if err := s.auctionRepository.MarkAuctionAsUpdated(ctx, auction.AuctionID); err != nil {
+					err := s.auctionRepository.MarkAuctionAsUpdated(ctx, auction.AuctionID)
+
+					if err != nil {
 						s.logger.Error(fmt.Sprintf("Failed marking auction as updated: %s", eris.ToString(err, true)), "trace_id", traceID, "source", source, "phase", phase, "routine_id", goroutineID, "auction_id", auctionId, "duration", time.Since(start))
 
 						s.notifyStatus(ctx, totalWorkload, &workDoneCounter)
@@ -476,7 +485,9 @@ func (s *Service) scrapAuctionDetail(ctx context.Context, g *errgroup.Group, fai
 
 				if err != nil {
 					if errors.Is(err, ErrAggAuctionStatsNotFound) {
-						if err := s.auctionRepository.Save(auction); err != nil {
+						err := s.auctionRepository.Save(auction)
+
+						if err != nil {
 							s.logger.Error(fmt.Sprintf("Failed saving auction: %s", eris.ToString(err, true)), "trace_id", traceID, "source", source, "phase", phase, "routine_id", goroutineID, "auction_id", auctionId, "duration", time.Since(start))
 
 							s.notifyStatus(ctx, totalWorkload, &workDoneCounter)
@@ -498,7 +509,9 @@ func (s *Service) scrapAuctionDetail(ctx context.Context, g *errgroup.Group, fai
 
 				auction.CalculateFlags(stats)
 
-				if err := s.auctionRepository.Save(auction); err != nil {
+				err = s.auctionRepository.Save(auction)
+
+				if err != nil {
 					s.logger.Error(fmt.Sprintf("Failed saving auction: %s", eris.ToString(err, true)), "trace_id", traceID, "source", source, "phase", phase, "routine_id", goroutineID, "auction_id", auctionId, "duration", time.Since(start))
 
 					s.notifyStatus(ctx, totalWorkload, &workDoneCounter)

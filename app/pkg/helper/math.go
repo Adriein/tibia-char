@@ -1,6 +1,10 @@
 package helper
 
 func PercentSafe(numerator interface{}, denominator interface{}) float64 {
+	return SafeDivision(numerator, denominator) * 100
+}
+
+func SafeDivision(numerator interface{}, denominator interface{}) float64 {
 	var num, den float64
 
 	switch v := numerator.(type) {
@@ -21,5 +25,5 @@ func PercentSafe(numerator interface{}, denominator interface{}) float64 {
 		return 0
 	}
 
-	return (num / den) * 100
+	return num / den
 }

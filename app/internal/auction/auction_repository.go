@@ -1581,17 +1581,20 @@ func (r *PgAuctionRepository) GetAuctionByAuctionID(ctx context.Context, auction
 
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return nil, nil // No auction found with the given ID
+			return nil, nil
 		}
+
 		return nil, eris.Wrap(err, "Failed to query auction by ID")
 	}
 
 	status, err := enums.GetAuctionRecordableStatusFromString(statusString)
+
 	if err != nil {
 		return nil, eris.Wrap(err, "Failed to parse auction status")
 	}
 
 	battleEyeEnum, err := enums.GetBattleEyeFromString(battleEyeString)
+
 	if err != nil {
 		return nil, eris.Wrap(err, "Failed parsing Battle Eye")
 	}
@@ -1690,9 +1693,11 @@ func (r *PgAuctionRepository) GetAuctionByAuctionID(ctx context.Context, auction
 			tac.tac_auction_id = $1;
 	`
 	charmsRows, err := r.connection.QueryContext(ctxTimeout, charmsQuery, auctionID)
+
 	if err != nil {
 		return nil, eris.Wrap(err, "Failed to query charms for single auction")
 	}
+
 	defer charmsRows.Close()
 
 	for charmsRows.Next() {
@@ -1705,6 +1710,7 @@ func (r *PgAuctionRepository) GetAuctionByAuctionID(ctx context.Context, auction
 		}
 		auction.Charms = append(auction.Charms, &charm)
 	}
+
 	if err = charmsRows.Err(); err != nil {
 		return nil, eris.Wrap(err, "Failed iterating charms rows for single auction")
 	}

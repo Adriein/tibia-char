@@ -8,6 +8,7 @@ import (
 
 	"github.com/adriein/tibia-char/pkg/constants"
 	"github.com/adriein/tibia-char/pkg/enums"
+	"github.com/adriein/tibia-char/pkg/helper"
 	"github.com/rotisserie/eris"
 )
 
@@ -385,8 +386,9 @@ func (a *Auction) getRangeLabel(val int, thresholds []int) string {
 	return "+" + strconv.Itoa(thresholds[len(thresholds)-1])
 }
 
+// TODO: add hot flag now its calculated @runtime
 func (a *Auction) CalculateFlags(stats *AggAuctionStats) {
-	ZScore := float64(a.Bid-int(stats.Median)) / stats.StdDeviation
+	ZScore := helper.SafeDivision(float64(a.Bid-int(stats.Median)), stats.StdDeviation)
 
 	if ZScore <= -1 {
 		a.Flags = append(a.Flags, &Flag{ID: enums.GoodDeal})
@@ -415,9 +417,17 @@ func (a *Auction) CalculateFlags(stats *AggAuctionStats) {
 		a.Flags = append(a.Flags, &Flag{ID: enums.RMount})
 		break
 	}
+
+	if a.IsTrending() {
+		a.Flags = append(a.Flags, &Flag{ID: enums.Hot})
+	}
 }
 
 func (a *Auction) IsEqual(other *Auction) bool {
+	if other == nil {
+		return false
+	}
+
 	return a.AuctionEnd.Equal(other.AuctionEnd) &&
 		a.Bid == other.Bid &&
 		a.TibiaAuctionLink == other.TibiaAuctionLink &&
