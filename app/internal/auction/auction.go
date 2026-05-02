@@ -1,6 +1,7 @@
 package auction
 
 import (
+	"slices"
 	"strconv"
 	"strings"
 	"sync"
@@ -373,7 +374,17 @@ func (a *Auction) SubsetKey() string {
 
 	skill := a.getRangeLabel(skillVal, []int{10, 100, 110, 120, 130})
 
-	return voc + "_" + lvl + "_" + skill
+	worldType := a.CharWorld.BattleEye.String()
+
+	hasROutfitFlag := slices.ContainsFunc(a.Flags, func(f *Flag) bool {
+		return f.ID == enums.ROutfit
+	})
+
+	if hasROutfitFlag {
+		return voc + "_" + lvl + "_" + skill + "_" + worldType + "_" + "routfit"
+	}
+
+	return voc + "_" + lvl + "_" + skill + "_" + worldType
 }
 
 func (a *Auction) getRangeLabel(val int, thresholds []int) string {
