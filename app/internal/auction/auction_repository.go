@@ -1331,6 +1331,7 @@ func (r *PgAuctionRepository) GetHistoricAuctionPrices(ctx context.Context) ([]*
 			a.ta_id,
 			a.ta_auction_id,
 			a.ta_char_level,
+			w.*,
 			v.*,
 			ts.*,
 			a.ta_current_bid
@@ -1342,6 +1343,8 @@ func (r *PgAuctionRepository) GetHistoricAuctionPrices(ctx context.Context) ([]*
 			tc_vocation v ON a.ta_char_vocation = v.tv_id
 		INNER JOIN
 			tc_skills ts ON a.ta_auction_id = ts.ts_auction_id
+		INNER JOIN
+			tc_world w ON a.ta_char_world = w.tw_id
 		WHERE
 			tar.tar_status = 'archived'
 		AND
@@ -1369,15 +1372,21 @@ func (r *PgAuctionRepository) GetHistoricAuctionPrices(ctx context.Context) ([]*
 
 	for rows.Next() {
 		var (
-			auction  Auction
-			vocation Vocation
-			skills   Skills
+			auction         Auction
+			vocation        Vocation
+			skills          Skills
+			world           World
+			battleEyeString string
 		)
 
 		err := rows.Scan(
 			&auction.ID,
 			&auction.AuctionID,
 			&auction.CharLevel,
+			&world.Id,
+			&world.Name,
+			&world.Location,
+			&battleEyeString,
 			&vocation.Id,
 			&vocation.Name,
 			&skills.AuctionID,
@@ -1396,8 +1405,50 @@ func (r *PgAuctionRepository) GetHistoricAuctionPrices(ctx context.Context) ([]*
 			return nil, eris.Wrap(err, "Failed to scan auction")
 		}
 
+		battleEyeEnum, err := enums.GetBattleEyeFromString(battleEyeString)
+
+		if err != nil {
+			return nil, eris.Wrap(err, "Failed parsing Battle Eye")
+		}
+
+		world.BattleEye = battleEyeEnum
+		
 		auction.CharVocation = &vocation
 		auction.Skills = &skills
+		auction.CharWorld = &world
+
+		flagsQuery := `
+			SELECT
+				taf.taf_auction_id,
+				taf.taf_flag_id
+			FROM
+				tc_auction_flags taf
+			WHERE
+				taf.taf_auction_id = $1;
+		`
+
+		flagRows, err := r.connection.QueryContext(ctx, flagsQuery, auction.ID)
+
+		if err != nil {
+			return nil, eris.Wrap(err, "Failed to query flags")
+		}
+
+		defer flagRows.Close()
+
+		for flagRows.Next() {
+			var flag Flag
+			var auctionID int
+
+			if err := flagRows.Scan(&auctionID, &flag.ID); err != nil {
+				return nil, eris.Wrap(err, "Failed to scan flag")
+			}
+
+			auction.Flags = append(auction.Flags, &flag)
+		}
+
+		if err = flagRows.Err(); err != nil {
+			return nil, eris.Wrap(err, "Failed iterating flag rows")
+		}
 
 		auctionMap[auction.AuctionID] = &auction
 
