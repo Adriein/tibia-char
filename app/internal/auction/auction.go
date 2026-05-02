@@ -386,7 +386,6 @@ func (a *Auction) getRangeLabel(val int, thresholds []int) string {
 	return "+" + strconv.Itoa(thresholds[len(thresholds)-1])
 }
 
-// TODO: add hot flag now its calculated @runtime
 func (a *Auction) CalculateFlags(stats *AggAuctionStats) {
 	ZScore := helper.SafeDivision(float64(a.Bid-int(stats.Median)), stats.StdDeviation)
 
