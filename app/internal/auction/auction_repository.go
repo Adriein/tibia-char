@@ -12,6 +12,7 @@ import (
 	"github.com/rotisserie/eris"
 )
 
+//TODO: pick only the most recent flags i have to update all queries
 type AuctionRepository interface {
 	Save(auction *Auction) error
 	GetActiveAuctions(ctx context.Context) ([]*Auction, error)
