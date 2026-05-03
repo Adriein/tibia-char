@@ -28,6 +28,7 @@ type AuctionService interface {
 	AggregateAuctionStatsPrecompute(ctx context.Context) error
 	WatchActiveAuctions(ctx context.Context) error
 	ConsolidateAuctions(ctx context.Context) error
+	BackfillAuctionFlags(ctx context.Context) error
 }
 
 type Service struct {
@@ -67,6 +68,45 @@ func NewService(
 		scrapperFactory:      scrapperFactory,
 		logger:               logger,
 	}
+}
+
+func (s *Service) BackfillAuctionFlags(ctx context.Context) error {
+	var auctions []*Auction
+
+	historical, err := s.auctionRepository.GetHistoricAuctionPrices(ctx)
+
+	if err != nil {
+		return err
+	}
+
+	auctions = append(auctions, historical...)
+
+	active, err := s.auctionRepository.GetActiveAuctions(ctx)
+
+	if err != nil {
+		return err
+	}
+
+	auctions = append(auctions, active...)
+
+	for _, auction := range auctions {
+
+		stats, err := s.aggAuctionRepository.GetByKey(auction.SubsetKey())
+
+		if err != nil {
+			return err
+		}
+
+		auction.CalculateFlags(stats)
+
+		err = s.auctionRepository.UpdateFlags(ctx, auction)
+
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 /*

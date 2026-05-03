@@ -23,6 +23,7 @@ type AuctionRepository interface {
 	CountActiveAuctions(ctx context.Context) (int, error)
 	DeactivateAuctionRecord(ctx context.Context, auctionID int) error
 	MarkAuctionAsUpdated(ctx context.Context, auctionID int) error
+	UpdateFlags(ctx context.Context, auction *Auction) error
 }
 
 type PgAuctionRepository struct {
@@ -355,14 +356,19 @@ func (r *PgAuctionRepository) Save(auction *Auction) error {
 		return eris.Wrap(err, "Error in upsert on tc_mounts")
 	}
 
-	//TODO: right now it's possible to have good deal and bad deal in the same character think how to solve that
 	flagsQuery := `
 		INSERT INTO tc_auction_flags (
 			taf_auction_id,
-			taf_flag_id
+			taf_flag_id,
+			taf_date_upd
 		)
-		SELECT * FROM UNNEST($1::int[], $2::int[])
-        ON CONFLICT (taf_auction_id, taf_flag_id) DO NOTHING
+		SELECT
+			u.auction_id,
+			u.flag_id,
+			TIMEZONE('UTC', NOW())
+		FROM UNNEST($1::int[], $2::int[]) AS u(auction_id, flag_id)
+        ON CONFLICT (taf_auction_id, taf_flag_id) DO UPDATE SET
+			taf_date_upd = EXCLUDED.taf_date_upd;
 		;
 	`
 
@@ -1331,6 +1337,7 @@ func (r *PgAuctionRepository) GetHistoricAuctionPrices(ctx context.Context) ([]*
 			a.ta_id,
 			a.ta_auction_id,
 			a.ta_char_level,
+			g.*,
 			w.*,
 			v.*,
 			ts.*,
@@ -1341,6 +1348,8 @@ func (r *PgAuctionRepository) GetHistoricAuctionPrices(ctx context.Context) ([]*
 			tc_auction a ON tar.tar_recordable_id = a.ta_id
 		INNER JOIN
 			tc_vocation v ON a.ta_char_vocation = v.tv_id
+		INNER JOIN
+			tc_gender g ON a.ta_char_gender = g.tg_id
 		INNER JOIN
 			tc_skills ts ON a.ta_auction_id = ts.ts_auction_id
 		INNER JOIN
@@ -1377,12 +1386,15 @@ func (r *PgAuctionRepository) GetHistoricAuctionPrices(ctx context.Context) ([]*
 			skills          Skills
 			world           World
 			battleEyeString string
+			gender          Gender
 		)
 
 		err := rows.Scan(
 			&auction.ID,
 			&auction.AuctionID,
 			&auction.CharLevel,
+			&gender.Id,
+			&gender.Name,
 			&world.Id,
 			&world.Name,
 			&world.Location,
@@ -1417,6 +1429,7 @@ func (r *PgAuctionRepository) GetHistoricAuctionPrices(ctx context.Context) ([]*
 		auction.CharVocation = &vocation
 		auction.Skills = &skills
 		auction.CharWorld = &world
+		auction.CharGender = &gender
 
 		flagsQuery := `
 			SELECT
@@ -1449,6 +1462,41 @@ func (r *PgAuctionRepository) GetHistoricAuctionPrices(ctx context.Context) ([]*
 
 		if err = flagRows.Err(); err != nil {
 			return nil, eris.Wrap(err, "Failed iterating flag rows")
+		}
+
+		bidRegistryQuery := `
+		SELECT
+			ta.ta_auction_id,
+			ta.ta_current_bid,
+			ta.ta_date_add
+		FROM
+			tc_auction ta
+		WHERE
+			ta.ta_auction_id = ANY($1);
+	`
+		bidRegistryRows, err := r.connection.QueryContext(ctx, bidRegistryQuery, pq.Array(orderedIDs))
+
+		if err != nil {
+			return nil, eris.Wrap(err, "Failed to query bid registry")
+		}
+
+		defer bidRegistryRows.Close()
+
+		for bidRegistryRows.Next() {
+			var registry BidRegistry
+			var auctionID int
+
+			if err := bidRegistryRows.Scan(&auctionID, &registry.Amount, &registry.DateAdd); err != nil {
+				return nil, eris.Wrap(err, "Failed to scan registry")
+			}
+
+			if auction, ok := auctionMap[auctionID]; ok {
+				auction.BidRegistry = append(auction.BidRegistry, &registry)
+			}
+		}
+
+		if err = bidRegistryRows.Err(); err != nil {
+			return nil, eris.Wrap(err, "Failed iterating bid registry rows")
 		}
 
 		auctionMap[auction.AuctionID] = &auction
@@ -1934,4 +1982,69 @@ func (r *PgAuctionRepository) MarkAuctionAsUpdated(ctx context.Context, auctionI
 	}
 
 	return nil
+}
+
+func (r *PgAuctionRepository) UpdateFlags(ctx context.Context, auction *Auction) error {
+	tx, err := r.connection.Begin()
+
+	if err != nil {
+		return eris.Wrap(err, "Error creating transaction")
+	}
+
+	query := `
+		UPDATE
+			tc_auction_recording
+		SET
+    		tar_date_upd = TIMEZONE('UTC', NOW())
+		WHERE tar_auction_id = $1;
+	`
+
+	_, err = tx.Exec(
+		query,
+		auction.AuctionID,
+	)
+
+	if err != nil {
+		return eris.Wrap(err, "Failed updating date upd of an auction record")
+	}
+
+	flagsQuery := `
+		INSERT INTO tc_auction_flags (
+			taf_auction_id,
+			taf_flag_id,
+			taf_date_upd
+		)
+		SELECT
+			u.auction_id,
+			u.flag_id,
+			TIMEZONE('UTC', NOW())
+		FROM UNNEST($1::int[], $2::int[]) AS u(auction_id, flag_id)
+        ON CONFLICT (taf_auction_id, taf_flag_id) DO UPDATE SET
+			taf_date_upd = EXCLUDED.taf_date_upd;
+		;
+	`
+
+	var (
+		flagAuctionID []int
+		flags         []int
+	)
+
+	for _, flag := range auction.Flags {
+		flagAuctionID = append(flagAuctionID, auction.AuctionID)
+		flags = append(flags, int(flag.ID))
+	}
+
+	_, err = tx.Exec(
+		flagsQuery,
+		pq.Array(flagAuctionID),
+		pq.Array(flags),
+	)
+
+	if err != nil {
+		tx.Rollback()
+
+		return eris.Wrap(err, "Error in upsert on tc_auction_flags")
+	}
+
+	return tx.Commit()
 }

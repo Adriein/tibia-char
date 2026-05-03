@@ -44,6 +44,16 @@
       "cwd": "${workspaceFolder}/app",
       "env": {},
       "args": []
+    },
+    {
+      "name": "backfill-cron",
+      "type": "go",
+      "request": "launch",
+      "mode": "debug",
+      "program": "${workspaceFolder}/app/cmd/cron/backfill/main.go",
+      "cwd": "${workspaceFolder}/app",
+      "env": {},
+      "args": []
     }
   ]
 }
