@@ -207,10 +207,11 @@ CREATE TABLE IF NOT EXISTS tc_flags (
     tf_id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     tf_name VARCHAR NOT NULL
 );
-
+/*TODO: add this field by hand in my local db and update all the queries to upd on conflict and then to pick the most recent rows*/
 CREATE TABLE IF NOT EXISTS tc_auction_flags (
     taf_auction_id INT NOT NULL,
     taf_flag_id INT NOT NULL,
+    taf_date_upd TIMESTAMP(0) WITHOUT TIME ZONE NOT NULL
     PRIMARY KEY (taf_auction_id, taf_flag_id),
 
     CONSTRAINT fk_auction_flags_auction_recording

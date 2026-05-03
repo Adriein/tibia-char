@@ -1387,6 +1387,7 @@ func (r *PgAuctionRepository) GetHistoricAuctionPrices(ctx context.Context) ([]*
 			&world.Name,
 			&world.Location,
 			&battleEyeString,
+			&world.Pvp,
 			&vocation.Id,
 			&vocation.Name,
 			&skills.AuctionID,
@@ -1412,7 +1413,7 @@ func (r *PgAuctionRepository) GetHistoricAuctionPrices(ctx context.Context) ([]*
 		}
 
 		world.BattleEye = battleEyeEnum
-		
+
 		auction.CharVocation = &vocation
 		auction.Skills = &skills
 		auction.CharWorld = &world
