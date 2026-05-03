@@ -1,0 +1,28 @@
+---
+- name: Import shared vars
+  ansible.builtin.include_vars:
+    file: "{{ playbook_dir }}/shared/main.yml"
+    name: shared
+
+- name: Remove migrate binary from home directory
+  ansible.builtin.file:
+    path: "{{ shared.remote_home_path }}/migrate"
+    state: absent
+  tags:
+    - deploy
+    - cleanup
+
+- name: Remove migration tar archive if leftover
+  ansible.builtin.file:
+    path: "{{ shared.remote_home_path }}/migrate.linux-amd64.tar.gz"
+    state: absent
+  tags:
+    - deploy
+    - cleanup
+
+- name: Report cleanup completed
+  ansible.builtin.debug:
+    msg: "Cleanup finished - temporary files removed"
+  tags:
+    - deploy
+    - cleanup

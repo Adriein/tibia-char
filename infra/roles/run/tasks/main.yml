@@ -1,0 +1,43 @@
+---
+- name: Import shared vars
+  ansible.builtin.include_vars:
+    file: "{{ playbook_dir }}/shared/main.yml"
+    name: shared
+
+- name: Run docker-compose down
+  community.docker.docker_compose_v2:
+    project_src: "{{ shared.tmp_build_folder }}"
+    state: absent
+    env_files:
+      - .env
+  register: compose_down
+  tags:
+    - deploy
+    - run
+
+- name: Show docker compose down results
+  ansible.builtin.debug:
+    var: compose_down
+  tags:
+    - deploy
+    - run
+
+- name: Run docker-compose up
+  community.docker.docker_compose_v2:
+    project_src: "{{ shared.tmp_build_folder }}"
+    state: present
+    pull: missing
+    build: always
+    env_files:
+      - .env
+  register: compose_up
+  tags:
+    - deploy
+    - run
+
+- name: Show docker compose up results
+  ansible.builtin.debug:
+    var: compose_up
+  tags:
+    - deploy
+    - run

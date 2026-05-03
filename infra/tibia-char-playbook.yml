@@ -1,0 +1,64 @@
+---
+- name: Pre-flight checks
+  hosts: all
+  gather_facts: true
+  become: true
+  roles:
+    - pre-flight
+  tags:
+    - always
+
+- name: Tibia-Char localhost create artifact
+  hosts: localhost
+  roles:
+    - tibia-char-zip
+  tags:
+    - build
+    - deploy
+    - full
+
+- name: Deploy tibia-char to hosts
+  hosts: all
+  become: true
+  roles:
+    - docker-install
+    - tibia-char-build
+    - tibia-char-set-env-vars
+    - tibia-char-run
+    - tibia-char-run-migrations
+    - health-check
+    - cleanup
+  environment:
+    DATABASE_IP: "{{ database_ip }}"
+    DATABASE_NAME: "{{ database_name }}"
+    DATABASE_USER: "{{ database_user }}"
+    DATABASE_PASSWORD: "{{ database_password }}"
+    SERVER_PORT: "{{ server_port }}"
+    TIBIA_CHAR_API_KEY: "{{ tibia_char_api_key }}"
+    ENVIRONMENT: "PRODUCTION"
+    API_URL: "{{ api_url }}"
+    API_PROTOCOL: "{{ api_protocol }}"
+  tags:
+    - deploy
+    - full
+
+- name: Update config only (no rebuild)
+  hosts: all
+  become: true
+  roles:
+    - tibia-char-set-env-vars
+    - tibia-char-run
+    - health-check
+  environment:
+    DATABASE_IP: "{{ database_ip }}"
+    DATABASE_NAME: "{{ database_name }}"
+    DATABASE_USER: "{{ database_user }}"
+    DATABASE_PASSWORD: "{{ database_password }}"
+    SERVER_PORT: "{{ server_port }}"
+    TIBIA_CHAR_API_KEY: "{{ tibia_char_api_key }}"
+    ENVIRONMENT: "PRODUCTION"
+    API_URL: "{{ api_url }}"
+    API_PROTOCOL: "{{ api_protocol }}"
+  tags:
+    - config
+    - restart

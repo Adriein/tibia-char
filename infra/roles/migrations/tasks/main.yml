@@ -1,0 +1,67 @@
+---
+- name: Import shared vars
+  ansible.builtin.include_vars:
+    file: "{{ playbook_dir }}/shared/main.yml"
+    name: shared
+
+- name: Check if migrate binary already exists
+  ansible.builtin.stat:
+    path: "{{ shared.remote_home_path }}/migrate"
+  register: migrate_binary
+  tags:
+    - deploy
+    - migrate
+
+- name: Download the migrate tool (with SHA256 verification)
+  ansible.builtin.get_url:
+    url: "https://github.com/golang-migrate/migrate/releases/download/{{ shared.migrate_version }}/migrate.linux-amd64.tar.gz"
+    dest: "{{ shared.remote_home_path }}/migrate.linux-amd64.tar.gz"
+    checksum: "sha256:{{ shared.migrate_sha256 }}"
+    mode: '0644'
+    owner: aclaretdev
+    group: aclaretdev
+  when: not migrate_binary.stat.exists
+  tags:
+    - deploy
+    - migrate
+
+- name: Untar migrate tool
+  ansible.builtin.unarchive:
+    src: "{{ shared.remote_home_path }}/migrate.linux-amd64.tar.gz"
+    dest: "{{ shared.remote_home_path }}"
+    remote_src: true
+    owner: aclaretdev
+    group: aclaretdev
+  when: not migrate_binary.stat.exists
+  tags:
+    - deploy
+    - migrate
+
+- name: Remove tar archive
+  ansible.builtin.file:
+    path: "{{ shared.remote_home_path }}/migrate.linux-amd64.tar.gz"
+    state: absent
+  when: not migrate_binary.stat.exists
+  tags:
+    - deploy
+    - migrate
+
+- name: Execute migrations on remote
+  ansible.builtin.shell: >
+    {{ shared.remote_home_path }}/migrate
+    -database postgresql://{{ ansible_env.DATABASE_USER }}:{{ ansible_env.DATABASE_PASSWORD }}@{{ ansible_env.DATABASE_IP }}:5432/{{ ansible_env.DATABASE_NAME }}?sslmode=disable
+    -path {{ shared.tmp_build_folder }}/server/database/migrations
+    up
+  args:
+    chdir: "{{ shared.remote_home_path }}"
+  register: migration_result
+  tags:
+    - deploy
+    - migrate
+
+- name: Show migration results
+  ansible.builtin.debug:
+    var: migration_result.stdout_lines
+  tags:
+    - deploy
+    - migrate

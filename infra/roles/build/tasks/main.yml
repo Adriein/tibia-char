@@ -1,0 +1,102 @@
+---
+- name: Import shared vars
+  ansible.builtin.include_vars:
+    file: "{{ playbook_dir }}/shared/main.yml"
+    name: shared
+
+- name: Validate required variables
+  ansible.builtin.assert:
+    that:
+      - database_ip is defined and database_ip != ''
+      - database_name is defined and database_name != ''
+      - database_user is defined and database_user != ''
+      - database_password is defined and database_password != ''
+      - server_port is defined and server_port != ''
+      - tibia_char_api_key is defined and tibia_char_api_key != ''
+      - api_url is defined and api_url != ''
+      - api_protocol is defined and api_protocol != ''
+    fail_msg: "Missing required vault variable: {{ item }}"
+    success_msg: "All required variables are set"
+  tags:
+    - always
+    - validate
+
+- name: Import shared vars (again for downstream)
+  ansible.builtin.include_vars:
+    file: "{{ playbook_dir }}/shared/main.yml"
+    name: shared
+
+- name: Create backup of current deployment
+  ansible.builtin.shell: |
+    if [ -d "{{ shared.deploy_path }}" ]; then
+      rm -rf "{{ shared.backup_path }}" 2>/dev/null || true
+      cp -rp "{{ shared.deploy_path }}" "{{ shared.backup_path }}"
+      echo "backup_created"
+    else
+      echo "no_existing_deployment"
+    fi
+  register: backup_result
+  changed_when: "'backup_created' in backup_result.stdout"
+  tags:
+    - deploy
+    - rollback
+
+- name: Remove tmp_build
+  ansible.builtin.file:
+    path: "{{ shared.tmp_build_folder }}"
+    state: absent
+  tags:
+    - deploy
+    - build
+
+- name: Create tmp build folder
+  ansible.builtin.file:
+    path: "{{ shared.tmp_build_folder }}"
+    state: directory
+    mode: '0755'
+    owner: aclaretdev
+    group: aclaretdev
+  tags:
+    - deploy
+    - build
+
+- name: Copy tibia-char artifact to tmp_build folder
+  ansible.builtin.copy:
+    src: "{{ local_tmp_project_folder }}/{{ shared.tibia_char_artifact }}"
+    dest: "{{ shared.tmp_build_folder }}"
+    mode: '0644'
+    owner: aclaretdev
+    group: aclaretdev
+  tags:
+    - deploy
+    - build
+
+- name: Unzip tibia-char artifact
+  ansible.builtin.unarchive:
+    src: "{{ shared.tmp_build_folder }}/{{ shared.tibia_char_artifact }}"
+    dest: "{{ shared.tmp_build_folder }}"
+    remote_src: true
+    owner: aclaretdev
+    group: aclaretdev
+  tags:
+    - deploy
+    - build
+
+- name: Remove artifact zip after extraction
+  ansible.builtin.file:
+    path: "{{ shared.tmp_build_folder }}/{{ shared.tibia_char_artifact }}"
+    state: absent
+  tags:
+    - deploy
+    - build
+
+- name: Remove .env files from extracted artifact
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - "{{ shared.tmp_build_folder }}/frontend/.env"
+    - "{{ shared.tmp_build_folder }}/server/.env"
+  tags:
+    - deploy
+    - build

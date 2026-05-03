@@ -1,0 +1,80 @@
+---
+- name: Ensure apt is using HTTPS
+  ansible.builtin.apt:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - apt-transport-https
+    - ca-certificates
+    - curl
+    - software-properties-common
+  tags:
+    - always
+    - docker
+
+- name: Create keyrings folder
+  ansible.builtin.file:
+    path: /etc/apt/keyrings
+    state: directory
+    mode: '0755'
+  tags:
+    - always
+    - docker
+
+- name: Add Docker GPG key
+  ansible.builtin.apt_key:
+    url: "https://download.docker.com/linux/ubuntu/gpg"
+    keyring: /etc/apt/keyrings/docker.asc
+    state: present
+  tags:
+    - always
+    - docker
+
+- name: Add Docker repository
+  ansible.builtin.apt_repository:
+    repo: "{{ docker_apt_repository }}"
+    state: present
+  tags:
+    - always
+    - docker
+
+- name: Install Docker packages
+  ansible.builtin.apt:
+    name: "{{ item }}"
+    state: present
+    update_cache: true
+  loop:
+    - docker-ce
+    - docker-ce-cli
+    - containerd.io
+    - docker-buildx-plugin
+    - docker-compose-plugin
+  tags:
+    - always
+    - docker
+
+- name: Ensure Docker service is enabled and running
+  ansible.builtin.systemd:
+    name: docker
+    enabled: true
+    state: started
+  tags:
+    - always
+    - docker
+
+- name: Create docker group
+  ansible.builtin.group:
+    name: "{{ docker_group }}"
+    state: present
+  tags:
+    - always
+    - docker
+
+- name: Add remote user to docker group
+  ansible.builtin.user:
+    name: "{{ remote_admin_user }}"
+    groups: "{{ docker_group }}"
+    append: true
+  tags:
+    - always
+    - docker

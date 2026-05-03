@@ -1,0 +1,58 @@
+---
+- name: Check SSH connectivity
+  ansible.builtin.ping:
+  tags:
+    - always
+    - preflight
+
+- name: Check available disk space
+  ansible.builtin.shell: df -BM / --output=avail | tail -1 | tr -d ' M'
+  register: disk_space_avail
+  changed_when: false
+  tags:
+    - always
+    - preflight
+
+- name: Assert sufficient disk space (minimum 1GB)
+  ansible.builtin.assert:
+    that:
+      - disk_space_avail.stdout | int >= 1024
+    fail_msg: "Insufficient disk space: {{ disk_space_avail.stdout }}MB available, need at least 1024MB"
+    success_msg: "Disk space OK: {{ disk_space_avail.stdout }}MB available"
+  tags:
+    - always
+    - preflight
+
+- name: Check Docker availability
+  ansible.builtin.command: docker --version
+  register: docker_version
+  changed_when: false
+  failed_when: false
+  tags:
+    - always
+    - preflight
+
+- name: Report Docker status
+  ansible.builtin.debug:
+    msg: "Docker {{ 'found' if docker_version.rc == 0 else 'NOT found - will be installed' }}"
+  tags:
+    - always
+    - preflight
+
+- name: Check if PostgreSQL is reachable
+  ansible.builtin.command: nc -z -w3 {{ ansible_env.DATABASE_IP | default('SKIP') }} 5432
+  register: pg_reachable
+  changed_when: false
+  failed_when: false
+  when: ansible_env.DATABASE_IP is defined and ansible_env.DATABASE_IP != ''
+  tags:
+    - always
+    - preflight
+
+- name: Report database connectivity
+  ansible.builtin.debug:
+    msg: "PostgreSQL {{ 'reachable' if pg_reachable.rc == 0 else 'NOT reachable' }} at {{ ansible_env.DATABASE_IP }}:5432"
+  when: ansible_env.DATABASE_IP is defined and ansible_env.DATABASE_IP != ''
+  tags:
+    - always
+    - preflight

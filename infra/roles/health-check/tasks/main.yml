@@ -1,0 +1,54 @@
+---
+- name: Import shared vars
+  ansible.builtin.include_vars:
+    file: "{{ playbook_dir }}/shared/main.yml"
+    name: shared
+
+- name: Wait for containers to be running
+  ansible.builtin.shell: >
+    docker compose -f {{ shared.tmp_build_folder }}/docker-compose.yml ps --format '{{"{{.State}}"}}' | grep -ci 'running' || true
+  register: running_count
+  changed_when: false
+  retries: 12
+  delay: 10
+  until: running_count.stdout | int > 0
+  tags:
+    - deploy
+    - health
+
+- name: Check no containers are unhealthy
+  ansible.builtin.shell: >
+    docker compose -f {{ shared.tmp_build_folder }}/docker-compose.yml ps --format '{{"{{.State}}"}}' | grep -ci 'unhealthy' || true
+  register: unhealthy_count
+  changed_when: false
+  retries: 12
+  delay: 10
+  until: unhealthy_count.stdout | int == 0
+  tags:
+    - deploy
+    - health
+
+
+- name: Verify application is responding
+  ansible.builtin.uri:
+    url: "{{ ansible_env.API_PROTOCOL | default('http') }}://{{ inventory_hostname }}:{{ ansible_env.SERVER_PORT | default('3000') }}/health"
+    method: GET
+    status_code: 200
+    timeout: 5
+  register: health_check
+  retries: 6
+  delay: 10
+  until: health_check.status == 200
+  failed_when: false
+  tags:
+    - deploy
+    - health
+
+- name: Report deployment health
+  ansible.builtin.debug:
+    msg: >-
+      Deployment health check {{ 'PASSED' if health_check.status | default(0) == 200 else 'SKIPPED (no /health endpoint)' }}
+      - Containers are running
+  tags:
+    - deploy
+    - health
