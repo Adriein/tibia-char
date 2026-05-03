@@ -207,7 +207,7 @@ CREATE TABLE IF NOT EXISTS tc_flags (
     tf_id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     tf_name VARCHAR NOT NULL
 );
-/*TODO: add this field by hand in my local db and update all the queries to upd on conflict and then to pick the most recent rows*/
+
 CREATE TABLE IF NOT EXISTS tc_auction_flags (
     taf_auction_id INT NOT NULL,
     taf_flag_id INT NOT NULL,
