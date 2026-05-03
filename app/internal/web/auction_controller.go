@@ -31,6 +31,9 @@ func (c *AuctionController) Get() gin.HandlerFunc {
 
 		var rawFilter auction.UrlQueryParamsDto
 
+		//TODO: make sure pagination takes into account the filters
+		//TODO: when hot deal + best deal appear when 2 filters and hot deal filter but not on good deal filter
+		//TODO: make all filters work
 		if err := ctx.ShouldBindQuery(&rawFilter); err != nil {
 			//TODO: Temporal logging until I decide what to do
 			c.logger.Error("Error binding filters", "trace_id", traceID, "error", eris.ToString(err, true))
