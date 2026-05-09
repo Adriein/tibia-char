@@ -31,6 +31,7 @@ func (c *AuctionController) Get() gin.HandlerFunc {
 
 		var rawFilter auction.UrlQueryParamsDto
 
+		//TODO: create a analytics middleware and pipe the info to posthog (nice free tier)
 		//TODO: make all filters work
 		if err := ctx.ShouldBindQuery(&rawFilter); err != nil {
 			//TODO: Temporal logging until I decide what to do
