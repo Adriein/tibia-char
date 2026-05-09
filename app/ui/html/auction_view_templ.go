@@ -43,6 +43,8 @@ func initTimezone() templ.ComponentScript {
 	}
 }
 
+// TODO: fix when more than 1 flag appears
+// TODO: pagination + filters on mobile
 func AuctionsView(page *auction.PaginatedAuctions) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -211,7 +213,7 @@ func Filter(label string, filter string, activeFilters []string) templ.Component
 		var templ_7745c5c3_Var4 string
 		templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(filter)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/ui/html/auction_view.templ`, Line: 99, Col: 51}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/ui/html/auction_view.templ`, Line: 102, Col: 51}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 		if templ_7745c5c3_Err != nil {
@@ -224,7 +226,7 @@ func Filter(label string, filter string, activeFilters []string) templ.Component
 		var templ_7745c5c3_Var5 string
 		templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(value)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/ui/html/auction_view.templ`, Line: 99, Col: 65}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/ui/html/auction_view.templ`, Line: 102, Col: 65}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 		if templ_7745c5c3_Err != nil {
@@ -247,7 +249,7 @@ func Filter(label string, filter string, activeFilters []string) templ.Component
 		var templ_7745c5c3_Var6 string
 		templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(label)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/ui/html/auction_view.templ`, Line: 100, Col: 8}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/ui/html/auction_view.templ`, Line: 103, Col: 8}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 		if templ_7745c5c3_Err != nil {
@@ -324,7 +326,7 @@ func SkillItem(name string, value int, imgSrc string, imgAlt string, threshold i
 		var templ_7745c5c3_Var10 string
 		templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(imgAlt)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/ui/html/auction_view.templ`, Line: 124, Col: 19}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/ui/html/auction_view.templ`, Line: 127, Col: 19}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 		if templ_7745c5c3_Err != nil {
@@ -337,7 +339,7 @@ func SkillItem(name string, value int, imgSrc string, imgAlt string, threshold i
 		var templ_7745c5c3_Var11 string
 		templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(imgSrc)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/ui/html/auction_view.templ`, Line: 124, Col: 32}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/ui/html/auction_view.templ`, Line: 127, Col: 32}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
 		if templ_7745c5c3_Err != nil {
@@ -350,7 +352,7 @@ func SkillItem(name string, value int, imgSrc string, imgAlt string, threshold i
 		var templ_7745c5c3_Var12 string
 		templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(name)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/ui/html/auction_view.templ`, Line: 125, Col: 11}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/ui/html/auction_view.templ`, Line: 128, Col: 11}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
 		if templ_7745c5c3_Err != nil {
@@ -363,7 +365,7 @@ func SkillItem(name string, value int, imgSrc string, imgAlt string, threshold i
 		var templ_7745c5c3_Var13 string
 		templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", value))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/ui/html/auction_view.templ`, Line: 127, Col: 33}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/ui/html/auction_view.templ`, Line: 130, Col: 33}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
 		if templ_7745c5c3_Err != nil {
@@ -438,7 +440,7 @@ func AuctionCard(viewModel *auction.AuctionViewModel) templ.Component {
 		var templ_7745c5c3_Var15 string
 		templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs(auction.Img)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/ui/html/auction_view.templ`, Line: 171, Col: 44}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/ui/html/auction_view.templ`, Line: 174, Col: 44}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var15))
 		if templ_7745c5c3_Err != nil {
@@ -451,7 +453,7 @@ func AuctionCard(viewModel *auction.AuctionViewModel) templ.Component {
 		var templ_7745c5c3_Var16 string
 		templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinStringErrs(auction.CharName)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/ui/html/auction_view.templ`, Line: 174, Col: 54}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/ui/html/auction_view.templ`, Line: 177, Col: 54}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var16))
 		if templ_7745c5c3_Err != nil {
@@ -464,7 +466,7 @@ func AuctionCard(viewModel *auction.AuctionViewModel) templ.Component {
 		var templ_7745c5c3_Var17 string
 		templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinStringErrs(auction.CharLevel)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/ui/html/auction_view.templ`, Line: 175, Col: 49}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/ui/html/auction_view.templ`, Line: 178, Col: 49}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var17))
 		if templ_7745c5c3_Err != nil {
@@ -477,7 +479,7 @@ func AuctionCard(viewModel *auction.AuctionViewModel) templ.Component {
 		var templ_7745c5c3_Var18 string
 		templ_7745c5c3_Var18, templ_7745c5c3_Err = templ.JoinStringErrs(auction.CharVocation.Name)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/ui/html/auction_view.templ`, Line: 175, Col: 77}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/ui/html/auction_view.templ`, Line: 178, Col: 77}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var18))
 		if templ_7745c5c3_Err != nil {
@@ -490,7 +492,7 @@ func AuctionCard(viewModel *auction.AuctionViewModel) templ.Component {
 		var templ_7745c5c3_Var19 string
 		templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.JoinStringErrs(lastUpdated)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/ui/html/auction_view.templ`, Line: 176, Col: 44}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/ui/html/auction_view.templ`, Line: 179, Col: 44}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var19))
 		if templ_7745c5c3_Err != nil {
@@ -525,7 +527,7 @@ func AuctionCard(viewModel *auction.AuctionViewModel) templ.Component {
 		var templ_7745c5c3_Var20 string
 		templ_7745c5c3_Var20, templ_7745c5c3_Err = templ.JoinStringErrs(auction.Bid)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/ui/html/auction_view.templ`, Line: 203, Col: 23}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/ui/html/auction_view.templ`, Line: 206, Col: 23}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var20))
 		if templ_7745c5c3_Err != nil {
@@ -560,7 +562,7 @@ func AuctionCard(viewModel *auction.AuctionViewModel) templ.Component {
 		var templ_7745c5c3_Var23 string
 		templ_7745c5c3_Var23, templ_7745c5c3_Err = templ.JoinStringErrs(auctionStage)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/ui/html/auction_view.templ`, Line: 204, Col: 57}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/ui/html/auction_view.templ`, Line: 207, Col: 57}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var23))
 		if templ_7745c5c3_Err != nil {
@@ -573,7 +575,7 @@ func AuctionCard(viewModel *auction.AuctionViewModel) templ.Component {
 		var templ_7745c5c3_Var24 string
 		templ_7745c5c3_Var24, templ_7745c5c3_Err = templ.JoinStringErrs(auctionEnd)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/ui/html/auction_view.templ`, Line: 208, Col: 22}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/ui/html/auction_view.templ`, Line: 211, Col: 22}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var24))
 		if templ_7745c5c3_Err != nil {
@@ -586,7 +588,7 @@ func AuctionCard(viewModel *auction.AuctionViewModel) templ.Component {
 		var templ_7745c5c3_Var25 string
 		templ_7745c5c3_Var25, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("/ui/static/images/%s.png", str.CamelToSnake(strings.ReplaceAll(auction.CharWorld.Location, " ", ""))))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/ui/html/auction_view.templ`, Line: 214, Col: 125}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/ui/html/auction_view.templ`, Line: 217, Col: 125}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var25))
 		if templ_7745c5c3_Err != nil {
@@ -599,7 +601,7 @@ func AuctionCard(viewModel *auction.AuctionViewModel) templ.Component {
 		var templ_7745c5c3_Var26 string
 		templ_7745c5c3_Var26, templ_7745c5c3_Err = templ.JoinStringErrs(auction.CharWorld.Name)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/ui/html/auction_view.templ`, Line: 216, Col: 31}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/ui/html/auction_view.templ`, Line: 219, Col: 31}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var26))
 		if templ_7745c5c3_Err != nil {
@@ -627,7 +629,7 @@ func AuctionCard(viewModel *auction.AuctionViewModel) templ.Component {
 		var templ_7745c5c3_Var27 string
 		templ_7745c5c3_Var27, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d %s", auction.BidFiat, auction.BidCurrency))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/ui/html/auction_view.templ`, Line: 227, Col: 70}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/ui/html/auction_view.templ`, Line: 230, Col: 70}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var27))
 		if templ_7745c5c3_Err != nil {
@@ -640,7 +642,7 @@ func AuctionCard(viewModel *auction.AuctionViewModel) templ.Component {
 		var templ_7745c5c3_Var28 string
 		templ_7745c5c3_Var28, templ_7745c5c3_Err = templ.JoinStringErrs(timeLeft)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/ui/html/auction_view.templ`, Line: 231, Col: 20}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/ui/html/auction_view.templ`, Line: 234, Col: 20}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var28))
 		if templ_7745c5c3_Err != nil {
@@ -668,7 +670,7 @@ func AuctionCard(viewModel *auction.AuctionViewModel) templ.Component {
 		var templ_7745c5c3_Var29 string
 		templ_7745c5c3_Var29, templ_7745c5c3_Err = templ.JoinStringErrs(strings.ReplaceAll(auction.CharWorld.Pvp, "Pvp", ""))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/ui/html/auction_view.templ`, Line: 239, Col: 61}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/ui/html/auction_view.templ`, Line: 242, Col: 61}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var29))
 		if templ_7745c5c3_Err != nil {
@@ -733,7 +735,7 @@ func AuctionCard(viewModel *auction.AuctionViewModel) templ.Component {
 				var templ_7745c5c3_Var30 string
 				templ_7745c5c3_Var30, templ_7745c5c3_Err = templ.JoinStringErrs(auction.FeaturedItems[i].ItemID)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/ui/html/auction_view.templ`, Line: 271, Col: 43}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/ui/html/auction_view.templ`, Line: 274, Col: 43}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var30))
 				if templ_7745c5c3_Err != nil {
@@ -746,7 +748,7 @@ func AuctionCard(viewModel *auction.AuctionViewModel) templ.Component {
 				var templ_7745c5c3_Var31 string
 				templ_7745c5c3_Var31, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("https://static.tibia.com/images/charactertrade/objects/%d.gif", auction.FeaturedItems[i].ItemID))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/ui/html/auction_view.templ`, Line: 273, Col: 121}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/ui/html/auction_view.templ`, Line: 276, Col: 121}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var31))
 				if templ_7745c5c3_Err != nil {
@@ -765,7 +767,7 @@ func AuctionCard(viewModel *auction.AuctionViewModel) templ.Component {
 		var templ_7745c5c3_Var32 string
 		templ_7745c5c3_Var32, templ_7745c5c3_Err = templ.JoinStringErrs(auction.CharmPoints)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/ui/html/auction_view.templ`, Line: 283, Col: 30}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/ui/html/auction_view.templ`, Line: 286, Col: 30}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var32))
 		if templ_7745c5c3_Err != nil {
@@ -778,7 +780,7 @@ func AuctionCard(viewModel *auction.AuctionViewModel) templ.Component {
 		var templ_7745c5c3_Var33 string
 		templ_7745c5c3_Var33, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d/%d", len(auction.Imbuements), MaxImbuements))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/ui/html/auction_view.templ`, Line: 288, Col: 71}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/ui/html/auction_view.templ`, Line: 291, Col: 71}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var33))
 		if templ_7745c5c3_Err != nil {
@@ -791,7 +793,7 @@ func AuctionCard(viewModel *auction.AuctionViewModel) templ.Component {
 		var templ_7745c5c3_Var34 string
 		templ_7745c5c3_Var34, templ_7745c5c3_Err = templ.JoinStringErrs(auction.BossPoints)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/ui/html/auction_view.templ`, Line: 293, Col: 29}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/ui/html/auction_view.templ`, Line: 296, Col: 29}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var34))
 		if templ_7745c5c3_Err != nil {
@@ -804,7 +806,7 @@ func AuctionCard(viewModel *auction.AuctionViewModel) templ.Component {
 		var templ_7745c5c3_Var35 string
 		templ_7745c5c3_Var35, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d/%d", len(auction.Quests), MaxQuests))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/ui/html/auction_view.templ`, Line: 298, Col: 63}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/ui/html/auction_view.templ`, Line: 301, Col: 63}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var35))
 		if templ_7745c5c3_Err != nil {
@@ -817,7 +819,7 @@ func AuctionCard(viewModel *auction.AuctionViewModel) templ.Component {
 		var templ_7745c5c3_Var36 templ.SafeURL
 		templ_7745c5c3_Var36, templ_7745c5c3_Err = templ.JoinURLErrs(fmt.Sprintf("https://www.tibia.com/charactertrade/?subtopic=currentcharactertrades&page=details&auctionid=%d", auction.AuctionID))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/ui/html/auction_view.templ`, Line: 304, Col: 139}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/ui/html/auction_view.templ`, Line: 307, Col: 139}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var36))
 		if templ_7745c5c3_Err != nil {
@@ -859,7 +861,7 @@ func Auctions(page *auction.PaginatedAuctions) templ.Component {
 		var templ_7745c5c3_Var38 string
 		templ_7745c5c3_Var38, templ_7745c5c3_Err = templ.JoinStringErrs(page.TotalCount)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/ui/html/auction_view.templ`, Line: 314, Col: 33}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/ui/html/auction_view.templ`, Line: 317, Col: 33}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var38))
 		if templ_7745c5c3_Err != nil {
@@ -881,7 +883,7 @@ func Auctions(page *auction.PaginatedAuctions) templ.Component {
 		var templ_7745c5c3_Var40 templ.SafeURL
 		templ_7745c5c3_Var40, templ_7745c5c3_Err = templ.JoinURLErrs(fmt.Sprintf("/index?pag=%d&qty=%d", page.Page-1, page.PageSize))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/ui/html/auction_view.templ`, Line: 316, Col: 75}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/ui/html/auction_view.templ`, Line: 319, Col: 75}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var40))
 		if templ_7745c5c3_Err != nil {
@@ -907,7 +909,7 @@ func Auctions(page *auction.PaginatedAuctions) templ.Component {
 		var templ_7745c5c3_Var42 string
 		templ_7745c5c3_Var42, templ_7745c5c3_Err = templ.JoinStringErrs(page.Page)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/ui/html/auction_view.templ`, Line: 319, Col: 19}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/ui/html/auction_view.templ`, Line: 322, Col: 19}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var42))
 		if templ_7745c5c3_Err != nil {
@@ -920,7 +922,7 @@ func Auctions(page *auction.PaginatedAuctions) templ.Component {
 		var templ_7745c5c3_Var43 string
 		templ_7745c5c3_Var43, templ_7745c5c3_Err = templ.JoinStringErrs(page.TotalPages)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/ui/html/auction_view.templ`, Line: 319, Col: 39}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/ui/html/auction_view.templ`, Line: 322, Col: 39}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var43))
 		if templ_7745c5c3_Err != nil {
@@ -942,7 +944,7 @@ func Auctions(page *auction.PaginatedAuctions) templ.Component {
 		var templ_7745c5c3_Var45 templ.SafeURL
 		templ_7745c5c3_Var45, templ_7745c5c3_Err = templ.JoinURLErrs(fmt.Sprintf("/index?pag=%d&qty=%d", page.Page+1, page.PageSize))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/ui/html/auction_view.templ`, Line: 320, Col: 75}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/ui/html/auction_view.templ`, Line: 323, Col: 75}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var45))
 		if templ_7745c5c3_Err != nil {
@@ -968,7 +970,7 @@ func Auctions(page *auction.PaginatedAuctions) templ.Component {
 		var templ_7745c5c3_Var47 string
 		templ_7745c5c3_Var47, templ_7745c5c3_Err = templ.JoinStringErrs(page.PageSize)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/ui/html/auction_view.templ`, Line: 324, Col: 22}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/ui/html/auction_view.templ`, Line: 327, Col: 22}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var47))
 		if templ_7745c5c3_Err != nil {

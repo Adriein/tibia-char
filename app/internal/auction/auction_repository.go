@@ -12,7 +12,7 @@ import (
 	"github.com/rotisserie/eris"
 )
 
-//TODO: pick only the most recent flags i have to update all queries
+// TODO: pick only the most recent flags i have to update all queries
 type AuctionRepository interface {
 	Save(auction *Auction) error
 	GetActiveAuctions(ctx context.Context) ([]*Auction, error)
@@ -21,7 +21,7 @@ type AuctionRepository interface {
 	GetAuctionsPendingToConsolidate(ctx context.Context) ([]*Auction, error)
 	GetHistoricAuctionPrices(ctx context.Context) ([]*Auction, error)
 	GetAuctionByAuctionID(ctx context.Context, auctionID int) (*Auction, error)
-	CountActiveAuctions(ctx context.Context) (int, error)
+	CountActiveAuctions(ctx context.Context, filter *AuctionFilter) (int, error)
 	DeactivateAuctionRecord(ctx context.Context, auctionID int) error
 	MarkAuctionAsUpdated(ctx context.Context, auctionID int) error
 	UpdateFlags(ctx context.Context, auction *Auction) error
@@ -1921,19 +1921,32 @@ func (r *PgAuctionRepository) GetAuctionByAuctionID(ctx context.Context, auction
 	return &auction, nil
 }
 
-func (r *PgAuctionRepository) CountActiveAuctions(ctx context.Context) (int, error) {
-	query := `
+func (r *PgAuctionRepository) CountActiveAuctions(ctx context.Context, filter *AuctionFilter) (int, error) {
+	whereClause, _, filterArgs, err := filter.ToSQL()
+
+	if err != nil {
+		return 0, eris.Wrap(err, "Failed to build filter query")
+	}
+
+	baseQuery := `
 		SELECT
 			count(*)
 		FROM
 			tc_auction_recording tar
+		INNER JOIN
+			tc_auction a ON tar.tar_recordable_id = a.ta_id
+		INNER JOIN
+			tc_vocation v ON a.ta_char_vocation = v.tv_id
+		INNER JOIN
+			tc_skills ts ON a.ta_auction_id = ts.ts_auction_id
 		WHERE
-			tar.tar_status = 'active';
 	`
+
+	query := baseQuery + whereClause
 
 	var count int
 
-	err := r.connection.QueryRowContext(ctx, query).Scan(&count)
+	err = r.connection.QueryRowContext(ctx, query, filterArgs...).Scan(&count)
 
 	if err != nil {
 		return 0, eris.Wrap(err, "Failed to count active auctions")

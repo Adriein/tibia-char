@@ -791,7 +791,7 @@ func (s *Service) GetAuctions(ctx context.Context, filter *AuctionFilter) (*Pagi
 		})
 	}
 
-	totalCount, err := s.auctionRepository.CountActiveAuctions(ctx)
+	totalCount, err := s.auctionRepository.CountActiveAuctions(ctx, filter)
 
 	if err != nil {
 		return nil, err
