@@ -12,7 +12,6 @@ import (
 	"github.com/rotisserie/eris"
 )
 
-// TODO: pick only the most recent flags i have to update all queries
 type AuctionRepository interface {
 	Save(auction *Auction) error
 	GetActiveAuctions(ctx context.Context) ([]*Auction, error)
@@ -740,7 +739,17 @@ func (r *PgAuctionRepository) GetActiveAuctions(ctx context.Context) ([]*Auction
 		FROM
 			tc_auction_flags taf
 		WHERE
-			taf.taf_auction_id = ANY($1);
+			(taf.taf_auction_id, taf.taf_date_upd) IN (
+				SELECT
+					inner_taf.taf_auction_id,
+					MAX(inner_taf.taf_date_upd)
+				FROM
+					tc_auction_flags inner_taf
+				WHERE
+					inner_taf.taf_auction_id = ANY($1)
+				GROUP BY
+					inner_taf.taf_auction_id
+		);
 	`
 
 	flagRows, err := r.connection.QueryContext(ctx, flagsQuery, pq.Array(orderedIDs))
@@ -1201,7 +1210,17 @@ func (r *PgAuctionRepository) GetAuctionsWithFilter(ctx context.Context, filter 
 		FROM
 			tc_auction_flags taf
 		WHERE
-			taf.taf_auction_id = ANY($1);
+			(taf.taf_auction_id, taf.taf_date_upd) IN (
+				SELECT
+					inner_taf.taf_auction_id,
+					MAX(inner_taf.taf_date_upd)
+				FROM
+					tc_auction_flags inner_taf
+				WHERE
+					inner_taf.taf_auction_id = ANY($1)
+				GROUP BY
+					inner_taf.taf_auction_id
+		);
 	`
 
 	flagRows, err := r.connection.QueryContext(ctx, flagsQuery, pq.Array(orderedIDs))
@@ -1439,7 +1458,17 @@ func (r *PgAuctionRepository) GetHistoricAuctionPrices(ctx context.Context) ([]*
 			FROM
 				tc_auction_flags taf
 			WHERE
-				taf.taf_auction_id = $1;
+				(taf.taf_auction_id, taf.taf_date_upd) IN (
+					SELECT
+						inner_taf.taf_auction_id,
+						MAX(inner_taf.taf_date_upd)
+					FROM
+						tc_auction_flags inner_taf
+					WHERE
+						inner_taf.taf_auction_id = $1
+					GROUP BY
+						inner_taf.taf_auction_id
+			);
 		`
 
 		flagRows, err := r.connection.QueryContext(ctx, flagsQuery, auction.ID)
@@ -1892,7 +1921,17 @@ func (r *PgAuctionRepository) GetAuctionByAuctionID(ctx context.Context, auction
 		FROM
 			tc_auction_flags taf
 		WHERE
-			taf.taf_auction_id = $1;
+			(taf.taf_auction_id, taf.taf_date_upd) IN (
+				SELECT
+					inner_taf.taf_auction_id,
+					MAX(inner_taf.taf_date_upd)
+				FROM
+					tc_auction_flags inner_taf
+				WHERE
+					inner_taf.taf_auction_id = $1
+				GROUP BY
+					inner_taf.taf_auction_id
+		);
 	`
 
 	flagRows, err := r.connection.QueryContext(ctx, flagsQuery, auctionID)
