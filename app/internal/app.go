@@ -14,6 +14,7 @@ import (
 	"github.com/adriein/tibia-char/pkg/helper"
 	"github.com/adriein/tibia-char/pkg/vendor"
 	"github.com/joho/godotenv"
+	"github.com/posthog/posthog-go"
 )
 
 type Modules struct {
@@ -21,9 +22,10 @@ type Modules struct {
 }
 
 type App struct {
-	Database *sql.DB
-	Modules  *Modules
-	Logger   *slog.Logger
+	Database      *sql.DB
+	Modules       *Modules
+	Logger        *slog.Logger
+	PosthogClient posthog.Client
 }
 
 func NewApp() *App {
@@ -41,6 +43,7 @@ func NewApp() *App {
 		constants.DatabaseName,
 		constants.ServerPort,
 		constants.Env,
+		constants.PosthogSdkApiKey,
 	)
 
 	if envCheckerErr := checker.Check(); envCheckerErr != nil {
@@ -51,11 +54,13 @@ func NewApp() *App {
 
 	db := database.New()
 	modules := initModules(db, logger)
+	posthogClient := initPosthogClient()
 
 	return &App{
-		Database: db,
-		Modules:  modules,
-		Logger:   logger,
+		Database:      db,
+		Modules:       modules,
+		Logger:        logger,
+		PosthogClient: posthogClient,
 	}
 }
 
@@ -97,4 +102,17 @@ func initModules(db *sql.DB, logger *slog.Logger) *Modules {
 	return &Modules{
 		Auction: service,
 	}
+}
+
+func initPosthogClient() posthog.Client {
+	client, _ := posthog.NewWithConfig(
+		os.Getenv(constants.PosthogSdkApiKey),
+		posthog.Config{
+			Endpoint: "https://eu.i.posthog.com",
+		},
+	)
+
+	defer client.Close()
+
+	return client
 }

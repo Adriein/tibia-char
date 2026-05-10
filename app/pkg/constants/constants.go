@@ -9,6 +9,7 @@ const (
 	ServerPort       = "SERVER_PORT"
 	Env              = "ENV"
 	Production       = "PRODUCTION"
+	PosthogSdkApiKey = "POSTHOG_SDK_API_KEY"
 )
 
 const (
@@ -22,6 +23,10 @@ const (
 
 const (
 	SourceKey = "source"
+)
+
+const (
+	SessionCookie = "tc_session"
 )
 
 // Tibia Char
