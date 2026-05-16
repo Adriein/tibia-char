@@ -35,7 +35,7 @@ func New(port string) *TibiaChar {
 	// Disable trusted proxy warning.
 	engine.SetTrustedProxies(nil)
 
-	engine.Use(middleware.Error(), gin.Logger(), gin.Recovery(), middleware.Tracer(), middleware.TimeZone(), middleware.Analytics(app.PosthogClient))
+	engine.Use(middleware.Error(), gin.Logger(), gin.Recovery(), middleware.Tracer(), middleware.TimeZone())
 
 	tibiaChar := &TibiaChar{
 		app:       app,
