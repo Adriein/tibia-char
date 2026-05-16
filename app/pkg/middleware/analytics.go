@@ -1,6 +1,8 @@
 package middleware
 
 import (
+	"fmt"
+
 	"github.com/adriein/tibia-char/pkg/constants"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -11,11 +13,23 @@ func Analytics(client posthog.Client) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		sessionId := getOrSetSessionID(ctx)
 
+		fmt.Println(sessionId)
+
+		var protocol string
+
+		if ctx.Request.Proto == "HTTP/1.1" {
+			protocol = "http"
+		} else {
+			protocol = "https"
+		}
+
+		currentURL := fmt.Sprintf("%s://%s%s", protocol, ctx.Request.Host, ctx.Request.URL.Path)
+
 		client.Enqueue(posthog.Capture{
 			DistinctId: sessionId,
 			Event:      "$pageview",
 			Properties: posthog.NewProperties().
-				Set("$current_url", "https://example.com"),
+				Set("$current_url", currentURL),
 		})
 
 		ctx.Next()
@@ -34,7 +48,7 @@ func getOrSetSessionID(ctx *gin.Context) string {
 	ctx.SetCookie(
 		constants.SessionCookie,
 		sessionID,
-		86400,
+		constants.DayInSeconds,
 		"/",
 		"",
 		true,

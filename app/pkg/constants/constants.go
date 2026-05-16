@@ -76,6 +76,10 @@ const (
 	ConsolidatePhase            = "CONSOLIDATE"
 )
 
+const (
+	DayInSeconds = 86400
+)
+
 // Errors
 
 const (
