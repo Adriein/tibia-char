@@ -1,4 +1,12 @@
 ---
+- name: Import shared vars
+  ansible.builtin.include_vars:
+    file: "{{ playbook_dir }}/shared/main.yml"
+    name: shared
+  tags:
+    - always
+    - docker
+
 - name: Ensure apt is using HTTPS
   ansible.builtin.apt:
     name: "{{ item }}"
@@ -72,7 +80,7 @@
 
 - name: Add remote user to docker group
   ansible.builtin.user:
-    name: "{{ remote_admin_user }}"
+    name: "{{ shared.remote_admin_user }}"
     groups: "{{ docker_group }}"
     append: true
   tags:

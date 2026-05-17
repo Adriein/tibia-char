@@ -88,7 +88,8 @@
   tags:
     - deploy
     - build
-
+TODO: in this whole file the go app is not build anywhere
+TODO: remove js frontend leftovers
 - name: Remove .env files from extracted artifact
   ansible.builtin.file:
     path: "{{ item }}"
