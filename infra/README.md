@@ -26,21 +26,33 @@ make config-only
 
 # Run pre-flight checks only
 make preflight
+
+# Install Neovim + config (server tooling)
+make setup
 ```
 
 Or with tags directly:
 ```bash
 ansible-playbook tibia-char-playbook.yml -i inventory.yml \
-  -e @ansible_vault.enc --key-file ~/.ssh/ansible \
+  --key-file ~/.ssh/ansible \
   --ask-become-pass --vault-password-file ansible_vault_password.txt \
   --tags "deploy,health"
 ```
 
-## Vault
+## Variables
+
+Configuration lives in `group_vars/all/` (auto-loaded by Ansible):
+
+| File | Contents |
+|------|----------|
+| `vars.yml` | Non-sensitive vars (`server_port`, `api_protocol`, `api_url`) |
+| `vault.yml` | Secrets encrypted with `ansible-vault` |
+
+### Vault
 
 To encrypt or re-encrypt the vault file:
 ```bash
-ansible-vault encrypt ansible_vault.enc
+ansible-vault encrypt group_vars/all/vault.yml
 ```
 
 ## Architecture
@@ -57,3 +69,4 @@ ansible-vault encrypt ansible_vault.enc
 | `health-check` | Remote | Verify containers + app health |
 | `cleanup` | Remote | Remove temp files |
 | `bootstrap` | Both | Generate SSH key + deploy to server |
+| `setup-nvim` | Remote | Install Neovim + write `init.lua` config |

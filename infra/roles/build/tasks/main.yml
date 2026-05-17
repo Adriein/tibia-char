@@ -12,7 +12,6 @@
       - database_user is defined and database_user != ''
       - database_password is defined and database_password != ''
       - server_port is defined and server_port != ''
-      - tibia_char_api_key is defined and tibia_char_api_key != ''
       - api_url is defined and api_url != ''
       - api_protocol is defined and api_protocol != ''
     fail_msg: "Missing required vault variable: {{ item }}"

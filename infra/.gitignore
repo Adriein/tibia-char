@@ -1,3 +1,4 @@
 .vscode
 tmp_build
 ansible_vault_password.txt
+group_vars/all/vault.yml
