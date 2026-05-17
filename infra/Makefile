@@ -5,6 +5,9 @@ INVENTORY = inventory.yml
 KEY_FILE = ~/.ssh/ansible
 ANSIBLE_VAULT_ENC = @ansible_vault.enc
 
+bootstrap:
+	ansible-playbook $(PLAYBOOK) -i $(INVENTORY) --key-file $(KEY_FILE) --ask-pass --ask-become-pass --tags bootstrap
+
 run:
 	ansible-playbook $(PLAYBOOK) -i $(INVENTORY) -e $(ANSIBLE_VAULT_ENC) --key-file $(KEY_FILE) --ask-become-pass --vault-password-file ansible_vault_password.txt
 
@@ -20,4 +23,4 @@ deploy-no-build:
 preflight:
 	ansible-playbook $(PLAYBOOK) -i $(INVENTORY) --key-file $(KEY_FILE) --ask-become-pass --vault-password-file ansible_vault_password.txt --tags always
 
-.PHONY: run build-only config-only deploy-no-build preflight clean
+.PHONY: bootstrap run build-only config-only deploy-no-build preflight clean

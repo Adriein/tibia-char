@@ -1,0 +1,30 @@
+---
+- name: Ensure ~/.ssh directory exists on control node
+  delegate_to: localhost
+  become: false
+  file:
+    path: "{{ lookup('env', 'HOME') }}/.ssh"
+    state: directory
+    mode: '0700'
+
+- name: Generate SSH key pair on control node if missing
+  delegate_to: localhost
+  become: false
+  openssh_keypair:
+    path: "{{ lookup('env', 'HOME') }}/.ssh/ansible"
+    type: ed25519
+    comment: "ansible"
+    state: present
+
+- name: Read public key from control node
+  delegate_to: localhost
+  become: false
+  slurp:
+    path: "{{ lookup('env', 'HOME') }}/.ssh/ansible.pub"
+  register: _ansible_pubkey
+
+- name: Add public key to remote user's authorized_keys
+  authorized_key:
+    user: "{{ ansible_user }}"
+    key: "{{ _ansible_pubkey.content | b64decode }}"
+    state: present

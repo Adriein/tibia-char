@@ -1,4 +1,12 @@
 ---
+- name: Bootstrap server (first-time SSH key setup)
+  hosts: all
+  gather_facts: false
+  roles:
+    - bootstrap
+  tags:
+    - bootstrap
+
 - name: Pre-flight checks
   hosts: all
   gather_facts: true

@@ -4,17 +4,14 @@ Automated deployment of **tibia-char** to a home server via Ansible.
 
 ## Prerequisites
 
-1. SSH key setup on your Ansible node:
-   ```bash
-   ssh-keygen -t ed25519 -C "ansible"
-   ssh-copy-id -i ~/.ssh/ansible.pub [server-ip]
-   ```
-
-2. Create `ansible_vault_password.txt` (gitignored) with your vault password.
+1. Create `ansible_vault_password.txt` (gitignored) with your vault password.
 
 ## Usage
 
 ```bash
+# First-time setup on a fresh server (prompts for SSH + sudo passwords)
+make bootstrap
+
 # Full deployment (build + deploy + migrate + health check)
 make run
 
@@ -59,3 +56,4 @@ ansible-vault encrypt ansible_vault.enc
 | `tibia-char-run-migrations` | Remote | Run PostgreSQL migrations (idempotent) |
 | `health-check` | Remote | Verify containers + app health |
 | `cleanup` | Remote | Remove temp files |
+| `bootstrap` | Both | Generate SSH key + deploy to server |
