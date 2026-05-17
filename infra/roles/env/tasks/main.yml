@@ -34,8 +34,8 @@
     - key: SERVER_PORT
       value: "{{ ansible_env.SERVER_PORT }}"
     - key: ENV
-      value: "{{ ansible_env.POSTHOG_SDK_API_KEY }}"
-    - key: API_URL
+      value: "{{ ansible_env.ENV }}"
+    - key: POSTHOG_SDK_API_KEY
       value: "{{ ansible_env.POSTHOG_SDK_API_KEY }}"
   tags:
     - deploy

@@ -7,7 +7,7 @@
 - name: Validate required variables
   ansible.builtin.assert:
     that:
-      - database_ip is defined and database_ip != ''
+      - database_url is defined and database_url != ''
       - database_name is defined and database_name != ''
       - database_user is defined and database_user != ''
       - database_password is defined and database_password != ''

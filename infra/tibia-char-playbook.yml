@@ -16,6 +16,14 @@
   tags:
     - always
 
+- name: Setup server tools
+  hosts: all
+  become: true
+  roles:
+    - setup-nvim
+  tags:
+    - setup
+
 - name: Tibia-Char localhost create artifact
   hosts: localhost
   roles:
@@ -37,7 +45,7 @@
     - health-check
     - cleanup
   environment:
-    DATABASE_IP: "{{ database_ip }}"
+    DATABASE_URL: "{{ database_url }}"
     DATABASE_NAME: "{{ database_name }}"
     DATABASE_USER: "{{ database_user }}"
     DATABASE_PASSWORD: "{{ database_password }}"
@@ -58,7 +66,7 @@
     - tibia-char-run
     - health-check
   environment:
-    DATABASE_IP: "{{ database_ip }}"
+    DATABASE_URL: "{{ database_url }}"
     DATABASE_NAME: "{{ database_name }}"
     DATABASE_USER: "{{ database_user }}"
     DATABASE_PASSWORD: "{{ database_password }}"

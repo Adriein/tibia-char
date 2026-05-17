@@ -2,7 +2,7 @@
 home_server:
   hosts:
     server_01:
-      ansible_host: 192.168.1.45
+      ansible_host: 192.168.1.56
       ansible_user: 'aclaretdev'
       ansible_become: true
       ansible_become_method: sudo

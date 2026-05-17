@@ -23,4 +23,7 @@ deploy-no-build:
 preflight:
 	ansible-playbook $(PLAYBOOK) -i $(INVENTORY) --key-file $(KEY_FILE) --ask-become-pass --vault-password-file ansible_vault_password.txt --tags always
 
-.PHONY: bootstrap run build-only config-only deploy-no-build preflight clean
+setup:
+	ansible-playbook $(PLAYBOOK) -i $(INVENTORY) -e $(ANSIBLE_VAULT_ENC) --key-file $(KEY_FILE) --ask-become-pass --vault-password-file ansible_vault_password.txt --tags setup
+
+.PHONY: bootstrap run build-only config-only deploy-no-build preflight setup clean
