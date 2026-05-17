@@ -23,8 +23,8 @@
     line: "{{ item.key }}={{ item.value }}"
     mode: '0600'
   with_items:
-    - key: DATABASE_IP
-      value: "{{ ansible_env.DATABASE_IP }}"
+    - key: DATABASE_URL
+      value: "{{ ansible_env.DATABASE_URL }}"
     - key: DATABASE_NAME
       value: "{{ ansible_env.DATABASE_NAME }}"
     - key: DATABASE_USER
@@ -33,14 +33,10 @@
       value: "{{ ansible_env.DATABASE_PASSWORD }}"
     - key: SERVER_PORT
       value: "{{ ansible_env.SERVER_PORT }}"
-    - key: TIBIA_CHAR_API_KEY
-      value: "{{ ansible_env.TIBIA_CHAR_API_KEY }}"
-    - key: ENVIRONMENT
-      value: "{{ ansible_env.ENVIRONMENT }}"
+    - key: ENV
+      value: "{{ ansible_env.POSTHOG_SDK_API_KEY }}"
     - key: API_URL
-      value: "{{ ansible_env.API_URL }}"
-    - key: API_PROTOCOL
-      value: "{{ ansible_env.API_PROTOCOL }}"
+      value: "{{ ansible_env.POSTHOG_SDK_API_KEY }}"
   tags:
     - deploy
     - config
