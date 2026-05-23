@@ -20,25 +20,11 @@
     - always
     - validate
 
-- name: Check if an existing deployment folder exists
-  ansible.builtin.stat:
-    path: "{{ shared.local_tmp_build_folder }}"
-  register: existing_deploy
-  tags:
-    - build
-
-- name: Clear out the old backup directory if it exists
+- name: Ensure local backup directory exists
   ansible.builtin.file:
     path: "{{ shared.local_backup_artifact_folder }}"
-    state: absent
-  when: existing_deploy.stat.exists and existing_deploy.stat.isdir
-  tags:
-    - build
-
-- name: Create backup of current deployment
-  ansible.builtin.command: "cp -rp {{ shared.deploy_path }} {{ shared.backup_path }}"
-  changed_when: true
-  when: existing_deploy.stat.exists and existing_deploy.stat.isdir
+    state: directory
+    mode: '0755'
   tags:
     - build
 
@@ -52,24 +38,59 @@
   tags:
     - build
 
-- name: Compile Go application binary for the target server
-  ansible.builtin.command: "go build -o {{ shared. }}/tibia-char-server"
-  args:
-    chdir: "{{ playbook_dir }}/.." # Assumes your Go code is one folder up from your ansible directory
-  environment:
-    GOOS: linux
-    GOARCH: amd64
-    CGO_ENABLED: "0"
+- name: Copy Dockerfile to build directory
+  ansible.builtin.copy:
+    src: "{{ playbook_dir }}/../Dockerfile"
+    dest: "{{ shared.local_tmp_build_folder }}/Dockerfile"
+    mode: '0644'
   tags:
     - build
 
-- name: Zip tibia-char app
+- name: Copy docker-compose.yaml to build directory
+  ansible.builtin.copy:
+    src: "{{ playbook_dir }}/../docker-compose.yaml"
+    dest: "{{ shared.local_tmp_build_folder }}/docker-compose.yaml"
+    mode: '0644'
+  tags:
+    - build
+
+- name: Copy migrations directory
+  ansible.builtin.copy:
+    src: "{{ playbook_dir }}/../app/database/migrations"
+    dest: "{{ shared.local_tmp_build_folder }}/migrations"
+    mode: '0644'
+  tags:
+    - build
+
+- name: Copy app directory to build directory
+  ansible.builtin.synchronize:
+    src: "{{ playbook_dir }}/../app/"
+    dest: "{{ shared.local_tmp_build_folder }}/"
+    rsync_opts:
+      - "--exclude=migrate"
+      - "--exclude=node_modules"
+      - "--exclude=.env*"
+  tags:
+    - build
+
+- name: Zip tibia-char app to backup directory with version prefix
   community.general.archive:
-    path: "{{ shared.local_tmp_build_folder }}/*"
-    dest: "{{ local_tmp_build_folder }}/{{ shared.tibia_char_artifact }}"
-    exclusion_patterns:
-      - "node_modules/*"
-      - "migrate"
+    path:
+      - Dockerfile
+      - docker-compose.yaml
+      - app
+      - migrations
+    dest: "{{ shared.local_backup_artifact_folder }}/{{ artifact_version }}-{{ shared.tibia_char_artifact }}"
+    format: zip
+  args:
+    chdir: "{{ shared.local_tmp_build_folder }}"
+  tags:
+    - build
+
+- name: Copy standard unversioned artifact to temporary build folder for downstream tasks
+  ansible.builtin.copy:
+    src: "{{ shared.local_backup_artifact_folder }}/{{ artifact_version }}-{{ shared.tibia_char_artifact }}"
+    dest: "{{ shared.local_tmp_build_folder }}/{{ shared.tibia_char_artifact }}"
     mode: '0644'
   tags:
     - build

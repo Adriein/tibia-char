@@ -14,7 +14,8 @@
   roles:
     - pre-flight
   tags:
-    - always
+    - full
+    - deploy
 
 - name: Setup server tools
   hosts: all
@@ -26,13 +27,18 @@
 
 - name: Tibia-Char localhost create artifact
   hosts: localhost
+  vars_prompt:
+    - name: artifact_version
+      prompt: "Please enter the version of the artifact to build"
+      private: false
+      default: "1.0.0"
   roles:
     - build
   tags:
     - build
     - deploy
     - full
-    
+
 - name: Deploy tibia-char to hosts
   hosts: all
   become: true

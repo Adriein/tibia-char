@@ -16,5 +16,23 @@ services:
       retries: 10
     volumes:
       - tibia_char_database_data:/var/lib/postgresql/data:rw
+
+  tibia_char_server:
+    container_name: tibia_char_server
+    build:
+      context: .
+      dockerfile: Dockerfile
+    network_mode: host
+    environment:
+      DATABASE_NAME: "${DATABASE_NAME}"
+      DATABASE_USER: "${DATABASE_USER}"
+      DATABASE_PASSWORD: "${DATABASE_PASSWORD}"
+      SERVER_PORT: "${SERVER_PORT}"
+      ENV: "${ENV}"
+      POSTHOG_SDK_API_KEY: "${POSTHOG_SDK_API_KEY}"
+    depends_on:
+      tibia_char_database:
+        condition: service_healthy
+
 volumes:
   tibia_char_database_data:
