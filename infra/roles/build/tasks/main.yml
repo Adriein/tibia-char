@@ -4,22 +4,6 @@
     file: "{{ playbook_dir }}/shared/main.yml"
     name: shared
 
-- name: Validate required variables
-  ansible.builtin.assert:
-    that:
-      - database_url is defined and database_url != ''
-      - database_name is defined and database_name != ''
-      - database_user is defined and database_user != ''
-      - database_password is defined and database_password != ''
-      - server_port is defined and server_port != ''
-      - api_url is defined and api_url != ''
-      - api_protocol is defined and api_protocol != ''
-    fail_msg: "Missing required vault variable: {{ item }}"
-    success_msg: "All required variables are set"
-  tags:
-    - always
-    - validate
-
 - name: Ensure local backup directory exists
   ansible.builtin.file:
     path: "{{ shared.local_backup_artifact_folder }}"
@@ -57,7 +41,7 @@
 - name: Copy migrations directory
   ansible.builtin.copy:
     src: "{{ playbook_dir }}/../app/database/migrations"
-    dest: "{{ shared.local_tmp_build_folder }}/migrations"
+    dest: "{{ shared.local_tmp_build_folder }}"
     mode: '0644'
   tags:
     - build
@@ -75,22 +59,16 @@
 
 - name: Zip tibia-char app to backup directory with version prefix
   community.general.archive:
-    path:
-      - Dockerfile
-      - docker-compose.yaml
-      - app
-      - migrations
+    path: "{{ shared.local_tmp_build_folder }}/*"
     dest: "{{ shared.local_backup_artifact_folder }}/{{ artifact_version }}-{{ shared.tibia_char_artifact }}"
     format: zip
-  args:
-    chdir: "{{ shared.local_tmp_build_folder }}"
   tags:
     - build
 
-- name: Copy standard unversioned artifact to temporary build folder for downstream tasks
+- name: Copy artifact to temporary build folder
   ansible.builtin.copy:
     src: "{{ shared.local_backup_artifact_folder }}/{{ artifact_version }}-{{ shared.tibia_char_artifact }}"
-    dest: "{{ shared.local_tmp_build_folder }}/{{ shared.tibia_char_artifact }}"
+    dest: "{{ shared.local_tmp_build_folder }}/{{ artifact_version }}-{{ shared.tibia_char_artifact }}"
     mode: '0644'
   tags:
     - build

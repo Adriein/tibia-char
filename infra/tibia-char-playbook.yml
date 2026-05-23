@@ -14,7 +14,7 @@
   roles:
     - pre-flight
   tags:
-    - full
+    - preflight
     - deploy
 
 - name: Setup server tools
