@@ -20,83 +20,56 @@
     - always
     - validate
 
-- name: Import shared vars (again for downstream)
-  ansible.builtin.include_vars:
-    file: "{{ playbook_dir }}/shared/main.yml"
-    name: shared
+- name: Check if an existing deployment folder exists
+  ansible.builtin.stat:
+    path: "{{ shared.local_tmp_build_folder }}"
+  register: existing_deploy
+  tags:
+    - build
+
+- name: Clear out the old backup directory if it exists
+  ansible.builtin.file:
+    path: "{{ shared.local_backup_artifact_folder }}"
+    state: absent
+  when: existing_deploy.stat.exists and existing_deploy.stat.isdir
+  tags:
+    - build
 
 - name: Create backup of current deployment
-  ansible.builtin.shell: |
-    if [ -d "{{ shared.deploy_path }}" ]; then
-      rm -rf "{{ shared.backup_path }}" 2>/dev/null || true
-      cp -rp "{{ shared.deploy_path }}" "{{ shared.backup_path }}"
-      echo "backup_created"
-    else
-      echo "no_existing_deployment"
-    fi
-  register: backup_result
-  changed_when: "'backup_created' in backup_result.stdout"
+  ansible.builtin.command: "cp -rp {{ shared.deploy_path }} {{ shared.backup_path }}"
+  changed_when: true
+  when: existing_deploy.stat.exists and existing_deploy.stat.isdir
   tags:
-    - deploy
-    - rollback
+    - build
 
-- name: Remove tmp_build
+- name: Ensure local temporary build directory is clean and exists
   ansible.builtin.file:
-    path: "{{ shared.tmp_build_folder }}"
-    state: absent
-  tags:
-    - deploy
-    - build
-
-- name: Create tmp build folder
-  ansible.builtin.file:
-    path: "{{ shared.tmp_build_folder }}"
-    state: directory
-    mode: '0755'
-    owner: aclaretdev
-    group: aclaretdev
-  tags:
-    - deploy
-    - build
-
-- name: Copy tibia-char artifact to tmp_build folder
-  ansible.builtin.copy:
-    src: "{{ local_tmp_project_folder }}/{{ shared.tibia_char_artifact }}"
-    dest: "{{ shared.tmp_build_folder }}"
-    mode: '0644'
-    owner: aclaretdev
-    group: aclaretdev
-  tags:
-    - deploy
-    - build
-
-- name: Unzip tibia-char artifact
-  ansible.builtin.unarchive:
-    src: "{{ shared.tmp_build_folder }}/{{ shared.tibia_char_artifact }}"
-    dest: "{{ shared.tmp_build_folder }}"
-    remote_src: true
-    owner: aclaretdev
-    group: aclaretdev
-  tags:
-    - deploy
-    - build
-
-- name: Remove artifact zip after extraction
-  ansible.builtin.file:
-    path: "{{ shared.tmp_build_folder }}/{{ shared.tibia_char_artifact }}"
-    state: absent
-  tags:
-    - deploy
-    - build
-TODO: in this whole file the go app is not build anywhere
-TODO: remove js frontend leftovers
-- name: Remove .env files from extracted artifact
-  ansible.builtin.file:
-    path: "{{ item }}"
-    state: absent
+    path: "{{ shared.local_tmp_build_folder }}"
+    state: "{{ item }}"
   loop:
-    - "{{ shared.tmp_build_folder }}/frontend/.env"
-    - "{{ shared.tmp_build_folder }}/server/.env"
+    - absent
+    - directory
   tags:
-    - deploy
+    - build
+
+- name: Compile Go application binary for the target server
+  ansible.builtin.command: "go build -o {{ shared. }}/tibia-char-server"
+  args:
+    chdir: "{{ playbook_dir }}/.." # Assumes your Go code is one folder up from your ansible directory
+  environment:
+    GOOS: linux
+    GOARCH: amd64
+    CGO_ENABLED: "0"
+  tags:
+    - build
+
+- name: Zip tibia-char app
+  community.general.archive:
+    path: "{{ shared.local_tmp_build_folder }}/*"
+    dest: "{{ local_tmp_build_folder }}/{{ shared.tibia_char_artifact }}"
+    exclusion_patterns:
+      - "node_modules/*"
+      - "migrate"
+    mode: '0644'
+  tags:
     - build

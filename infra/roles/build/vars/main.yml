@@ -1,2 +1,1 @@
-local_tmp_project_folder: "{{ playbook_dir }}/tmp_build"
-remote_tibia_char_project: /home/aclaretdev/tibia-char
+local_project_folder: /home/aclaret/CLARET-DEV/tibia-char

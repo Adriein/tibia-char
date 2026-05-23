@@ -27,19 +27,17 @@
 - name: Tibia-Char localhost create artifact
   hosts: localhost
   roles:
-    - zip
+    - build
   tags:
     - build
     - deploy
     - full
-TODO: the order of zip and uilb is hectic i don't understand how this can possibily work
-TODO: make sure all tmp directories get cleaned up because i don't think they are right now
+    
 - name: Deploy tibia-char to hosts
   hosts: all
   become: true
   roles:
     - docker-install
-    - build
     - env
     - run
     - migrations
