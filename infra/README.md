@@ -60,7 +60,7 @@ ansible-vault encrypt group_vars/all/vault.yml
 | Role | Runs On | Purpose |
 |------|---------|---------|
 | `pre-flight` | Remote | Connectivity, disk space, DB reachability |
-| `tibia-char-zip` | Localhost | Create deployment artifact |
+| `zip` | Localhost | Create deployment artifact |
 | `docker-install` | Remote | Install Docker Engine + plugins |
 | `build` | Remote | Extract artifact, backup old deployment |
 | `env` | Remote | Generate `.env` (mode 0600) |

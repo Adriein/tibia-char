@@ -27,7 +27,7 @@
 - name: Tibia-Char localhost create artifact
   hosts: localhost
   roles:
-    - tibia-char-zip
+    - zip
   tags:
     - build
     - deploy
