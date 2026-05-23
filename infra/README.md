@@ -62,10 +62,10 @@ ansible-vault encrypt group_vars/all/vault.yml
 | `pre-flight` | Remote | Connectivity, disk space, DB reachability |
 | `tibia-char-zip` | Localhost | Create deployment artifact |
 | `docker-install` | Remote | Install Docker Engine + plugins |
-| `tibia-char-build` | Remote | Extract artifact, backup old deployment |
-| `tibia-char-set-env-vars` | Remote | Generate `.env` (mode 0600) |
-| `tibia-char-run` | Remote | Docker compose down/up |
-| `tibia-char-run-migrations` | Remote | Run PostgreSQL migrations (idempotent) |
+| `build` | Remote | Extract artifact, backup old deployment |
+| `env` | Remote | Generate `.env` (mode 0600) |
+| `run` | Remote | Docker compose down/up |
+| `migrations` | Remote | Run PostgreSQL migrations (idempotent) |
 | `health-check` | Remote | Verify containers + app health |
 | `cleanup` | Remote | Remove temp files |
 | `bootstrap` | Both | Generate SSH key + deploy to server |

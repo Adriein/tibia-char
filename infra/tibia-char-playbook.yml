@@ -32,7 +32,6 @@
     - build
     - deploy
     - full
-TODO: make sure how tibia-char-build for example is identified because there is nowhere this tag is added
 TODO: the order of zip and uilb is hectic i don't understand how this can possibily work
 TODO: make sure all tmp directories get cleaned up because i don't think they are right now
 - name: Deploy tibia-char to hosts
@@ -40,10 +39,10 @@ TODO: make sure all tmp directories get cleaned up because i don't think they ar
   become: true
   roles:
     - docker-install
-    - tibia-char-build
-    - tibia-char-set-env-vars
-    - tibia-char-run
-    - tibia-char-run-migrations
+    - build
+    - env
+    - run
+    - migrations
     - health-check
     - cleanup
   environment: &deploy_env
@@ -63,8 +62,8 @@ TODO: make sure all tmp directories get cleaned up because i don't think they ar
   hosts: all
   become: true
   roles:
-    - tibia-char-set-env-vars
-    - tibia-char-run
+    - env
+    - run
     - health-check
   environment: *deploy_env
   tags:
