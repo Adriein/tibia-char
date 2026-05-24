@@ -1,28 +1,14 @@
 # Makefile for executing Ansible playbook
 
-PLAYBOOK = tibia-char-playbook.yml
+CD_PLAYBOOK = deploy-playbook.yml
+CI_PLAYBOOK = build-playbook.yml
 INVENTORY = inventory.yml
 KEY_FILE = ~/.ssh/ansible
 
-bootstrap:
-	ansible-playbook $(PLAYBOOK) -i $(INVENTORY) --key-file $(KEY_FILE) --ask-pass --ask-become-pass --tags bootstrap
+deploy:
+	ansible-playbook $(CD_PLAYBOOK) -i $(INVENTORY) --key-file $(KEY_FILE) --ask-become-pass --vault-password-file ansible_vault_password.txt
 
-run:
-	ansible-playbook $(PLAYBOOK) -i $(INVENTORY) --key-file $(KEY_FILE) --ask-become-pass --vault-password-file ansible_vault_password.txt
+build:
+	ansible-playbook ${CI_PLAYBOOK} --vault-password-file ansible_vault_password.txt
 
-build-only:
-	ansible-playbook $(PLAYBOOK) -i $(INVENTORY) --key-file $(KEY_FILE) --ask-become-pass --vault-password-file ansible_vault_password.txt --tags build
-
-config-only:
-	ansible-playbook $(PLAYBOOK) -i $(INVENTORY) --key-file $(KEY_FILE) --ask-become-pass --vault-password-file ansible_vault_password.txt --tags config
-
-deploy-no-build:
-	ansible-playbook $(PLAYBOOK) -i $(INVENTORY) --key-file $(KEY_FILE) --ask-become-pass --vault-password-file ansible_vault_password.txt --tags deploy
-
-preflight:
-	ansible-playbook $(PLAYBOOK) -i $(INVENTORY) --key-file $(KEY_FILE) --ask-become-pass --vault-password-file ansible_vault_password.txt --tags always
-
-setup:
-	ansible-playbook $(PLAYBOOK) -i $(INVENTORY) --key-file $(KEY_FILE) --ask-become-pass --vault-password-file ansible_vault_password.txt --tags setup
-
-.PHONY: bootstrap run build-only config-only deploy-no-build preflight setup clean
+.PHONY: build deploy
