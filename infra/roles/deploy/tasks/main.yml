@@ -1,0 +1,32 @@
+---
+- name: Import shared vars
+  ansible.builtin.include_vars:
+    file: "{{ playbook_dir }}/shared/main.yml"
+    name: shared
+
+- name: Ensure target directory exists on remote machines
+  ansible.builtin.file:
+    path: "{{ shared.deploy_path }}"
+    state: directory
+    mode: '0755'
+  become: true
+  tags:
+    - deploy
+
+- name: Copy artifact from localhost build folder to remote machines
+  ansible.builtin.copy:
+    src: "{{ shared.local_tmp_build_folder }}/{{ artifact_version }}-{{ shared.tibia_char_artifact }}"
+    dest: "{{ shared.deploy_path }}{{ artifact_version }}-{{ shared.tibia_char_artifact }}"
+    mode: '0644'
+  become: true
+  tags:
+    - deploy
+
+- name: Copy artifact to remote backup folder
+  ansible.builtin.copy:
+    src: "{{ shared.deploy_path }}{{ artifact_version }}-{{ shared.tibia_char_artifact }}"
+    dest: "{{ shared.backup_path }}{{ artifact_version }}-{{ shared.tibia_char_artifact }}"
+    mode: '0644'
+  become: true
+  tags:
+    - deploy
