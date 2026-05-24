@@ -72,3 +72,21 @@
     mode: '0644'
   tags:
     - build
+
+- name: Find all files and folders inside the temporary build directory
+  ansible.builtin.find:
+    paths: "{{ shared.local_tmp_build_folder }}"
+    recurse: false
+    file_type: any
+  register: files_in_tmp_build
+  tags:
+    - build
+
+- name: Delete everything except the specific versioned artifact
+  ansible.builtin.file:
+    path: "{{ item.path }}"
+    state: absent
+  loop: "{{ files_in_tmp_build.files }}"
+  when: item.path != (shared.local_tmp_build_folder ~ '/' ~ artifact_version ~ '-' ~ shared.tibia_char_artifact)
+  tags:
+    - build
