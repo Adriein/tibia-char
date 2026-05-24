@@ -19,7 +19,6 @@
     dest: "{{ shared.deploy_path }}{{ artifact_version }}-{{ shared.tibia_char_artifact }}"
     mode: '0644'
   become: true
-  remote_src: true
   tags:
     - deploy
 

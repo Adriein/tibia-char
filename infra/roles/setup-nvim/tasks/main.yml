@@ -4,8 +4,7 @@
     file: "{{ playbook_dir }}/shared/main.yml"
     name: shared
   tags:
-    - setup
-    - nvim
+    - bootstrap
 
 - name: Check if nvim is installed
   ansible.builtin.command: which nvim
@@ -13,8 +12,7 @@
   changed_when: false
   failed_when: false
   tags:
-    - setup
-    - nvim
+    - bootstrap
 
 - name: Install Neovim
   ansible.builtin.apt:
@@ -23,8 +21,7 @@
     update_cache: true
   when: nvim_check.rc != 0
   tags:
-    - setup
-    - nvim
+    - bootstrap
 
 - name: Ensure Neovim config directory exists
   ansible.builtin.file:
@@ -34,8 +31,7 @@
     group: "{{ shared.remote_admin_user }}"
     mode: '0755'
   tags:
-    - setup
-    - nvim
+    - bootstrap
 
 - name: Create Neovim init.lua config
   ansible.builtin.copy:
@@ -56,5 +52,4 @@
     group: "{{ shared.remote_admin_user }}"
     mode: '0644'
   tags:
-    - setup
-    - nvim
+    - bootstrap

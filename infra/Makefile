@@ -4,10 +4,13 @@ PLAYBOOK = deploy-playbook.yml
 INVENTORY = inventory.yml
 KEY_FILE = ~/.ssh/ansible
 
-deploy:
-	ansible-playbook $(PLAYBOOK) -i $(INVENTORY) --key-file $(KEY_FILE) --ask-become-pass --vault-password-file ansible_vault_password.txt
+bootstrap:
+	ansible-playbook $(PLAYBOOK) -i $(INVENTORY) -t bootstrap --key-file $(KEY_FILE) --ask-become-pass --vault-password-file ansible_vault_password.txt
+
+deploy-stg:
+	ansible-playbook $(PLAYBOOK) -i $(INVENTORY) -t full --key-file $(KEY_FILE) --ask-become-pass --vault-password-file ansible_vault_password.txt
 
 build:
 	ansible-playbook ${PLAYBOOK} -t build --vault-password-file ansible_vault_password.txt
 
-.PHONY: build deploy
+.PHONY: build deploy bootstrap

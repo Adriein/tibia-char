@@ -1,34 +1,27 @@
-# Home Server - Ansible Deployment
+# Tibia Char - Ansible Deployment
 
-Automated deployment of **tibia-char** to a home server via Ansible.
+Automated deployment of **tibia-char**.
 
 ## Prerequisites
 
 1. Create `ansible_vault_password.txt` (gitignored) with your vault password.
+2. Create a ssh key and copy the .pub to the remote
+```bash
+ssh-keygen -t ed25519 -f ~/.ssh/ansible -C "ansible"
+ssh-copy-id -i ~/.ssh/ansible.pub aclaret@192.168.1.56
+```
 
 ## Usage
 
 ```bash
-# First-time setup on a fresh server (prompts for SSH + sudo passwords)
+# First-time setup on a fresh server
 make bootstrap
 
-# Full deployment (build + deploy + migrate + health check)
-make run
+# Full deployment to stg
+make deploy-stg
 
 # Build artifact only (localhost)
 make build-only
-
-# Deploy without rebuilding (uses existing artifact)
-make deploy-no-build
-
-# Update env vars and restart containers only
-make config-only
-
-# Run pre-flight checks only
-make preflight
-
-# Install Neovim + config (server tooling)
-make setup
 ```
 
 Or with tags directly:
@@ -53,6 +46,10 @@ Configuration lives in `group_vars/all/` (auto-loaded by Ansible):
 To encrypt or re-encrypt the vault file:
 ```bash
 ansible-vault encrypt group_vars/all/vault.yml
+```
+To decrypt the actual vault file:
+```bash
+ansible-vault decrypt group_vars/all/vault.yml
 ```
 
 ## Architecture

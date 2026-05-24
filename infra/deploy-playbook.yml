@@ -1,9 +1,9 @@
 ---
-- name: Bootstrap server (first-time SSH key setup)
+- name: Setup server tools
   hosts: all
-  gather_facts: false
+  become: true
   roles:
-    - bootstrap
+    - setup-nvim
   tags:
     - bootstrap
 
@@ -16,14 +16,7 @@
   tags:
     - preflight
     - deploy
-
-- name: Setup server tools
-  hosts: all
-  become: true
-  roles:
-    - setup-nvim
-  tags:
-    - setup
+    - full
 
 - name: Tibia-Char localhost create artifact
   hosts: localhost
