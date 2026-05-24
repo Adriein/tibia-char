@@ -4,14 +4,6 @@
     file: "{{ playbook_dir }}/shared/main.yml"
     name: shared
 
-- name: Remove migrate binary from home directory
-  ansible.builtin.file:
-    path: "{{ shared.remote_home_path }}/migrate"
-    state: absent
-  tags:
-    - deploy
-    - cleanup
-
 - name: Remove migration tar archive if leftover
   ansible.builtin.file:
     path: "{{ shared.remote_home_path }}/migrate.linux-amd64.tar.gz"

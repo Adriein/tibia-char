@@ -1,6 +1,5 @@
 tibia_char_artifact: tibia-char-artifact
 remote_home_path: /home/aclaretdev
-tmp_build_folder: /home/aclaretdev/tmp_build
 deploy_path: /opt/tibia-char/src
 backup_path: /opt/tibia-char/backup
 migrate_version: v4.17.1

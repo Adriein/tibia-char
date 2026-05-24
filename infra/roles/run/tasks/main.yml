@@ -6,7 +6,7 @@
 
 - name: Run docker-compose down
   community.docker.docker_compose_v2:
-    project_src: "{{ shared.tmp_build_folder }}"
+    project_src: "{{ shared.deploy_path }}"
     state: absent
     env_files:
       - .env
@@ -24,7 +24,7 @@
 
 - name: Run docker-compose up
   community.docker.docker_compose_v2:
-    project_src: "{{ shared.tmp_build_folder }}"
+    project_src: "{{ shared.deploy_path }}"
     state: present
     pull: missing
     build: always

@@ -49,11 +49,9 @@
 - name: Execute migrations on remote
   ansible.builtin.shell: >
     {{ shared.remote_home_path }}/migrate
-    -database postgresql://{{ ansible_env.DATABASE_USER }}:{{ ansible_env.DATABASE_PASSWORD }}@{{ ansible_env.DATABASE_URL }}:5432/{{ ansible_env.DATABASE_NAME }}?sslmode=disable
-    -path {{ shared.tmp_build_folder }}/server/database/migrations
+    -database postgresql://{{ adatabase_url }}:{{ database_url }}@{{ database_url }}:5432/{{ database_url }}?sslmode=disable
+    -path {{ shared.deploy_path }}/migrations
     up
-  args:
-    chdir: "{{ shared.remote_home_path }}"
   register: migration_result
   tags:
     - deploy

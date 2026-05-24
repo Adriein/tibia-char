@@ -40,19 +40,19 @@
     - preflight
 
 - name: Check if PostgreSQL is reachable
-  ansible.builtin.command: nc -z -w3 {{ ansible_env.DATABASE_URL | default('SKIP') }} 5432
+  ansible.builtin.command: nc -z -w3 {{ database_url | default('SKIP') }} 5432
   register: pg_reachable
   changed_when: false
   failed_when: false
-  when: ansible_env.DATABASE_URL is defined and ansible_env.DATABASE_URL != ''
+  when: database_url is defined and database_url != ''
   tags:
     - always
     - preflight
 
 - name: Report database connectivity
   ansible.builtin.debug:
-    msg: "PostgreSQL {{ 'reachable' if pg_reachable.rc == 0 else 'NOT reachable' }} at {{ ansible_env.DATABASE_URL }}:5432"
-  when: ansible_env.DATABASE_URL is defined and ansible_env.DATABASE_URL != ''
+    msg: "PostgreSQL {{ 'reachable' if pg_reachable.rc == 0 else 'NOT reachable' }} at {{ database_url }}:5432"
+  when: database_url is defined and database_url != ''
   tags:
     - always
     - preflight

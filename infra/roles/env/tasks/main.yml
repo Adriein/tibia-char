@@ -6,7 +6,7 @@
 
 - name: Create .env file for docker
   ansible.builtin.file:
-    path: "{{ shared.tmp_build_folder }}/.env"
+    path: "{{ shared.deploy_path }}/.env"
     state: touch
     mode: '0600'
     owner: aclaretdev
@@ -17,26 +17,26 @@
 
 - name: Write env vars into the .env file
   ansible.builtin.lineinfile:
-    dest: "{{ shared.tmp_build_folder }}/.env"
+    dest: "{{ shared.deploy_path }}/.env"
     state: present
     regexp: "^{{ item.key }}="
     line: "{{ item.key }}={{ item.value }}"
     mode: '0600'
   with_items:
     - key: DATABASE_URL
-      value: "{{ ansible_env.DATABASE_URL }}"
+      value: "{{ database_url }}"
     - key: DATABASE_NAME
-      value: "{{ ansible_env.DATABASE_NAME }}"
+      value: "{{ database_name }}"
     - key: DATABASE_USER
-      value: "{{ ansible_env.DATABASE_USER }}"
+      value: "{{ database_user }}"
     - key: DATABASE_PASSWORD
-      value: "{{ ansible_env.DATABASE_PASSWORD }}"
+      value: "{{ adatabase_password }}"
     - key: SERVER_PORT
-      value: "{{ ansible_env.SERVER_PORT }}"
+      value: "{{ server_port }}"
     - key: ENV
-      value: "{{ ansible_env.ENV }}"
+      value: "{{ env }}"
     - key: POSTHOG_SDK_API_KEY
-      value: "{{ ansible_env.POSTHOG_SDK_API_KEY }}"
+      value: "{{ posthog_sdk_api_key }}"
   tags:
     - deploy
     - config

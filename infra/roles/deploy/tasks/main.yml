@@ -19,6 +19,7 @@
     dest: "{{ shared.deploy_path }}{{ artifact_version }}-{{ shared.tibia_char_artifact }}"
     mode: '0644'
   become: true
+  remote_src: true
   tags:
     - deploy
 
@@ -27,6 +28,15 @@
     src: "{{ shared.deploy_path }}{{ artifact_version }}-{{ shared.tibia_char_artifact }}"
     dest: "{{ shared.backup_path }}{{ artifact_version }}-{{ shared.tibia_char_artifact }}"
     mode: '0644'
+  become: true
+  tags:
+    - deploy
+
+- name: Unarchive the deployment artifact on the remote machine
+  ansible.builtin.unarchive:
+    src: "{{ shared.deploy_path }}/{{ artifact_version }}-{{ shared.tibia_char_artifact }}"
+    dest: "{{ shared.deploy_path }}/"
+    remote_src: true
   become: true
   tags:
     - deploy

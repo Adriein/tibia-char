@@ -6,7 +6,7 @@
 
 - name: Wait for containers to be running
   ansible.builtin.shell: >
-    docker compose -f {{ shared.tmp_build_folder }}/docker-compose.yml ps --format '{{"{{.State}}"}}' | grep -ci 'running' || true
+    docker compose -f {{ shared.deploy_path }}/docker-compose.yml ps --format '{{"{{.State}}"}}' | grep -ci 'running' || true
   register: running_count
   changed_when: false
   retries: 12
@@ -18,7 +18,7 @@
 
 - name: Check no containers are unhealthy
   ansible.builtin.shell: >
-    docker compose -f {{ shared.tmp_build_folder }}/docker-compose.yml ps --format '{{"{{.State}}"}}' | grep -ci 'unhealthy' || true
+    docker compose -f {{ shared.deploy_path }}/docker-compose.yml ps --format '{{"{{.State}}"}}' | grep -ci 'unhealthy' || true
   register: unhealthy_count
   changed_when: false
   retries: 12
