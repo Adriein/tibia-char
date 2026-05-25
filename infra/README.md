@@ -10,6 +10,11 @@ Automated deployment of **tibia-char**.
 ssh-keygen -t ed25519 -f ~/.ssh/ansible -C "ansible"
 ssh-copy-id -i ~/.ssh/ansible.pub aclaret@192.168.1.56
 ```
+3. Update sudoers removing the need for a password to become sudo
+```bash
+sudo visudo -f /etc/sudoers.d/ansible
+aclaret ALL=(ALL) NOPASSWD:ALL
+```
 
 ## Usage
 
