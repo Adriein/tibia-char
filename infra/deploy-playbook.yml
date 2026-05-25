@@ -25,6 +25,10 @@
       prompt: "Please enter the version of the artifact to build"
       private: false
       default: "1.0.0"
+  tasks:
+    - name: Share artifact version with subsequent plays
+      set_fact:
+        artifact_version: "{{ artifact_version }}"
   roles:
     - build
   tags:
@@ -35,6 +39,26 @@
 - name: Deploy tibia-char to hosts
   hosts: all
   become: true
+  pre_tasks:
+    - name: Determine the correct artifact version
+      set_fact:
+        artifact_version: >-
+          {% if hostvars['localhost']['artifact_version'] is defined %}
+            {{ hostvars['localhost']['artifact_version'] }}
+          {% elif manual_artifact_version != "" %}
+            {{ manual_artifact_version }}
+          {% endif %}
+
+    - name: Prompt for version ONLY if not already defined by localhost
+      ansible.builtin.pause:
+        prompt: "Artifact version not found from build. Please enter the version to deploy"
+      register: manual_input
+      when: hostvars['localhost']['artifact_version'] is undefined
+
+    - name: Fail if no version was provided at all
+      fail:
+        msg: "Deployment halted: No artifact version was provided."
+      when: artifact_version == ""
   roles:
     - docker-install
     - deploy
