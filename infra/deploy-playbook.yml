@@ -43,11 +43,11 @@
     - name: Determine the correct artifact version
       set_fact:
         artifact_version: >-
-          {% if hostvars['localhost']['artifact_version'] is defined %}
-            {{ hostvars['localhost']['artifact_version'] }}
-          {% elif manual_artifact_version != "" %}
-            {{ manual_artifact_version }}
-          {% endif %}
+          {%- if hostvars['localhost']['artifact_version'] is defined -%}
+            {{ hostvars['localhost']['artifact_version'] | trim }}
+          {%- elif manual_artifact_version != "" -%}
+            {{ manual_artifact_version | trim }}
+          {%- endif -%}
 
     - name: Prompt for version ONLY if not already defined by localhost
       ansible.builtin.pause:

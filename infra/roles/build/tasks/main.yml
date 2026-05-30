@@ -60,15 +60,15 @@
 - name: Zip tibia-char app to backup directory with version prefix
   community.general.archive:
     path: "{{ shared.local_tmp_build_folder }}/*"
-    dest: "{{ shared.local_backup_artifact_folder }}/{{ artifact_version }}-{{ shared.tibia_char_artifact }}"
+    dest: "{{ shared.local_backup_artifact_folder }}/{{ artifact_version }}-{{ shared.tibia_char_artifact }}{{ shared.archive_extension }}"
     format: zip
   tags:
     - build
 
 - name: Copy artifact to temporary build folder
   ansible.builtin.copy:
-    src: "{{ shared.local_backup_artifact_folder }}/{{ artifact_version }}-{{ shared.tibia_char_artifact }}"
-    dest: "{{ shared.local_tmp_build_folder }}/{{ artifact_version }}-{{ shared.tibia_char_artifact }}"
+    src: "{{ shared.local_backup_artifact_folder }}/{{ artifact_version }}-{{ shared.tibia_char_artifact }}{{ shared.archive_extension }}"
+    dest: "{{ shared.local_tmp_build_folder }}/{{ artifact_version }}-{{ shared.tibia_char_artifact }}{{ shared.archive_extension }}"
     mode: '0644'
   tags:
     - build
@@ -87,6 +87,6 @@
     path: "{{ item.path }}"
     state: absent
   loop: "{{ files_in_tmp_build.files }}"
-  when: item.path != (shared.local_tmp_build_folder ~ '/' ~ artifact_version ~ '-' ~ shared.tibia_char_artifact)
+  when: item.path != (shared.local_tmp_build_folder ~ '/' ~ artifact_version ~ '-' ~ shared.tibia_char_artifact ~ shared.archive_extension)
   tags:
     - build

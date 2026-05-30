@@ -7,6 +7,8 @@ import (
 	"github.com/rotisserie/eris"
 )
 
+//TODO: aggregation table is broken for sure i have more records than aggregations something is not taked into account
+
 type AggAuctionStatsRepository interface {
 	Save(stats *AggAuctionStats) error
 	GetByKey(key string) (*AggAuctionStats, error)

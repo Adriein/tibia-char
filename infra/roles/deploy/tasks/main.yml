@@ -4,7 +4,7 @@
     file: "{{ playbook_dir }}/shared/main.yml"
     name: shared
 
-- name: Ensure target directory exists on remote machines
+- name: Ensure deploy target directory exists on remote machines
   ansible.builtin.file:
     path: "{{ shared.deploy_path }}"
     state: directory
@@ -15,25 +15,35 @@
 
 - name: Copy artifact from localhost build folder to remote machines
   ansible.builtin.copy:
-    src: "{{ shared.local_tmp_build_folder }}/{{ artifact_version }}-{{ shared.tibia_char_artifact }}"
-    dest: "{{ shared.deploy_path }}{{ artifact_version }}-{{ shared.tibia_char_artifact }}"
+    src: "{{ shared.local_tmp_build_folder }}/{{ artifact_version }}-{{ shared.tibia_char_artifact }}{{ shared.archive_extension }}"
+    dest: "{{ shared.deploy_path }}/{{ artifact_version }}-{{ shared.tibia_char_artifact }}{{ shared.archive_extension }}"
     mode: '0644'
+  become: true
+  tags:
+    - deploy
+
+- name: Ensure backup target directory exists on remote machines
+  ansible.builtin.file:
+    path: "{{ shared.backup_path }}"
+    state: directory
+    mode: '0755'
   become: true
   tags:
     - deploy
 
 - name: Copy artifact to remote backup folder
   ansible.builtin.copy:
-    src: "{{ shared.deploy_path }}{{ artifact_version }}-{{ shared.tibia_char_artifact }}"
-    dest: "{{ shared.backup_path }}{{ artifact_version }}-{{ shared.tibia_char_artifact }}"
+    src: "{{ shared.deploy_path }}/{{ artifact_version }}-{{ shared.tibia_char_artifact }}{{ shared.archive_extension }}"
+    dest: "{{ shared.backup_path }}/{{ artifact_version }}-{{ shared.tibia_char_artifact }}{{ shared.archive_extension }}"
     mode: '0644'
+    remote_src: true
   become: true
   tags:
     - deploy
 
 - name: Unarchive the deployment artifact on the remote machine
   ansible.builtin.unarchive:
-    src: "{{ shared.deploy_path }}/{{ artifact_version }}-{{ shared.tibia_char_artifact }}"
+    src: "{{ shared.deploy_path }}/{{ artifact_version }}-{{ shared.tibia_char_artifact }}{{ shared.archive_extension }}"
     dest: "{{ shared.deploy_path }}/"
     remote_src: true
   become: true
