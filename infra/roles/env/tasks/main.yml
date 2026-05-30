@@ -30,7 +30,7 @@
     - key: DATABASE_USER
       value: "{{ database_user }}"
     - key: DATABASE_PASSWORD
-      value: "{{ adatabase_password }}"
+      value: "{{ database_password }}"
     - key: SERVER_PORT
       value: "{{ server_port }}"
     - key: ENV

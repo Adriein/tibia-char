@@ -57,11 +57,11 @@
   tags:
     - build
 
-- name: Zip tibia-char app to backup directory with version prefix
+- name: Compress tibia-char app to backup directory with version prefix
   community.general.archive:
     path: "{{ shared.local_tmp_build_folder }}/*"
     dest: "{{ shared.local_backup_artifact_folder }}/{{ artifact_version }}-{{ shared.tibia_char_artifact }}{{ shared.archive_extension }}"
-    format: zip
+    format: gz
   tags:
     - build
 

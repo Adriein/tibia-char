@@ -8,5 +8,5 @@ remote_admin_user: aclaretdev
 ansible_repo_root: "{{ playbook_dir }}"
 local_tmp_build_folder: "{{ playbook_dir }}/tmp_build"
 local_backup_artifact_folder: "{{ playbook_dir }}/artifact_backup"
-archive_extension: ".zip"
+archive_extension: ".tar.gz"
 
