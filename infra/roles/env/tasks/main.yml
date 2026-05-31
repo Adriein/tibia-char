@@ -9,8 +9,8 @@
     path: "{{ shared.deploy_path }}/.env"
     state: touch
     mode: '0600'
-    owner: aclaretdev
-    group: aclaretdev
+    owner: aclaret
+    group: aclaret
   tags:
     - deploy
     - config

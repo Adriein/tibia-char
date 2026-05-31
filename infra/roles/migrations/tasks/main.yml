@@ -18,8 +18,8 @@
     dest: "{{ shared.remote_home_path }}/migrate.linux-amd64.tar.gz"
     checksum: "sha256:{{ shared.migrate_sha256 }}"
     mode: '0644'
-    owner: aclaretdev
-    group: aclaretdev
+    owner: aclaret
+    group: aclaret
   when: not migrate_binary.stat.exists
   tags:
     - deploy
@@ -30,8 +30,8 @@
     src: "{{ shared.remote_home_path }}/migrate.linux-amd64.tar.gz"
     dest: "{{ shared.remote_home_path }}"
     remote_src: true
-    owner: aclaretdev
-    group: aclaretdev
+    owner: aclaret
+    group: aclaret
   when: not migrate_binary.stat.exists
   tags:
     - deploy
@@ -49,7 +49,7 @@
 - name: Execute migrations on remote
   ansible.builtin.shell: >
     {{ shared.remote_home_path }}/migrate
-    -database postgresql://{{ adatabase_url }}:{{ database_url }}@{{ database_url }}:5432/{{ database_url }}?sslmode=disable
+    -database postgresql://{{ database_url }}:{{ database_url }}@{{ database_url }}:5432/{{ database_url }}?sslmode=disable
     -path {{ shared.deploy_path }}/migrations
     up
   register: migration_result
