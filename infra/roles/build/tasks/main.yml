@@ -49,7 +49,7 @@
 - name: Copy app directory to build directory
   ansible.builtin.synchronize:
     src: "{{ playbook_dir }}/../app/"
-    dest: "{{ shared.local_tmp_build_folder }}/"
+    dest: "{{ shared.local_tmp_build_folder }}/app/"
     rsync_opts:
       - "--exclude=migrate"
       - "--exclude=node_modules"

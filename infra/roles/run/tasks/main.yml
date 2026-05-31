@@ -22,6 +22,12 @@
     - deploy
     - run
 
+- name: Build Tibia Char Docker img
+  community.docker.docker_image_build:
+    name: "{{ shared.tibia_char_artifact }}:{{ artifact_version }}"
+    path: "{{ shared.deploy_path }}"
+    dockerfile: Dockerfile
+
 - name: Run docker-compose up
   community.docker.docker_compose_v2:
     project_src: "{{ shared.deploy_path }}"
