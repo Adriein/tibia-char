@@ -37,6 +37,10 @@
       value: "{{ env }}"
     - key: POSTHOG_SDK_API_KEY
       value: "{{ posthog_sdk_api_key }}"
+    - key: IMAGE_NAME
+      value: "{{ shared.tibia_char_artifact }}"
+    - key: IMAGE_VERSION
+      value: "{{ artifact_version }}"
   tags:
     - deploy
     - config

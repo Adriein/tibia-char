@@ -32,7 +32,7 @@
 
 - name: Copy docker-compose.yaml to build directory
   ansible.builtin.copy:
-    src: "{{ playbook_dir }}/../docker-compose.yaml"
+    src: "{{ playbook_dir }}/../docker-compose-pro.yaml"
     dest: "{{ shared.local_tmp_build_folder }}/docker-compose.yaml"
     mode: '0644'
   tags:
