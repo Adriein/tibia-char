@@ -49,7 +49,7 @@
 - name: Execute migrations on remote
   ansible.builtin.shell: >
     {{ shared.remote_home_path }}/migrate
-    -database postgresql://{{ database_url }}:{{ database_url }}@{{ database_url }}:5432/{{ database_url }}?sslmode=disable
+    -database {{ database_url }}
     -path {{ shared.deploy_path }}/migrations
     up
   register: migration_result
