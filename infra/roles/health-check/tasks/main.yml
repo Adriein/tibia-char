@@ -31,7 +31,7 @@
 
 - name: Verify application is responding
   ansible.builtin.uri:
-    url: "{{ ansible_env.API_PROTOCOL | default('http') }}://{{ inventory_hostname }}:{{ ansible_env.SERVER_PORT | default('3000') }}/health"
+    url: "{{ ansible_env.API_PROTOCOL | default('http') }}://{{ inventory_hostname }}:{{ ansible_env.SERVER_PORT | default('4000') }}/health"
     method: GET
     status_code: 200
     timeout: 5

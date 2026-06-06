@@ -3,7 +3,7 @@ remote_home_path: /home/aclaret
 deploy_path: /opt/tibia-char/src
 backup_path: /opt/tibia-char/backup
 migrate_version: v4.17.1
-migrate_sha256: 1c22a3940e724148ea2545b18f0e684f7c089a6431a33b5fda07c18f2e3e85b6
+migrate_sha256: ddb3fe2c5f7a3a87b0fbcd451f56b5630208dc0a897ea3c73b2084431f166112
 remote_admin_user: aclaret
 ansible_repo_root: "{{ playbook_dir }}"
 local_tmp_build_folder: "{{ playbook_dir }}/tmp_build"

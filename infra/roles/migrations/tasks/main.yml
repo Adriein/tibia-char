@@ -18,8 +18,8 @@
     dest: "{{ shared.remote_home_path }}/migrate.linux-amd64.tar.gz"
     checksum: "sha256:{{ shared.migrate_sha256 }}"
     mode: '0644'
-    owner: aclaret
-    group: aclaret
+    owner: "{{ shared.remote_admin_user }}"
+    group: "{{ shared.remote_admin_user }}"
   when: not migrate_binary.stat.exists
   tags:
     - deploy
@@ -30,8 +30,8 @@
     src: "{{ shared.remote_home_path }}/migrate.linux-amd64.tar.gz"
     dest: "{{ shared.remote_home_path }}"
     remote_src: true
-    owner: aclaret
-    group: aclaret
+    owner: "{{ shared.remote_admin_user }}"
+    group: "{{ shared.remote_admin_user }}"
   when: not migrate_binary.stat.exists
   tags:
     - deploy
