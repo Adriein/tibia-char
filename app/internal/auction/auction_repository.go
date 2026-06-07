@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/adriein/tibia-char/database"
 	"github.com/adriein/tibia-char/pkg/enums"
 	"github.com/lib/pq"
 	"github.com/rotisserie/eris"
@@ -452,7 +453,7 @@ func (r *PgAuctionRepository) GetActiveAuctions(ctx context.Context) ([]*Auction
 		return nil, eris.Wrap(err, "Failed to query active auctions")
 	}
 
-	defer rows.Close()
+	defer database.CloseRowsSafely(rows, &err)
 
 	auctionMap := make(map[int]*Auction)
 
@@ -541,10 +542,6 @@ func (r *PgAuctionRepository) GetActiveAuctions(ctx context.Context) ([]*Auction
 		orderedIDs = append(orderedIDs, auction.AuctionID)
 	}
 
-	if err = rows.Err(); err != nil {
-		return nil, eris.Wrap(err, "Failed iterating auction rows")
-	}
-
 	if len(orderedIDs) == 0 {
 		return []*Auction{}, nil
 	}
@@ -566,7 +563,7 @@ func (r *PgAuctionRepository) GetActiveAuctions(ctx context.Context) ([]*Auction
 		return nil, eris.Wrap(err, "Failed to query featured items")
 	}
 
-	defer featuredItemsRows.Close()
+	defer database.CloseRowsSafely(featuredItemsRows, &err)
 
 	for featuredItemsRows.Next() {
 		var item FeaturedItem
@@ -578,10 +575,6 @@ func (r *PgAuctionRepository) GetActiveAuctions(ctx context.Context) ([]*Auction
 		if auction, ok := auctionMap[item.AuctionID]; ok {
 			auction.FeaturedItems = append(auction.FeaturedItems, &item)
 		}
-	}
-
-	if err = featuredItemsRows.Err(); err != nil {
-		return nil, eris.Wrap(err, "Failed iterating featured item rows")
 	}
 
 	imbuementsQuery := `
@@ -602,7 +595,7 @@ func (r *PgAuctionRepository) GetActiveAuctions(ctx context.Context) ([]*Auction
 		return nil, eris.Wrap(err, "Failed to query imbuements")
 	}
 
-	defer imbuementRows.Close()
+	defer database.CloseRowsSafely(imbuementRows, &err)
 
 	for imbuementRows.Next() {
 		var imbuement Imbuement
@@ -615,10 +608,6 @@ func (r *PgAuctionRepository) GetActiveAuctions(ctx context.Context) ([]*Auction
 		if auction, ok := auctionMap[auctionID]; ok {
 			auction.Imbuements = append(auction.Imbuements, &imbuement)
 		}
-	}
-
-	if err = imbuementRows.Err(); err != nil {
-		return nil, eris.Wrap(err, "Failed iterating imbuement rows")
 	}
 
 	charmsQuery := `
@@ -641,7 +630,7 @@ func (r *PgAuctionRepository) GetActiveAuctions(ctx context.Context) ([]*Auction
 		return nil, eris.Wrap(err, "Failed to query charms")
 	}
 
-	defer charmsRows.Close()
+	defer database.CloseRowsSafely(charmsRows, &err)
 
 	for charmsRows.Next() {
 		var charm Charm
@@ -654,10 +643,6 @@ func (r *PgAuctionRepository) GetActiveAuctions(ctx context.Context) ([]*Auction
 		if auction, ok := auctionMap[auctionID]; ok {
 			auction.Charms = append(auction.Charms, &charm)
 		}
-	}
-
-	if err = charmsRows.Err(); err != nil {
-		return nil, eris.Wrap(err, "Failed iterating charms rows")
 	}
 
 	questsQuery := `
@@ -678,7 +663,7 @@ func (r *PgAuctionRepository) GetActiveAuctions(ctx context.Context) ([]*Auction
 		return nil, eris.Wrap(err, "Failed to query quests")
 	}
 
-	defer questsRows.Close()
+	defer database.CloseRowsSafely(questsRows, &err)
 
 	for questsRows.Next() {
 		var quest Quest
@@ -691,10 +676,6 @@ func (r *PgAuctionRepository) GetActiveAuctions(ctx context.Context) ([]*Auction
 		if auction, ok := auctionMap[auctionID]; ok {
 			auction.Quests = append(auction.Quests, &quest)
 		}
-	}
-
-	if err = questsRows.Err(); err != nil {
-		return nil, eris.Wrap(err, "Failed iterating quests rows")
 	}
 
 	bidRegistryQuery := `
@@ -713,7 +694,7 @@ func (r *PgAuctionRepository) GetActiveAuctions(ctx context.Context) ([]*Auction
 		return nil, eris.Wrap(err, "Failed to query bid registry")
 	}
 
-	defer bidRegistryRows.Close()
+	defer database.CloseRowsSafely(bidRegistryRows, &err)
 
 	for bidRegistryRows.Next() {
 		var registry BidRegistry
@@ -726,10 +707,6 @@ func (r *PgAuctionRepository) GetActiveAuctions(ctx context.Context) ([]*Auction
 		if auction, ok := auctionMap[auctionID]; ok {
 			auction.BidRegistry = append(auction.BidRegistry, &registry)
 		}
-	}
-
-	if err = bidRegistryRows.Err(); err != nil {
-		return nil, eris.Wrap(err, "Failed iterating bid registry rows")
 	}
 
 	flagsQuery := `
@@ -758,7 +735,7 @@ func (r *PgAuctionRepository) GetActiveAuctions(ctx context.Context) ([]*Auction
 		return nil, eris.Wrap(err, "Failed to query flags")
 	}
 
-	defer flagRows.Close()
+	defer database.CloseRowsSafely(flagRows, &err)
 
 	for flagRows.Next() {
 		var flag Flag
@@ -771,10 +748,6 @@ func (r *PgAuctionRepository) GetActiveAuctions(ctx context.Context) ([]*Auction
 		if auction, ok := auctionMap[auctionID]; ok {
 			auction.Flags = append(auction.Flags, &flag)
 		}
-	}
-
-	if err = flagRows.Err(); err != nil {
-		return nil, eris.Wrap(err, "Failed iterating flag rows")
 	}
 
 	auctions := make([]*Auction, 0, len(orderedIDs))
@@ -821,6 +794,8 @@ func (r *PgAuctionRepository) GetActiveAuctionsFinishingIn(ctx context.Context, 
 	if err != nil {
 		return nil, eris.Wrap(err, "Failed to query active auctions")
 	}
+
+	defer database.CloseRowsSafely(rows, &err)
 
 	var result []*Auction
 
@@ -923,7 +898,7 @@ func (r *PgAuctionRepository) GetAuctionsWithFilter(ctx context.Context, filter 
 		return nil, eris.Wrap(err, "Failed to query auctions with filter")
 	}
 
-	defer rows.Close()
+	defer database.CloseRowsSafely(rows, &err)
 
 	auctionMap := make(map[int]*Auction)
 
@@ -1012,10 +987,6 @@ func (r *PgAuctionRepository) GetAuctionsWithFilter(ctx context.Context, filter 
 		orderedIDs = append(orderedIDs, auction.AuctionID)
 	}
 
-	if err = rows.Err(); err != nil {
-		return nil, eris.Wrap(err, "Failed iterating auction rows")
-	}
-
 	if len(orderedIDs) == 0 {
 		return []*Auction{}, nil
 	}
@@ -1037,7 +1008,7 @@ func (r *PgAuctionRepository) GetAuctionsWithFilter(ctx context.Context, filter 
 		return nil, eris.Wrap(err, "Failed to query featured items")
 	}
 
-	defer featuredItemsRows.Close()
+	defer database.CloseRowsSafely(featuredItemsRows, &err)
 
 	for featuredItemsRows.Next() {
 		var item FeaturedItem
@@ -1049,10 +1020,6 @@ func (r *PgAuctionRepository) GetAuctionsWithFilter(ctx context.Context, filter 
 		if auction, ok := auctionMap[item.AuctionID]; ok {
 			auction.FeaturedItems = append(auction.FeaturedItems, &item)
 		}
-	}
-
-	if err = featuredItemsRows.Err(); err != nil {
-		return nil, eris.Wrap(err, "Failed iterating featured item rows")
 	}
 
 	imbuementsQuery := `
@@ -1073,7 +1040,7 @@ func (r *PgAuctionRepository) GetAuctionsWithFilter(ctx context.Context, filter 
 		return nil, eris.Wrap(err, "Failed to query imbuements")
 	}
 
-	defer imbuementRows.Close()
+	defer database.CloseRowsSafely(imbuementRows, &err)
 
 	for imbuementRows.Next() {
 		var imbuement Imbuement
@@ -1086,10 +1053,6 @@ func (r *PgAuctionRepository) GetAuctionsWithFilter(ctx context.Context, filter 
 		if auction, ok := auctionMap[auctionID]; ok {
 			auction.Imbuements = append(auction.Imbuements, &imbuement)
 		}
-	}
-
-	if err = imbuementRows.Err(); err != nil {
-		return nil, eris.Wrap(err, "Failed iterating imbuement rows")
 	}
 
 	charmsQuery := `
@@ -1112,7 +1075,7 @@ func (r *PgAuctionRepository) GetAuctionsWithFilter(ctx context.Context, filter 
 		return nil, eris.Wrap(err, "Failed to query charms")
 	}
 
-	defer charmsRows.Close()
+	defer database.CloseRowsSafely(charmsRows, &err)
 
 	for charmsRows.Next() {
 		var charm Charm
@@ -1125,10 +1088,6 @@ func (r *PgAuctionRepository) GetAuctionsWithFilter(ctx context.Context, filter 
 		if auction, ok := auctionMap[auctionID]; ok {
 			auction.Charms = append(auction.Charms, &charm)
 		}
-	}
-
-	if err = charmsRows.Err(); err != nil {
-		return nil, eris.Wrap(err, "Failed iterating charms rows")
 	}
 
 	questsQuery := `
@@ -1149,7 +1108,7 @@ func (r *PgAuctionRepository) GetAuctionsWithFilter(ctx context.Context, filter 
 		return nil, eris.Wrap(err, "Failed to query quests")
 	}
 
-	defer questsRows.Close()
+	defer database.CloseRowsSafely(questsRows, &err)
 
 	for questsRows.Next() {
 		var quest Quest
@@ -1162,10 +1121,6 @@ func (r *PgAuctionRepository) GetAuctionsWithFilter(ctx context.Context, filter 
 		if auction, ok := auctionMap[auctionID]; ok {
 			auction.Quests = append(auction.Quests, &quest)
 		}
-	}
-
-	if err = questsRows.Err(); err != nil {
-		return nil, eris.Wrap(err, "Failed iterating quests rows")
 	}
 
 	bidRegistryQuery := `
@@ -1184,7 +1139,7 @@ func (r *PgAuctionRepository) GetAuctionsWithFilter(ctx context.Context, filter 
 		return nil, eris.Wrap(err, "Failed to query bid registry")
 	}
 
-	defer bidRegistryRows.Close()
+	defer database.CloseRowsSafely(bidRegistryRows, &err)
 
 	for bidRegistryRows.Next() {
 		var registry BidRegistry
@@ -1197,10 +1152,6 @@ func (r *PgAuctionRepository) GetAuctionsWithFilter(ctx context.Context, filter 
 		if auction, ok := auctionMap[auctionID]; ok {
 			auction.BidRegistry = append(auction.BidRegistry, &registry)
 		}
-	}
-
-	if err = bidRegistryRows.Err(); err != nil {
-		return nil, eris.Wrap(err, "Failed iterating bid registry rows")
 	}
 
 	flagsQuery := `
@@ -1229,7 +1180,7 @@ func (r *PgAuctionRepository) GetAuctionsWithFilter(ctx context.Context, filter 
 		return nil, eris.Wrap(err, "Failed to query flags")
 	}
 
-	defer flagRows.Close()
+	defer database.CloseRowsSafely(flagRows, &err)
 
 	for flagRows.Next() {
 		var flag Flag
@@ -1242,10 +1193,6 @@ func (r *PgAuctionRepository) GetAuctionsWithFilter(ctx context.Context, filter 
 		if auction, ok := auctionMap[auctionID]; ok {
 			auction.Flags = append(auction.Flags, &flag)
 		}
-	}
-
-	if err = flagRows.Err(); err != nil {
-		return nil, eris.Wrap(err, "Failed iterating flag rows")
 	}
 
 	auctions := make([]*Auction, 0, len(orderedIDs))
@@ -1283,7 +1230,7 @@ func (r *PgAuctionRepository) GetAuctionsPendingToConsolidate(ctx context.Contex
 		return nil, eris.Wrap(err, "Failed to query auctions")
 	}
 
-	defer rows.Close()
+	defer database.CloseRowsSafely(rows, &err)
 
 	var result []*Auction
 
@@ -1328,7 +1275,7 @@ func (r *PgAuctionRepository) GetAuctionsPendingToConsolidate(ctx context.Contex
 		return nil, eris.Wrap(err, "Failed to query auctions")
 	}
 
-	defer rows.Close()
+	defer database.CloseRowsSafely(rows, &err)
 
 	for rows.Next() {
 		var (
@@ -1383,7 +1330,7 @@ func (r *PgAuctionRepository) GetHistoricAuctionPrices(ctx context.Context) ([]*
 		;
 	`
 
-	ctxTimeout, cancel := context.WithTimeout(ctx, time.Second*10)
+	ctxTimeout, cancel := context.WithTimeout(ctx, time.Second*60)
 
 	defer cancel()
 
@@ -1393,11 +1340,11 @@ func (r *PgAuctionRepository) GetHistoricAuctionPrices(ctx context.Context) ([]*
 		return nil, eris.Wrap(err, "Failed to query auctions")
 	}
 
-	defer rows.Close()
+	defer database.CloseRowsSafely(rows, &err)
 
-	auctionMap := make(map[int]*Auction)
+	auctionMap := make(map[int]*Auction, 30000)
 
-	var orderedIDs []int
+	orderedIDs := make([]int, 30000)
 
 	for rows.Next() {
 		var (
@@ -1477,7 +1424,7 @@ func (r *PgAuctionRepository) GetHistoricAuctionPrices(ctx context.Context) ([]*
 			return nil, eris.Wrap(err, "Failed to query flags")
 		}
 
-		defer flagRows.Close()
+		defer database.CloseRowsSafely(flagRows, &err)
 
 		for flagRows.Next() {
 			var flag Flag
@@ -1490,27 +1437,24 @@ func (r *PgAuctionRepository) GetHistoricAuctionPrices(ctx context.Context) ([]*
 			auction.Flags = append(auction.Flags, &flag)
 		}
 
-		if err = flagRows.Err(); err != nil {
-			return nil, eris.Wrap(err, "Failed iterating flag rows")
-		}
-
 		bidRegistryQuery := `
-		SELECT
-			ta.ta_auction_id,
-			ta.ta_current_bid,
-			ta.ta_date_add
-		FROM
-			tc_auction ta
-		WHERE
-			ta.ta_auction_id = ANY($1);
-	`
+			SELECT
+				ta.ta_auction_id,
+				ta.ta_current_bid,
+				ta.ta_date_add
+			FROM
+				tc_auction ta
+			WHERE
+				ta.ta_auction_id = ANY($1);
+		`
+
 		bidRegistryRows, err := r.connection.QueryContext(ctx, bidRegistryQuery, pq.Array(orderedIDs))
 
 		if err != nil {
 			return nil, eris.Wrap(err, "Failed to query bid registry")
 		}
 
-		defer bidRegistryRows.Close()
+		defer database.CloseRowsSafely(bidRegistryRows, &err)
 
 		for bidRegistryRows.Next() {
 			var registry BidRegistry
@@ -1523,10 +1467,6 @@ func (r *PgAuctionRepository) GetHistoricAuctionPrices(ctx context.Context) ([]*
 			if auction, ok := auctionMap[auctionID]; ok {
 				auction.BidRegistry = append(auction.BidRegistry, &registry)
 			}
-		}
-
-		if err = bidRegistryRows.Err(); err != nil {
-			return nil, eris.Wrap(err, "Failed iterating bid registry rows")
 		}
 
 		auctionMap[auction.AuctionID] = &auction
@@ -1550,7 +1490,7 @@ func (r *PgAuctionRepository) GetHistoricAuctionPrices(ctx context.Context) ([]*
 		return nil, eris.Wrap(err, "Failed to query outfits")
 	}
 
-	defer outfitsRows.Close()
+	defer database.CloseRowsSafely(outfitsRows, &err)
 
 	for outfitsRows.Next() {
 		var outfit Outfit
@@ -1563,10 +1503,6 @@ func (r *PgAuctionRepository) GetHistoricAuctionPrices(ctx context.Context) ([]*
 		if auction, ok := auctionMap[auctionID]; ok {
 			auction.Outfits = append(auction.Outfits, &outfit)
 		}
-	}
-
-	if err = outfitsRows.Err(); err != nil {
-		return nil, eris.Wrap(err, "Failed iterating outfits rows")
 	}
 
 	mountsQuery := `
@@ -1584,7 +1520,7 @@ func (r *PgAuctionRepository) GetHistoricAuctionPrices(ctx context.Context) ([]*
 		return nil, eris.Wrap(err, "Failed to query mounts")
 	}
 
-	defer mountsRows.Close()
+	defer database.CloseRowsSafely(mountsRows, &err)
 
 	for mountsRows.Next() {
 		var mount Mount
@@ -1597,10 +1533,6 @@ func (r *PgAuctionRepository) GetHistoricAuctionPrices(ctx context.Context) ([]*
 		if auction, ok := auctionMap[auctionID]; ok {
 			auction.Mounts = append(auction.Mounts, &mount)
 		}
-	}
-
-	if err = mountsRows.Err(); err != nil {
-		return nil, eris.Wrap(err, "Failed iterating mounts rows")
 	}
 
 	auctions := make([]*Auction, 0, len(orderedIDs))
@@ -1757,7 +1689,7 @@ func (r *PgAuctionRepository) GetAuctionByAuctionID(ctx context.Context, auction
 		return nil, eris.Wrap(err, "Failed to query featured items for single auction")
 	}
 
-	defer featuredItemsRows.Close()
+	defer database.CloseRowsSafely(featuredItemsRows, &err)
 
 	for featuredItemsRows.Next() {
 		var item FeaturedItem
@@ -1767,10 +1699,6 @@ func (r *PgAuctionRepository) GetAuctionByAuctionID(ctx context.Context, auction
 		}
 
 		auction.FeaturedItems = append(auction.FeaturedItems, &item)
-	}
-
-	if err = featuredItemsRows.Err(); err != nil {
-		return nil, eris.Wrap(err, "Failed iterating featured item rows for single auction")
 	}
 
 	imbuementsQuery := `
@@ -1791,7 +1719,7 @@ func (r *PgAuctionRepository) GetAuctionByAuctionID(ctx context.Context, auction
 		return nil, eris.Wrap(err, "Failed to query imbuements for single auction")
 	}
 
-	defer imbuementRows.Close()
+	defer database.CloseRowsSafely(imbuementRows, &err)
 
 	for imbuementRows.Next() {
 		var imbuement Imbuement
@@ -1802,10 +1730,6 @@ func (r *PgAuctionRepository) GetAuctionByAuctionID(ctx context.Context, auction
 		}
 
 		auction.Imbuements = append(auction.Imbuements, &imbuement)
-	}
-
-	if err = imbuementRows.Err(); err != nil {
-		return nil, eris.Wrap(err, "Failed iterating imbuement rows for single auction")
 	}
 
 	charmsQuery := `
@@ -1828,7 +1752,7 @@ func (r *PgAuctionRepository) GetAuctionByAuctionID(ctx context.Context, auction
 		return nil, eris.Wrap(err, "Failed to query charms for single auction")
 	}
 
-	defer charmsRows.Close()
+	defer database.CloseRowsSafely(charmsRows, &err)
 
 	for charmsRows.Next() {
 		var charm Charm
@@ -1839,10 +1763,6 @@ func (r *PgAuctionRepository) GetAuctionByAuctionID(ctx context.Context, auction
 			return nil, eris.Wrap(err, "Failed to scan charm for single auction")
 		}
 		auction.Charms = append(auction.Charms, &charm)
-	}
-
-	if err = charmsRows.Err(); err != nil {
-		return nil, eris.Wrap(err, "Failed iterating charms rows for single auction")
 	}
 
 	questsQuery := `
@@ -1863,7 +1783,7 @@ func (r *PgAuctionRepository) GetAuctionByAuctionID(ctx context.Context, auction
 		return nil, eris.Wrap(err, "Failed to query quests for single auction")
 	}
 
-	defer questsRows.Close()
+	defer database.CloseRowsSafely(questsRows, &err)
 
 	for questsRows.Next() {
 		var quest Quest
@@ -1875,10 +1795,6 @@ func (r *PgAuctionRepository) GetAuctionByAuctionID(ctx context.Context, auction
 		}
 
 		auction.Quests = append(auction.Quests, &quest)
-	}
-
-	if err = questsRows.Err(); err != nil {
-		return nil, eris.Wrap(err, "Failed iterating quests rows for single auction")
 	}
 
 	bidRegistryQuery := `
@@ -1898,7 +1814,7 @@ func (r *PgAuctionRepository) GetAuctionByAuctionID(ctx context.Context, auction
 		return nil, eris.Wrap(err, "Failed to query bid registry for single auction")
 	}
 
-	defer bidRegistryRows.Close()
+	defer database.CloseRowsSafely(bidRegistryRows, &err)
 
 	for bidRegistryRows.Next() {
 		var registry BidRegistry
@@ -1908,10 +1824,6 @@ func (r *PgAuctionRepository) GetAuctionByAuctionID(ctx context.Context, auction
 		}
 
 		auction.BidRegistry = append(auction.BidRegistry, &registry)
-	}
-
-	if err = bidRegistryRows.Err(); err != nil {
-		return nil, eris.Wrap(err, "Failed iterating bid registry rows for single auction")
 	}
 
 	flagsQuery := `
@@ -1940,7 +1852,7 @@ func (r *PgAuctionRepository) GetAuctionByAuctionID(ctx context.Context, auction
 		return nil, eris.Wrap(err, "Failed to query flags")
 	}
 
-	defer flagRows.Close()
+	defer database.CloseRowsSafely(flagRows, &err)
 
 	for flagRows.Next() {
 		var flag Flag
@@ -1951,10 +1863,6 @@ func (r *PgAuctionRepository) GetAuctionByAuctionID(ctx context.Context, auction
 		}
 
 		auction.Flags = append(auction.Flags, &flag)
-	}
-
-	if err = flagRows.Err(); err != nil {
-		return nil, eris.Wrap(err, "Failed iterating flag rows")
 	}
 
 	return &auction, nil

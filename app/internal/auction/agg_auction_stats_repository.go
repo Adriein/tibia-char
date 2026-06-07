@@ -44,7 +44,7 @@ func (r *PgAggAuctionStatsRepsitory) Save(stats *AggAuctionStats) error {
 			taas_max_price = EXCLUDED.taas_max_price,
 			taas_mode_price = EXCLUDED.taas_mode_price,
 			taas_sample_size = EXCLUDED.taas_sample_size,
-			taas_date_upd = TIMEZONE('UTC', NOW())
+			taas_date_upd = EXCLUDED.taas_date_upd
 		;
 	`
 
