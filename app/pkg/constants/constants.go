@@ -8,13 +8,12 @@ const (
 	DatabaseName     = "DATABASE_NAME"
 	ServerPort       = "SERVER_PORT"
 	Env              = "ENV"
-	Production       = "PRODUCTION"
 	PosthogSdkApiKey = "POSTHOG_SDK_API_KEY"
 )
 
 const (
-	DEV  = "dev"
-	PROD = "prod"
+	Dev  = "dev"
+	Prod = "pro"
 )
 
 const (
