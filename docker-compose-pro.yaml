@@ -34,6 +34,8 @@ services:
   tibia_char_reverse_proxy:
     container_name: tibia_char_reverse_proxy
     image: caddy:2.11-alpine
+    environment:
+      SERVER_PORT: "${SERVER_PORT}"
     restart: unless-stopped
     ports:
       - "80:80"
