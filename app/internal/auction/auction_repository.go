@@ -1342,9 +1342,9 @@ func (r *PgAuctionRepository) GetHistoricAuctionPrices(ctx context.Context) ([]*
 
 	defer database.CloseRowsSafely(rows, &err)
 
-	auctionMap := make(map[int]*Auction, 30000)
+	auctionMap := make(map[int]*Auction)
 
-	orderedIDs := make([]int, 30000)
+	var orderedIDs []int
 
 	for rows.Next() {
 		var (
@@ -1398,7 +1398,12 @@ func (r *PgAuctionRepository) GetHistoricAuctionPrices(ctx context.Context) ([]*
 		auction.CharWorld = &world
 		auction.CharGender = &gender
 
-		flagsQuery := `
+		auctionMap[auction.AuctionID] = &auction
+
+		orderedIDs = append(orderedIDs, auction.AuctionID)
+	}
+
+	flagsQuery := `
 			SELECT
 				taf.taf_auction_id,
 				taf.taf_flag_id
@@ -1412,32 +1417,34 @@ func (r *PgAuctionRepository) GetHistoricAuctionPrices(ctx context.Context) ([]*
 					FROM
 						tc_auction_flags inner_taf
 					WHERE
-						inner_taf.taf_auction_id = $1
+						inner_taf.taf_auction_id = ANY($1)
 					GROUP BY
 						inner_taf.taf_auction_id
 			);
 		`
 
-		flagRows, err := r.connection.QueryContext(ctx, flagsQuery, auction.ID)
+	flagRows, err := r.connection.QueryContext(ctx, flagsQuery, pq.Array(orderedIDs))
 
-		if err != nil {
-			return nil, eris.Wrap(err, "Failed to query flags")
+	if err != nil {
+		return nil, eris.Wrap(err, "Failed to query flags")
+	}
+
+	defer database.CloseRowsSafely(flagRows, &err)
+
+	for flagRows.Next() {
+		var flag Flag
+		var auctionID int
+
+		if err := flagRows.Scan(&auctionID, &flag.ID); err != nil {
+			return nil, eris.Wrap(err, "Failed to scan flag")
 		}
 
-		defer database.CloseRowsSafely(flagRows, &err)
-
-		for flagRows.Next() {
-			var flag Flag
-			var auctionID int
-
-			if err := flagRows.Scan(&auctionID, &flag.ID); err != nil {
-				return nil, eris.Wrap(err, "Failed to scan flag")
-			}
-
+		if auction, ok := auctionMap[auctionID]; ok {
 			auction.Flags = append(auction.Flags, &flag)
 		}
+	}
 
-		bidRegistryQuery := `
+	bidRegistryQuery := `
 			SELECT
 				ta.ta_auction_id,
 				ta.ta_current_bid,
@@ -1448,30 +1455,25 @@ func (r *PgAuctionRepository) GetHistoricAuctionPrices(ctx context.Context) ([]*
 				ta.ta_auction_id = ANY($1);
 		`
 
-		bidRegistryRows, err := r.connection.QueryContext(ctx, bidRegistryQuery, pq.Array(orderedIDs))
+	bidRegistryRows, err := r.connection.QueryContext(ctx, bidRegistryQuery, pq.Array(orderedIDs))
 
-		if err != nil {
-			return nil, eris.Wrap(err, "Failed to query bid registry")
+	if err != nil {
+		return nil, eris.Wrap(err, "Failed to query bid registry")
+	}
+
+	defer database.CloseRowsSafely(bidRegistryRows, &err)
+
+	for bidRegistryRows.Next() {
+		var registry BidRegistry
+		var auctionID int
+
+		if err := bidRegistryRows.Scan(&auctionID, &registry.Amount, &registry.DateAdd); err != nil {
+			return nil, eris.Wrap(err, "Failed to scan registry")
 		}
 
-		defer database.CloseRowsSafely(bidRegistryRows, &err)
-
-		for bidRegistryRows.Next() {
-			var registry BidRegistry
-			var auctionID int
-
-			if err := bidRegistryRows.Scan(&auctionID, &registry.Amount, &registry.DateAdd); err != nil {
-				return nil, eris.Wrap(err, "Failed to scan registry")
-			}
-
-			if auction, ok := auctionMap[auctionID]; ok {
-				auction.BidRegistry = append(auction.BidRegistry, &registry)
-			}
+		if auction, ok := auctionMap[auctionID]; ok {
+			auction.BidRegistry = append(auction.BidRegistry, &registry)
 		}
-
-		auctionMap[auction.AuctionID] = &auction
-
-		orderedIDs = append(orderedIDs, auction.AuctionID)
 	}
 
 	outfitsQuery := `
