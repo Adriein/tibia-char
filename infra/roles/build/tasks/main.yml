@@ -30,6 +30,14 @@
   tags:
     - build
 
+- name: Copy Caddyfile to build directory
+  ansible.builtin.copy:
+    src: "{{ playbook_dir }}/reverse_proxy/Caddyfile"
+    dest: "{{ shared.local_tmp_build_folder }}/Caddyfile"
+    mode: '0644'
+  tags:
+    - build
+
 - name: Copy docker-compose.yaml to build directory
   ansible.builtin.copy:
     src: "{{ playbook_dir }}/../docker-compose-pro.yaml"

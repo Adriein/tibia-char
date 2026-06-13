@@ -1,0 +1,7 @@
+localhost {
+    reverse_proxy tibia_char_server:{$SERVER_PORT}
+}
+
+tibiachar.com {
+    reverse_proxy tibia_char_server:{$SERVER_PORT}
+}
