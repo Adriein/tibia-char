@@ -398,6 +398,8 @@ func (a *Auction) getRangeLabel(val int, thresholds []int) string {
 }
 
 func (a *Auction) CalculateFlags(stats *AggAuctionStats) {
+	a.Flags = nil
+
 	ZScore := helper.SafeDivision(float64(a.Bid-int(stats.Median)), stats.StdDeviation)
 
 	if ZScore <= -1 {

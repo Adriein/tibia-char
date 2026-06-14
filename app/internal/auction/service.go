@@ -89,11 +89,20 @@ func (s *Service) BackfillAuctionFlags(ctx context.Context) error {
 
 	auctions = append(auctions, active...)
 
-	for _, auction := range auctions {
+	traceID := ctx.Value(middleware.TraceIDKey)
+	total := len(auctions)
+
+	s.logger.Info("Backfilling", "trace_id", traceID, "n_auc", total)
+
+	for i, auction := range auctions {
 
 		stats, err := s.aggAuctionRepository.GetByKey(auction.SubsetKey())
 
 		if err != nil {
+			if errors.Is(err, ErrAggAuctionStatsNotFound) {
+				continue
+			}
+
 			return err
 		}
 
@@ -104,6 +113,8 @@ func (s *Service) BackfillAuctionFlags(ctx context.Context) error {
 		if err != nil {
 			return err
 		}
+
+		s.logger.Info(fmt.Sprintf("Backfilling %d/%d", i+1, total), "trace_id", traceID)
 	}
 
 	return nil
