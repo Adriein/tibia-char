@@ -1,35 +1,24 @@
----
 - name: Import shared vars
   ansible.builtin.include_vars:
     file: "{{ playbook_dir }}/shared/main.yml"
     name: shared
 
-- name: Wait for containers to be running
-  ansible.builtin.shell: >
-    docker compose -f {{ shared.deploy_path }}/docker-compose.yml ps --format '{{"{{.State}}"}}' | grep -ci 'running' || true
-  register: running_count
-  changed_when: false
+- name: Wait for containers to achieve healthy state
+  community.docker.docker_compose_v2_info:
+    project_src: "{{ shared.deploy_path }}"
+  register: compose_info
   retries: 5
-  delay: 10
-  until: running_count.stdout | int > 0
+  delay: 5
+  # Loop until containers exist, at least one is running, and NONE are unhealthy
+  until: >
+    compose_info.containers | default([]) | length > 0 and
+    (compose_info.containers | map(attribute='State') | select('equalto', 'running') | list | length) > 0 and
+    (compose_info.containers | map(attribute='Health') | select('equalto', 'unhealthy') | list | length) == 0
   tags:
     - deploy
     - health
 
-- name: Check no containers are unhealthy
-  ansible.builtin.shell: >
-    docker compose -f {{ shared.deploy_path }}/docker-compose.yml ps --format '{{"{{.State}}"}}' | grep -ci 'unhealthy' || true
-  register: unhealthy_count
-  changed_when: false
-  retries: 5
-  delay: 10
-  until: unhealthy_count.stdout | int == 0
-  tags:
-    - deploy
-    - health
-
-
-- name: Verify application is responding
+- name: Verify application HTTP endpoint is responding
   ansible.builtin.uri:
     url: "{{ api_protocol | default('http') }}://{{ inventory_hostname }}/health"
     method: GET
@@ -37,9 +26,9 @@
     timeout: 5
   register: health_check
   retries: 5
-  delay: 10
+  delay: 5
   until: health_check.status == 200
-  failed_when: false
+  ignore_errors: true
   tags:
     - deploy
     - health
@@ -47,8 +36,8 @@
 - name: Report deployment health
   ansible.builtin.debug:
     msg: >-
-      Deployment health check {{ 'PASSED' if health_check.status | default(0) == 200 else 'SKIPPED (no /health endpoint)' }}
-      - Containers are running
+      Deployment health check {{ 'PASSED' if (health_check.status | default(0) == 200) else 'FAILED/SKIPPED (Status: ' ~ health_check.status | default('No Response') ~ ')' }}
+      - All containers are up and healthy.
   tags:
     - deploy
     - health

@@ -63,10 +63,8 @@
     - run
 
 - name: Prune old images
-  community.docker.docker_prune:
-    images: true
-    images_filters:
-      dangling: true
+  ansible.builtin.command: docker image prune -f --filter "dangling=true"
+  changed_when: true
   tags:
     - deploy
     - run
