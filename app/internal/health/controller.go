@@ -1,8 +1,9 @@
 package health
 
 import (
-	"github.com/gin-gonic/gin"
 	"net/http"
+
+	"github.com/gin-gonic/gin"
 )
 
 type Controller struct{}
@@ -13,6 +14,6 @@ func NewController() *Controller {
 
 func (c *Controller) Get() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		ctx.JSON(http.StatusOK, gin.H{"ok": true, "data": "pong"})
+		ctx.JSON(http.StatusOK, gin.H{"ok": true})
 	}
 }

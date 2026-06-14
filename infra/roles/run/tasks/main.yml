@@ -4,46 +4,79 @@
     file: "{{ playbook_dir }}/shared/main.yml"
     name: shared
 
-- name: Run docker-compose down
-  community.docker.docker_compose_v2:
-    project_src: "{{ shared.deploy_path }}"
-    state: absent
-    env_files:
-      - .env
-  register: compose_down
-  tags:
-    - deploy
-    - run
-
-- name: Show docker compose down results
-  ansible.builtin.debug:
-    var: compose_down
-  tags:
-    - deploy
-    - run
-
 - name: Build Tibia Char Docker img
   community.docker.docker_image_build:
     name: "{{ shared.tibia_char_artifact }}:{{ artifact_version }}"
     path: "{{ shared.deploy_path }}"
     dockerfile: Dockerfile
+  tags:
+    - deploy
+    - run
 
-- name: Run docker-compose up
+- name: Scale instances
   community.docker.docker_compose_v2:
     project_src: "{{ shared.deploy_path }}"
     state: present
     pull: missing
     build: always
-    env_files:
-      - .env
-  register: compose_up
+    scale:
+      tibia_char_server: 2
+    environment:
+      DATABASE_NAME: "{{ database_name }}"
+      DATABASE_USER: "{{ database_user }}"
+      DATABASE_PASSWORD: "{{ database_password }}"
+      SERVER_PORT: "{{ server_port }}"
+      ENV: "{{ env }}"
+      POSTHOG_SDK_API_KEY: "{{ posthog_sdk_api_key }}"
+  register: compose_scale_up
   tags:
     - deploy
     - run
 
-- name: Show docker compose up results
+- name: Show docker compose scale up results
   ansible.builtin.debug:
-    var: compose_up
+    var: compose_scale_up
+  tags:
+    - deploy
+    - run
+
+- name: Wait for the new container to be ready
+  ansible.builtin.pause:
+    seconds: 15
+  tags:
+    - deploy
+    - run
+
+- name: Scale back down to 1 instance
+  community.docker.docker_compose_v2:
+    project_src: "{{ shared.deploy_path }}"
+    state: present
+    scale:
+      tibia_char_server: 1
+    environment:
+      DATABASE_NAME: "{{ database_name }}"
+      DATABASE_USER: "{{ database_user }}"
+      DATABASE_PASSWORD: "{{ database_password }}"
+      SERVER_PORT: "{{ server_port }}"
+      ENV: "{{ env }}"
+      POSTHOG_SDK_API_KEY: "{{ posthog_sdk_api_key }}"
+  register: compose_scale_down
+  tags:
+    - deploy
+    - run
+
+- name: Show docker compose scale down results
+  ansible.builtin.debug:
+    var: compose_scale_down
+  tags:
+    - deploy
+    - run
+
+- name: Prune old images
+  community.docker.docker_prune:
+    images: true
+    images_filters:
+      dangling: true
   tags:
     - deploy
     - run

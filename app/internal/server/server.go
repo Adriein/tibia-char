@@ -58,7 +58,7 @@ func New(port string) *TibiaChar {
 
 func (t *TibiaChar) routeSetup() {
 	//HEALTH CHECK
-	t.gin.GET("/ping", health.NewController().Get())
+	t.gin.GET("/health", health.NewController().Get())
 
 	cwd, _ := os.Getwd()
 

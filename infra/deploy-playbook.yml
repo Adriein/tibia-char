@@ -36,6 +36,9 @@
     - deploy
     - full
 
+#TODO: deploy also the crons and create the crontabs to run them when appropiate
+#TODO: how i do the next deployments? cleaning the folder or what?
+
 - name: Deploy tibia-char to hosts
   hosts: all
   become: true
@@ -74,8 +77,8 @@
     DATABASE_PASSWORD: "{{ database_password }}"
     SERVER_PORT: "{{ server_port }}"
     ENV: "{{ env }}"
-    API_URL: "{{ api_url }}"
     API_PROTOCOL: "{{ api_protocol }}"
+    POSTHOG_SDK_API_KEY: "{{ posthog_sdk_api_key }}"
   tags:
     - deploy
     - full
