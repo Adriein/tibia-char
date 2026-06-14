@@ -1,4 +1,4 @@
-package main
+package cron
 
 import (
 	"context"
@@ -12,9 +12,7 @@ import (
 	"github.com/rotisserie/eris"
 )
 
-func main() {
-	app := internal.NewApp()
-
+func Backfill(app *internal.App) {
 	traceID := helper.TraceID()
 
 	ctx := context.WithValue(context.Background(), middleware.TraceIDKey, traceID)

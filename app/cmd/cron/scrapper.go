@@ -1,4 +1,4 @@
-package main
+package cron
 
 import (
 	"context"
@@ -13,9 +13,7 @@ import (
 	"github.com/rotisserie/eris"
 )
 
-func main() {
-	app := internal.NewApp()
-
+func Scrapper(app * internal.App) {
 	for true {
 		traceID := helper.TraceID()
 

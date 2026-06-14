@@ -1,4 +1,4 @@
-package main
+package cron
 
 import (
 	"context"
@@ -11,9 +11,7 @@ import (
 	"github.com/rotisserie/eris"
 )
 
-func main() {
-	app := internal.NewApp()
-
+func Stats(app *internal.App) {
 	service := app.Modules.Auction
 
 	ctx := context.WithValue(context.Background(), middleware.TraceIDKey, helper.TraceID())

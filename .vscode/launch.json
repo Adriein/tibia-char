@@ -20,40 +20,40 @@
       "type": "go",
       "request": "launch",
       "mode": "debug",
-      "program": "${workspaceFolder}/app/cmd/cron/scrapper/main.go",
+      "program": "${workspaceFolder}/app/cmd/tibia-char/main.go",
       "cwd": "${workspaceFolder}/app",
       "env": {},
-      "args": []
+      "args": ["scrapper"]
     },
     {
       "name": "currency-cron",
       "type": "go",
       "request": "launch",
       "mode": "debug",
-      "program": "${workspaceFolder}/app/cmd/cron/currency/main.go",
+      "program": "${workspaceFolder}/app/cmd/tibia-char/main.go",
       "cwd": "${workspaceFolder}/app",
       "env": {},
-      "args": []
+      "args": ["currency"]
     },
     {
       "name": "stats-cron",
       "type": "go",
       "request": "launch",
       "mode": "debug",
-      "program": "${workspaceFolder}/app/cmd/cron/stats/main.go",
+      "program": "${workspaceFolder}/app/cmd/tibia-char/main.go",
       "cwd": "${workspaceFolder}/app",
       "env": {},
-      "args": []
+      "args": ["stats"]
     },
     {
       "name": "backfill-cron",
       "type": "go",
       "request": "launch",
       "mode": "debug",
-      "program": "${workspaceFolder}/app/cmd/cron/backfill/main.go",
+      "program": "${workspaceFolder}/app/cmd/tibia-char/main.go",
       "cwd": "${workspaceFolder}/app",
       "env": {},
-      "args": []
+      "args": ["backfill"]
     }
   ]
 }

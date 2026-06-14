@@ -79,6 +79,13 @@ const (
 	DayInSeconds = 86400
 )
 
+const (
+	CronBackfill = "backfill"
+	CronCurrency = "currency"
+	CronScrapper = "scrapper"
+	CronStats    = "stats"
+)
+
 // Errors
 
 const (

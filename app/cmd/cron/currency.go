@@ -1,4 +1,4 @@
-package main
+package cron
 
 import (
 	"context"
@@ -14,9 +14,7 @@ import (
 	"github.com/rotisserie/eris"
 )
 
-func main() {
-	app := internal.NewApp()
-
+func Currency(app *internal.App) {
 	logger := log.New(os.Stderr, "[Currency Cron] ", log.LstdFlags|log.LUTC)
 
 	currencyAPI := vendor.NewOpenCurrencyAPI()
