@@ -21,13 +21,8 @@
     build: always
     scale:
       tibia_char_server: 2
-    environment:
-      DATABASE_NAME: "{{ database_name }}"
-      DATABASE_USER: "{{ database_user }}"
-      DATABASE_PASSWORD: "{{ database_password }}"
-      SERVER_PORT: "{{ server_port }}"
-      ENV: "{{ env }}"
-      POSTHOG_SDK_API_KEY: "{{ posthog_sdk_api_key }}"
+    env_files:
+      - .env
   register: compose_scale_up
   tags:
     - deploy
@@ -53,13 +48,8 @@
     state: present
     scale:
       tibia_char_server: 1
-    environment:
-      DATABASE_NAME: "{{ database_name }}"
-      DATABASE_USER: "{{ database_user }}"
-      DATABASE_PASSWORD: "{{ database_password }}"
-      SERVER_PORT: "{{ server_port }}"
-      ENV: "{{ env }}"
-      POSTHOG_SDK_API_KEY: "{{ posthog_sdk_api_key }}"
+    env_files:
+      - .env
   register: compose_scale_down
   tags:
     - deploy
