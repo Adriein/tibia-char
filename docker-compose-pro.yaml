@@ -18,8 +18,10 @@ services:
       - tibia_char_database_data:/var/lib/postgresql/data:rw
 
   tibia_char_server:
+    container_name: tibia_char_server
     image: "${IMAGE_NAME}:${IMAGE_VERSION}"
     environment:
+      DATABASE_URL: "${DATABASE_URL}"
       DATABASE_NAME: "${DATABASE_NAME}"
       DATABASE_USER: "${DATABASE_USER}"
       DATABASE_PASSWORD: "${DATABASE_PASSWORD}"

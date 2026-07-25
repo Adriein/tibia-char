@@ -3,6 +3,7 @@ package constants
 //Env var keys
 
 const (
+	DatabaseUrl      = "DATABASE_URL"
 	DatabaseUser     = "DATABASE_USER"
 	DatabasePassword = "DATABASE_PASSWORD"
 	DatabaseName     = "DATABASE_NAME"
