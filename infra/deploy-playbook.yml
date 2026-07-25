@@ -38,7 +38,6 @@
 
 #TODO: deploy also the crons and create the crontabs to run them when appropiate
 #TODO: how i do the next deployments? cleaning the folder or what?
-#TODO: acabar el dump de la db en stg lo tienes en /tmp
 #TODO: acuerdate de volver a encryptar el ansible vault
 
 - name: Deploy tibia-char to hosts

@@ -1,16 +1,18 @@
 package database
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
-	"log"
+	"log/slog"
 	"os"
+	"time"
 
 	"github.com/adriein/tibia-char/pkg/constants"
 	"github.com/rotisserie/eris"
 )
 
-func New() *sql.DB {
+func New(logger *slog.Logger) *sql.DB {
 	databaseDsn := fmt.Sprintf(
 		"postgresql://%s:%s@%s:5432/%s?sslmode=disable",
 		os.Getenv(constants.DatabaseUser),
@@ -19,10 +21,24 @@ func New() *sql.DB {
 		os.Getenv(constants.DatabaseName),
 	)
 
-	database, dbConnErr := sql.Open("postgres", databaseDsn)
+	database, err := sql.Open("postgres", databaseDsn)
 
-	if dbConnErr != nil {
-		log.Fatal(dbConnErr.Error())
+	if err != nil {
+		enhancedErr := eris.Wrap(err, "Failed db open conn on db init")
+
+		logger.Error(eris.ToString(enhancedErr, true))
+		os.Exit(1)
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+
+	defer cancel()
+
+	if err := database.PingContext(ctx); err != nil {
+		enhancedErr := eris.Wrap(err, "Failed db ping on db init")
+
+		logger.Error(eris.ToString(enhancedErr, true))
+		os.Exit(1)
 	}
 
 	return database

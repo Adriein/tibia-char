@@ -51,7 +51,7 @@ func NewApp() *App {
 
 	logger := initLogger()
 
-	db := database.New()
+	db := database.New(logger)
 	modules := initModules(db, logger)
 
 	return &App{
