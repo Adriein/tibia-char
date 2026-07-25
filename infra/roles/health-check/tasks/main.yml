@@ -4,7 +4,7 @@
     name: shared
 
 - name: Wait for containers to achieve healthy state
-  community.docker.docker_compose_v2_info:
+  community.docker.docker_compose_v2:
     project_src: "{{ shared.deploy_path }}"
   register: compose_info
   retries: 5

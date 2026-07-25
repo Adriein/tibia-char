@@ -72,3 +72,14 @@ ansible-vault decrypt group_vars/all/vault.yml
 | `cleanup` | Remote | Remove temp files |
 | `bootstrap` | Both | Generate SSH key + deploy to server |
 | `setup-nvim` | Remote | Install Neovim + write `init.lua` config |
+
+## Database
+Command to copy the dump file to the remote server
+```bash
+scp -i ~/.ssh/ansible ./dev-tibia-char.dump aclaret@192.168.1.56:~/
+```
+
+Once we got the .dump in the remote (-a means data only if we have run the migrations before)
+```bash
+cat ./dev-tibia-char.dump | docker exec -i tibia_char_database pg_restore -U postgres -d tibia-char -v -a
+```

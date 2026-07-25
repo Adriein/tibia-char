@@ -134,7 +134,7 @@ func (s *Service) ScrapperOrchestrator(ctx context.Context) error {
 	}
 
 	now := time.Now().In(loc)
-
+	//TODO: make a retry logic if this fails because forbidden wait and retry
 	if now.Hour() == 10 && now.Minute() <= 59 {
 		if err := s.ScrapBazaar(ctx); err != nil {
 			return err
