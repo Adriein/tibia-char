@@ -12,9 +12,10 @@ import (
 
 func New() *sql.DB {
 	databaseDsn := fmt.Sprintf(
-		"postgresql://%s:%s@localhost:5432/%s?sslmode=disable",
+		"postgresql://%s:%s@%s:5432/%s?sslmode=disable",
 		os.Getenv(constants.DatabaseUser),
 		os.Getenv(constants.DatabasePassword),
+		os.Getenv(constants.DatabaseHost),
 		os.Getenv(constants.DatabaseName),
 	)
 

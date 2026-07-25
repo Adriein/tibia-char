@@ -49,7 +49,7 @@
 - name: Execute migrations on remote
   ansible.builtin.shell: >
     {{ shared.remote_home_path }}/migrate
-    -database {{ database_url }}
+    -database {{ migrate_database_url }}
     -path {{ shared.deploy_path }}/migrations
     up
   register: migration_result

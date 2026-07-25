@@ -40,6 +40,7 @@ func NewApp() *App {
 		constants.DatabaseUser,
 		constants.DatabasePassword,
 		constants.DatabaseName,
+		constants.DatabaseHost,
 		constants.ServerPort,
 		constants.Env,
 	)
