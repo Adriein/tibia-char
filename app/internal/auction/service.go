@@ -134,7 +134,7 @@ func (s *Service) ScrapperOrchestrator(ctx context.Context) error {
 	}
 
 	now := time.Now().In(loc)
-	//TODO: make a retry logic if this fails because forbidden wait and retry
+
 	if now.Hour() == 10 && now.Minute() <= 59 {
 		if err := s.ScrapBazaar(ctx); err != nil {
 			return err
@@ -280,23 +280,53 @@ func (s *Service) ScrapBazaar(ctx context.Context) error {
 
 	s.logger.Info("Obtained worlds from tibiaAPI", "trace_id", traceID, "source", source, "worlds", len(worlds))
 
-	auctionLinkSet, err := s.scrapAuctionLinks(ctx, worlds)
+	maxRetries := 5
 
-	if err != nil {
-		s.logger.Error("Finish with error", "trace_id", traceID, "source", source, "phase", constants.ScrapPhase, "duration", time.Since(start))
+	for i := range maxRetries {
+		if i > 0 {
+			backoff := time.Duration(i) * time.Minute
 
-		return err
+			s.logger.Warn("Rate limited, backing off", "trace_id", traceID, "source", source, "phase", constants.ScrapPhase, "retry", i, "backoff", backoff)
+
+			select {
+			case <-ctx.Done():
+				return ctx.Err()
+			case <-time.After(backoff):
+			}
+		}
+
+		auctionLinkSet, err := s.scrapAuctionLinks(ctx, worlds)
+
+		if err != nil {
+			if errors.Is(err, RateLimitError) {
+				s.logger.Error("Rate limit error, retrying", "trace_id", traceID, "source", source, "phase", constants.ScrapPhase, "duration", time.Since(start))
+
+				continue
+			}
+
+			s.logger.Error("Finish with error", "trace_id", traceID, "source", source, "phase", constants.ScrapPhase, "duration", time.Since(start))
+
+			return eris.Wrap(err, "Error scrapping auction link")
+		}
+
+		if err := s.scrapAuctionDetails(ctx, auctionLinkSet); err != nil {
+			if errors.Is(err, RateLimitError) {
+				s.logger.Error("Rate limit error, retrying", "trace_id", traceID, "source", source, "phase", constants.ScrapPhase, "duration", time.Since(start))
+
+				continue
+			}
+
+			s.logger.Error("Finish with error", "trace_id", traceID, "source", source, "phase", constants.ScrapPhase, "duration", time.Since(start))
+
+			return err
+		}
+
+		s.logger.Info("Finish", "trace_id", traceID, "source", source, "phase", constants.ScrapPhase, "duration", time.Since(start), "auctions", currentAuctions, "links", len(auctionLinkSet.Data))
+
+		return nil
 	}
 
-	if err := s.scrapAuctionDetails(ctx, auctionLinkSet); err != nil {
-		s.logger.Error("Finish with error", "trace_id", traceID, "source", source, "phase", constants.ScrapPhase, "duration", time.Since(start))
-
-		return err
-	}
-
-	s.logger.Info("Finish", "trace_id", traceID, "source", source, "phase", constants.ScrapPhase, "duration", time.Since(start), "auctions", currentAuctions, "links", len(auctionLinkSet.Data))
-
-	return nil
+	return eris.New("Failed to scrap auctions: rate limit retries exhausted")
 }
 
 func (s *Service) scrapAuctionLinks(ctx context.Context, worlds []*World) (*AuctionLinkSet, error) {
@@ -360,7 +390,7 @@ func (s *Service) scrapAuctionLinks(ctx context.Context, worlds []*World) (*Auct
 		err := g.Wait()
 
 		if err != nil {
-			return nil, err
+			return nil, eris.Wrap(err, "Failed scrapping")
 		}
 	}
 
