@@ -9,6 +9,7 @@
     name: "{{ shared.tibia_char_artifact }}:{{ artifact_version }}"
     path: "{{ shared.deploy_path }}"
     dockerfile: Dockerfile
+    nocache: true
   tags:
     - deploy
     - run
@@ -17,8 +18,7 @@
   community.docker.docker_compose_v2:
     project_src: "{{ shared.deploy_path }}"
     state: present
-    pull: missing
-    build: always
+    recreate: auto
     scale:
       tibia_char_server: 2
     env_files:
@@ -64,6 +64,13 @@
 
 - name: Prune old images
   ansible.builtin.command: docker image prune -f --filter "dangling=true"
+  changed_when: true
+  tags:
+    - deploy
+    - run
+
+- name: Prune all unused images (including old tags)
+  ansible.builtin.command: docker image prune -a -f
   changed_when: true
   tags:
     - deploy
