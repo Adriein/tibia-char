@@ -3,6 +3,7 @@ package cron
 import (
 	"context"
 	"log"
+	"os"
 	"time"
 
 	"github.com/adriein/tibia-char/internal"
@@ -13,19 +14,34 @@ import (
 	"github.com/rotisserie/eris"
 )
 
-func Scrapper(app * internal.App) {
-	for true {
-		traceID := helper.TraceID()
+func Scrapper(app *internal.App) {
+	if os.Getenv(constants.Env) != constants.Prod {
+		for true {
+			traceID := helper.TraceID()
 
-		ctx := context.WithValue(context.Background(), middleware.TraceIDKey, traceID)
-		ctx = context.WithValue(ctx, constants.SourceKey, "SCRAP_CRON")
+			ctx := context.WithValue(context.Background(), middleware.TraceIDKey, traceID)
+			ctx = context.WithValue(ctx, constants.SourceKey, "SCRAP_CRON")
 
-		service := app.Modules.Auction
+			service := app.Modules.Auction
 
-		if err := service.ScrapperOrchestrator(ctx); err != nil {
-			log.Println(eris.ToString(err, true))
+			if err := service.ScrapperOrchestrator(ctx); err != nil {
+				log.Println(eris.ToString(err, true))
+			}
+
+			time.Sleep(5 * time.Minute)
 		}
 
-		time.Sleep(5 * time.Minute)
+		return
+	}
+
+	traceID := helper.TraceID()
+
+	ctx := context.WithValue(context.Background(), middleware.TraceIDKey, traceID)
+	ctx = context.WithValue(ctx, constants.SourceKey, "SCRAP_CRON")
+
+	service := app.Modules.Auction
+
+	if err := service.ScrapperOrchestrator(ctx); err != nil {
+		log.Println(eris.ToString(err, true))
 	}
 }

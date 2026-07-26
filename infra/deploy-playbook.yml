@@ -36,7 +36,6 @@
     - deploy
     - full
 
-#TODO: deploy also the crons and create the crontabs to run them when appropiate
 #TODO: how i do the next deployments? cleaning the folder or what?
 #TODO: acuerdate de volver a encryptar el ansible vault
 
@@ -68,6 +67,7 @@
     - deploy
     - env
     - run
+    - cron
     - migrations
     - health-check
     - cleanup
@@ -91,6 +91,7 @@
   roles:
     - env
     - run
+    - cron
     - health-check
   environment: *deploy_env
   tags:
