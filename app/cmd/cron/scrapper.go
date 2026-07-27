@@ -15,6 +15,8 @@ import (
 )
 
 func Scrapper(app *internal.App, ingestion bool) {
+	logger := app.Logger
+
 	if ingestion {
 		traceID := helper.TraceID()
 
@@ -24,7 +26,7 @@ func Scrapper(app *internal.App, ingestion bool) {
 		service := app.Modules.Auction
 
 		if err := service.ScrapNewAuctions(ctx); err != nil {
-			log.Println(eris.ToString(err, true))
+			logger.Error("Error scrapping new auctions", "error", eris.ToJSON(err, true))
 		}
 
 		return
