@@ -62,21 +62,24 @@ func NewApp() *App {
 }
 
 func initLogger() *slog.Logger {
-	opts := &slog.HandlerOptions{
-		ReplaceAttr: func(groups []string, attr slog.Attr) slog.Attr {
-			if attr.Key == slog.TimeKey {
-				formatted := attr.Value.Time().UTC().Format(time.DateTime)
-
-				return slog.String(slog.TimeKey, formatted)
-			}
-
-			return attr
-		},
-	}
-
 	if os.Getenv(constants.Env) == constants.Dev {
+		opts := &slog.HandlerOptions{
+			Level: slog.LevelDebug,
+			ReplaceAttr: func(groups []string, attr slog.Attr) slog.Attr {
+				if attr.Key == slog.TimeKey {
+					formatted := attr.Value.Time().UTC().Format(time.DateTime)
+
+					return slog.String(slog.TimeKey, formatted)
+				}
+
+				return attr
+			},
+		}
+
 		return slog.New(slog.NewTextHandler(os.Stdout, opts))
 	}
+
+	opts := &slog.HandlerOptions{}
 
 	return slog.New(slog.NewJSONHandler(os.Stdout, opts))
 
