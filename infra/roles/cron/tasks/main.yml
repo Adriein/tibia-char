@@ -4,10 +4,10 @@
     file: "{{ playbook_dir }}/shared/main.yml"
     name: shared
 
-- name: Cron - Scrap market every 5 min
+- name: Cron - Scrap stored links every 5 min
   ansible.builtin.cron:
-    name: "tibia-char update-prices"
-    minute: "0"
+    name: "tibia-char scrapper"
+    minute: "*/5"
     hour: "*"
     job: >-
       docker run --rm
@@ -20,6 +20,72 @@
       -e ENV={{ env }}
       {{ shared.tibia_char_artifact }}:{{ artifact_version }}
       ./tibia-char --scrapper
+    user: "{{ shared.remote_admin_user }}"
+  tags:
+    - cron
+    - deploy
+    - full
+
+- name: Cron - Ingest new auctions once a day
+  ansible.builtin.cron:
+    name: "tibia-char ingestion"
+    minute: "0"
+    hour: "11"
+    job: >-
+      docker run --rm
+      -e DATABASE_URL={{ database_url }}
+      -e DATABASE_NAME={{ database_name }}
+      -e DATABASE_USER={{ database_user }}
+      -e DATABASE_HOST={{ database_host }}
+      -e DATABASE_PASSWORD={{ database_password }}
+      -e SERVER_PORT={{ server_port }}
+      -e ENV={{ env }}
+      {{ shared.tibia_char_artifact }}:{{ artifact_version }}
+      ./tibia-char --ingestion
+    user: "{{ shared.remote_admin_user }}"
+  tags:
+    - cron
+    - deploy
+    - full
+
+- name: Cron - Update currency rate exchange once a day
+  ansible.builtin.cron:
+    name: "tibia-char currency"
+    minute: "0"
+    hour: "1"
+    job: >-
+      docker run --rm
+      -e DATABASE_URL={{ database_url }}
+      -e DATABASE_NAME={{ database_name }}
+      -e DATABASE_USER={{ database_user }}
+      -e DATABASE_HOST={{ database_host }}
+      -e DATABASE_PASSWORD={{ database_password }}
+      -e SERVER_PORT={{ server_port }}
+      -e ENV={{ env }}
+      {{ shared.tibia_char_artifact }}:{{ artifact_version }}
+      ./tibia-char --currency
+    user: "{{ shared.remote_admin_user }}"
+  tags:
+    - cron
+    - deploy
+    - full
+
+- name: Cron - Update stats aggregation once a day
+  ansible.builtin.cron:
+    name: "tibia-char stats"
+    minute: "0"
+    hour: "1"
+    job: >-
+      docker run --rm
+      -e DATABASE_URL={{ database_url }}
+      -e DATABASE_NAME={{ database_name }}
+      -e DATABASE_USER={{ database_user }}
+      -e DATABASE_HOST={{ database_host }}
+      -e DATABASE_PASSWORD={{ database_password }}
+      -e SERVER_PORT={{ server_port }}
+      -e ENV={{ env }}
+      {{ shared.tibia_char_artifact }}:{{ artifact_version }}
+      ./tibia-char --stats
     user: "{{ shared.remote_admin_user }}"
   tags:
     - cron
