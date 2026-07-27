@@ -26,7 +26,9 @@ func main() {
 	case constants.CronCurrency:
 		cron.Currency(app)
 	case constants.CronScrapper:
-		cron.Scrapper(app)
+		cron.Scrapper(app, false)
+	case constants.CronIngestion:
+		cron.Scrapper(app, true)
 	case constants.CronStats:
 		cron.Stats(app)
 	default:

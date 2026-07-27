@@ -82,10 +82,11 @@ const (
 )
 
 const (
-	CronBackfill = "backfill"
-	CronCurrency = "currency"
-	CronScrapper = "scrapper"
-	CronStats    = "stats"
+	CronBackfill  = "backfill"
+	CronCurrency  = "currency"
+	CronScrapper  = "scrapper"
+	CronIngestion = "ingestion"
+	CronStats     = "stats"
 )
 
 // Errors

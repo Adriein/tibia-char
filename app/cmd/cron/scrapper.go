@@ -14,7 +14,22 @@ import (
 	"github.com/rotisserie/eris"
 )
 
-func Scrapper(app *internal.App) {
+func Scrapper(app *internal.App, ingestion bool) {
+	if ingestion {
+		traceID := helper.TraceID()
+
+		ctx := context.WithValue(context.Background(), middleware.TraceIDKey, traceID)
+		ctx = context.WithValue(ctx, constants.SourceKey, "SCRAP_CRON")
+
+		service := app.Modules.Auction
+
+		if err := service.ScrapNewAuctions(ctx); err != nil {
+			log.Println(eris.ToString(err, true))
+		}
+
+		return
+	}
+
 	if os.Getenv(constants.Env) != constants.Prod {
 		for true {
 			traceID := helper.TraceID()

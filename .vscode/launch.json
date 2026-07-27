@@ -26,6 +26,16 @@
       "args": ["scrapper"]
     },
     {
+      "name": "ingest-cron",
+      "type": "go",
+      "request": "launch",
+      "mode": "debug",
+      "program": "${workspaceFolder}/app/cmd/tibia-char/main.go",
+      "cwd": "${workspaceFolder}/app",
+      "env": {},
+      "args": ["ingestion"]
+    },
+    {
       "name": "currency-cron",
       "type": "go",
       "request": "launch",

@@ -23,6 +23,7 @@ import (
 )
 
 type AuctionService interface {
+	ScrapNewAuctions(ctx context.Context) error
 	ScrapperOrchestrator(ctx context.Context) error
 	GetAuctions(ctx context.Context, filter *AuctionFilter) (*PaginatedAuctions, error)
 	AggregateAuctionStatsPrecompute(ctx context.Context) error
@@ -122,25 +123,25 @@ func (s *Service) BackfillAuctionFlags(ctx context.Context) error {
 
 /*
 ================================================================================
+New Auction Ingestion
+================================================================================
+*/
+
+func (s *Service) ScrapNewAuctions(ctx context.Context) error {
+	if err := s.ScrapBazaar(ctx); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+/*
+================================================================================
 Scrapper Orchestrator
 ================================================================================
 */
 
 func (s *Service) ScrapperOrchestrator(ctx context.Context) error {
-	loc, err := time.LoadLocation("Europe/Berlin")
-
-	if err != nil {
-		return eris.Wrap(err, "Failed to load location Europe/Berlin")
-	}
-
-	now := time.Now().In(loc)
-
-	if now.Hour() == 10 && now.Minute() <= 59 {
-		if err := s.ScrapBazaar(ctx); err != nil {
-			return err
-		}
-	}
-
 	if err := s.WatchActiveAuctions(ctx); err != nil {
 		return err
 	}
