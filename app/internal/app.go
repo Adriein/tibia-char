@@ -1,21 +1,24 @@
 package internal
 
 import (
+	"context"
 	"database/sql"
+	"fmt"
 	"log"
 	"log/slog"
 	"os"
-	"time"
 
 	"github.com/adriein/tibia-char/database"
 	"github.com/adriein/tibia-char/internal/auction"
 	"github.com/adriein/tibia-char/internal/currency"
 	"github.com/adriein/tibia-char/pkg/constants"
 	"github.com/adriein/tibia-char/pkg/helper"
+	"github.com/adriein/tibia-char/pkg/logger"
 	"github.com/adriein/tibia-char/pkg/vendor"
 	"github.com/joho/godotenv"
 )
 
+type ShutdownFunc func(context.Context) error
 type Modules struct {
 	Auction auction.AuctionService
 }
@@ -24,6 +27,7 @@ type App struct {
 	Database *sql.DB
 	Modules  *Modules
 	Logger   *slog.Logger
+	Shutdown ShutdownFunc
 }
 
 func NewApp() *App {
@@ -49,40 +53,19 @@ func NewApp() *App {
 		log.Fatal(envCheckerErr.Error())
 	}
 
-	logger := initLogger()
+	logger, loggerShutdown := logger.Create()
 
 	db := database.New(logger)
 	modules := initModules(db, logger)
+
+	shudownFn := gracefulShutdown(loggerShutdown)
 
 	return &App{
 		Database: db,
 		Modules:  modules,
 		Logger:   logger,
+		Shutdown: shudownFn,
 	}
-}
-
-func initLogger() *slog.Logger {
-	if os.Getenv(constants.Env) == constants.Dev {
-		opts := &slog.HandlerOptions{
-			Level: slog.LevelDebug,
-			ReplaceAttr: func(groups []string, attr slog.Attr) slog.Attr {
-				if attr.Key == slog.TimeKey {
-					formatted := attr.Value.Time().UTC().Format(time.DateTime)
-
-					return slog.String(slog.TimeKey, formatted)
-				}
-
-				return attr
-			},
-		}
-
-		return slog.New(slog.NewTextHandler(os.Stdout, opts))
-	}
-
-	opts := &slog.HandlerOptions{}
-
-	return slog.New(slog.NewJSONHandler(os.Stdout, opts))
-
 }
 
 func initModules(db *sql.DB, logger *slog.Logger) *Modules {
@@ -101,5 +84,28 @@ func initModules(db *sql.DB, logger *slog.Logger) *Modules {
 
 	return &Modules{
 		Auction: service,
+	}
+}
+
+func gracefulShutdown(cleanups ...ShutdownFunc) ShutdownFunc {
+	return func(ctx context.Context) error {
+		var combinedErr error
+
+		for i, cleanup := range cleanups {
+			if cleanup == nil {
+				continue
+			}
+
+			if err := cleanup(ctx); err != nil {
+				slog.Error("Cleanup task failed", "task_index", i, "error", err)
+				if combinedErr == nil {
+					combinedErr = err
+				} else {
+					combinedErr = fmt.Errorf("%v; %w", combinedErr, err)
+				}
+			}
+		}
+
+		return combinedErr
 	}
 }

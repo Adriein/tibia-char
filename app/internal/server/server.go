@@ -2,8 +2,6 @@ package server
 
 import (
 	"fmt"
-	"log"
-	"log/slog"
 	"os"
 
 	"github.com/gin-gonic/gin"
@@ -23,9 +21,8 @@ type TibiaChar struct {
 	validator *validator.Validate
 }
 
-func New(port string) *TibiaChar {
-	app := internal.NewApp()
-
+func New(port string, app *internal.App) *TibiaChar {
+	logger := app.Logger
 	engine := gin.New()
 
 	ginHtmlRenderer := engine.HTMLRender
@@ -48,10 +45,11 @@ func New(port string) *TibiaChar {
 	if ginErr := engine.Run(port); ginErr != nil {
 		err := eris.Wrap(ginErr, "Error starting HTTP server")
 
-		log.Fatal(eris.ToString(err, true))
+		logger.Error(eris.ToString(err, true))
+		os.Exit(1)
 	}
 
-	slog.Info("Starting the TibiaChar at " + port)
+	logger.Info("Starting the TibiaChar at " + port)
 
 	return tibiaChar
 }
