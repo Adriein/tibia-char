@@ -21,7 +21,7 @@ func Create() (*slog.Logger, func(context.Context) error) {
 			Level: slog.LevelDebug,
 			ReplaceAttr: func(groups []string, attr slog.Attr) slog.Attr {
 				if attr.Key == slog.TimeKey {
-					formatted := attr.Value.Time().UTC().Format(time.DateTime)
+					formatted := attr.Value.Time().Format(time.DateTime)
 
 					return slog.String(slog.TimeKey, formatted)
 				}
