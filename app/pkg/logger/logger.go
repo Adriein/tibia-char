@@ -2,6 +2,7 @@ package logger
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 	"os"
 	"time"
@@ -39,7 +40,7 @@ func Create() (*slog.Logger, func(context.Context) error) {
 		otlploghttp.WithEndpoint("eu.i.posthog.com"),
 		otlploghttp.WithURLPath("/i/v1/logs"),
 		otlploghttp.WithHeaders(map[string]string{
-			"Authorization": "Bearer phc_vvgsk4o4CHgSnoexamQcDrHWQViTesuKoPLhMNeCqkqk",
+			"Authorization": fmt.Sprintf("Bearer %s", os.Getenv(constants.PosthogSdkApiKey)),
 		}),
 	)
 

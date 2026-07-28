@@ -1,12 +1,4 @@
 ---
-- name: Setup server tools
-  hosts: all
-  become: true
-  roles:
-    - setup-nvim
-  tags:
-    - bootstrap
-
 - name: Pre-flight checks
   hosts: all
   gather_facts: true
@@ -72,10 +64,10 @@
     - health-check
     - cleanup
   environment: &deploy_env
-    DATABASE_URL: "{{ migrate_database_url }}"
+    DATABASE_URL: "{{ database_url }}"
+    MIGRATE_DATABASE_URL: "{{ migrate_database_url }}"
     DATABASE_NAME: "{{ database_name }}"
     DATABASE_USER: "{{ database_user }}"
-    DATABASE_HOST: "{{ database_host }}"
     DATABASE_PASSWORD: "{{ database_password }}"
     SERVER_PORT: "{{ server_port }}"
     ENV: "{{ env }}"

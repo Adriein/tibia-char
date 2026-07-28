@@ -3,7 +3,6 @@ package database
 import (
 	"context"
 	"database/sql"
-	"fmt"
 	"log/slog"
 	"os"
 	"time"
@@ -13,13 +12,7 @@ import (
 )
 
 func New(logger *slog.Logger) *sql.DB {
-	databaseDsn := fmt.Sprintf(
-		"postgresql://%s:%s@%s:5432/%s?sslmode=disable",
-		os.Getenv(constants.DatabaseUser),
-		os.Getenv(constants.DatabasePassword),
-		os.Getenv(constants.DatabaseHost),
-		os.Getenv(constants.DatabaseName),
-	)
+	databaseDsn := os.Getenv(constants.DatabaseUrl)
 
 	database, err := sql.Open("postgres", databaseDsn)
 

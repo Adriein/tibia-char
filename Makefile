@@ -15,9 +15,9 @@ create-migration:
 .PHONY: migrate
 migrate:
 	@echo "Executing migrations"
-	@cd ./app; ./migrate -database ${DATABASE_URL} -path database/migrations up
+	@cd ./app; ./migrate -database ${MIGRATE_DATABASE_URL} -path database/migrations up
 
 .PHONY: rollback
 rollback:
 	@echo "Executing migrations"
-	@cd ./app; ./migrate -database ${DATABASE_URL} -path database/migrations down
+	@cd ./app; ./migrate -database ${MIGRATE_DATABASE_URL} -path database/migrations down

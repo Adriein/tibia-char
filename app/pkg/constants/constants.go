@@ -4,10 +4,6 @@ package constants
 
 const (
 	DatabaseUrl      = "DATABASE_URL"
-	DatabaseUser     = "DATABASE_USER"
-	DatabasePassword = "DATABASE_PASSWORD"
-	DatabaseName     = "DATABASE_NAME"
-	DatabaseHost     = "DATABASE_HOST"
 	ServerPort       = "SERVER_PORT"
 	Env              = "ENV"
 	PosthogSdkApiKey = "POSTHOG_SDK_API_KEY"

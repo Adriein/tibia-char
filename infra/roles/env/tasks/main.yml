@@ -24,13 +24,11 @@
     mode: '0600'
   with_items:
     - key: DATABASE_URL
-      value: "{{ migrate_database_url }}"
+      value: "{{ database_url }}"
     - key: DATABASE_NAME
       value: "{{ database_name }}"
     - key: DATABASE_USER
       value: "{{ database_user }}"
-    - key: DATABASE_HOST
-      value: "{{ database_host }}"
     - key: DATABASE_PASSWORD
       value: "{{ database_password }}"
     - key: SERVER_PORT

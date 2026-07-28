@@ -41,10 +41,6 @@ func NewApp() *App {
 
 	checker := helper.NewEnvVarChecker(
 		constants.DatabaseUrl,
-		constants.DatabaseUser,
-		constants.DatabasePassword,
-		constants.DatabaseName,
-		constants.DatabaseHost,
 		constants.ServerPort,
 		constants.Env,
 	)
