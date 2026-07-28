@@ -8,7 +8,7 @@
   ansible.builtin.cron:
     name: "tibia-char scrapper"
     minute: "*/5"
-    hour: "*"
+    hour: "0-10,12-23"
     job: >-
       docker run --rm
       -e DATABASE_URL={{ database_url }}
