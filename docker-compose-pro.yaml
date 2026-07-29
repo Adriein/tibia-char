@@ -16,6 +16,8 @@ services:
       retries: 10
     volumes:
       - tibia_char_database_data:/var/lib/postgresql/data:rw
+    networks:
+      - tibia_network
 
   tibia_char_server:
     image: "${IMAGE_NAME}:${IMAGE_VERSION}"
@@ -27,6 +29,8 @@ services:
     depends_on:
       tibia_char_database:
         condition: service_healthy
+    networks:
+      - tibia_network
 
   tibia_char_reverse_proxy:
     container_name: tibia_char_reverse_proxy
@@ -44,6 +48,12 @@ services:
       - caddy_config:/config
     depends_on:
       - tibia_char_server
+    networks:
+      - tibia_network
+
+networks:
+  tibia_network:
+    name: tibia_network
 
 volumes:
   tibia_char_database_data:

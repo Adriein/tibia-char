@@ -10,13 +10,13 @@
     minute: "*/5"
     hour: "0-10,12-23"
     job: >-
-      docker run --rm
+      docker run --rm --network tibia_network
       -e DATABASE_URL={{ database_url }}
       -e POSTHOG_SDK_API_KEY={{ posthog_sdk_api_key }}
       -e SERVER_PORT={{ server_port }}
       -e ENV={{ env }}
       {{ shared.tibia_char_artifact }}:{{ artifact_version }}
-      ./tibia-char --scrapper
+      ./tibia-char scrapper
     user: "{{ shared.remote_admin_user }}"
   tags:
     - cron
@@ -29,13 +29,13 @@
     minute: "0"
     hour: "11"
     job: >-
-      docker run --rm
+      docker run --rm --network tibia_network
       -e DATABASE_URL={{ database_url }}
       -e POSTHOG_SDK_API_KEY={{ posthog_sdk_api_key }}
       -e SERVER_PORT={{ server_port }}
       -e ENV={{ env }}
       {{ shared.tibia_char_artifact }}:{{ artifact_version }}
-      ./tibia-char --ingestion
+      ./tibia-char ingestion
     user: "{{ shared.remote_admin_user }}"
   tags:
     - cron
@@ -48,13 +48,13 @@
     minute: "0"
     hour: "1"
     job: >-
-      docker run --rm
+      docker run --rm --network tibia_network
       -e DATABASE_URL={{ database_url }}
       -e POSTHOG_SDK_API_KEY={{ posthog_sdk_api_key }}
       -e SERVER_PORT={{ server_port }}
       -e ENV={{ env }}
       {{ shared.tibia_char_artifact }}:{{ artifact_version }}
-      ./tibia-char --currency
+      ./tibia-char currency
     user: "{{ shared.remote_admin_user }}"
   tags:
     - cron
@@ -67,13 +67,13 @@
     minute: "0"
     hour: "1"
     job: >-
-      docker run --rm
+      docker run --rm --network tibia_network
       -e DATABASE_URL={{ database_url }}
       -e POSTHOG_SDK_API_KEY={{ posthog_sdk_api_key }}
       -e SERVER_PORT={{ server_port }}
       -e ENV={{ env }}
       {{ shared.tibia_char_artifact }}:{{ artifact_version }}
-      ./tibia-char --stats
+      ./tibia-char stats
     user: "{{ shared.remote_admin_user }}"
   tags:
     - cron
