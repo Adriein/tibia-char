@@ -11,10 +11,32 @@ import (
 	"go.opentelemetry.io/contrib/bridges/otelslog"
 	"go.opentelemetry.io/otel/exporters/otlp/otlplog/otlploghttp"
 	"go.opentelemetry.io/otel/exporters/stdout/stdoutlog"
+	"go.opentelemetry.io/otel/log"
 	otellog "go.opentelemetry.io/otel/sdk/log"
 	"go.opentelemetry.io/otel/sdk/resource"
 	semconv "go.opentelemetry.io/otel/semconv/v1.37.0"
 )
+
+type SeverityProcessor struct {
+	otellog.Processor
+	Level log.Severity
+}
+
+func (p *SeverityProcessor) OnEmit(ctx context.Context, record *otellog.Record) error {
+	if record.Severity() < p.Level {
+		return nil
+	}
+
+	return p.Processor.OnEmit(ctx, record)
+}
+
+func (p *SeverityProcessor) Enabled(ctx context.Context, param otellog.EnabledParameters) bool {
+	if param.Severity < p.Level {
+		return false
+	}
+
+	return p.Processor.Enabled(ctx, param)
+}
 
 func Create() (*slog.Logger, func(context.Context) error) {
 	if os.Getenv(constants.Env) == constants.Dev {
@@ -36,7 +58,7 @@ func Create() (*slog.Logger, func(context.Context) error) {
 
 	ctx := context.Background()
 
-	exporter, err := otlploghttp.New(ctx,
+	httpExporter, err := otlploghttp.New(ctx,
 		otlploghttp.WithEndpoint("eu.i.posthog.com"),
 		otlploghttp.WithURLPath("/i/v1/logs"),
 		otlploghttp.WithHeaders(map[string]string{
@@ -59,8 +81,13 @@ func Create() (*slog.Logger, func(context.Context) error) {
 		),
 	)
 
+	levelProcessor := &SeverityProcessor{
+		Processor: otellog.NewBatchProcessor(httpExporter),
+		Level:     log.SeverityInfo,
+	}
+
 	loggerProvider := otellog.NewLoggerProvider(
-		otellog.WithProcessor(otellog.NewBatchProcessor(exporter)),
+		otellog.WithProcessor(levelProcessor),
 		otellog.WithProcessor(otellog.NewSimpleProcessor(stdoutExporter)),
 		otellog.WithResource(res),
 	)
