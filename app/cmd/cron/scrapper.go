@@ -2,7 +2,6 @@ package cron
 
 import (
 	"context"
-	"log"
 	"os"
 	"time"
 
@@ -42,7 +41,7 @@ func Scrapper(app *internal.App, ingestion bool) {
 			service := app.Modules.Auction
 
 			if err := service.ScrapperOrchestrator(ctx); err != nil {
-				log.Println(eris.ToString(err, true))
+				logger.Error("Error scrapping auctions", "error", eris.ToString(err, true))
 			}
 
 			time.Sleep(5 * time.Minute)
@@ -59,6 +58,6 @@ func Scrapper(app *internal.App, ingestion bool) {
 	service := app.Modules.Auction
 
 	if err := service.ScrapperOrchestrator(ctx); err != nil {
-		log.Println(eris.ToString(err, true))
+		logger.Error("Error scrapping auctions", "error", eris.ToString(err, true))
 	}
 }

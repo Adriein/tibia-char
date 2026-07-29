@@ -143,11 +143,11 @@ Scrapper Orchestrator
 
 func (s *Service) ScrapperOrchestrator(ctx context.Context) error {
 	if err := s.WatchActiveAuctions(ctx); err != nil {
-		return err
+		return eris.Wrap(err, "Error refreshing active auctions")
 	}
 
 	if err := s.ConsolidateAuctions(ctx); err != nil {
-		return err
+		return eris.Wrap(err, "Error consolidating active auctions")
 	}
 
 	return nil
@@ -384,13 +384,13 @@ func (s *Service) scrapAuctionLinks(ctx context.Context, worlds []*World) (*Auct
 
 				linkParser := s.parserFactory.CreateAuctionListParser(scrapperInstance)
 
-				s.logger.Info("Start world link extraction", "trace_id", traceID, "source", source, "phase", constants.ScrapPhase, "world", world.Name, "routine_id", goroutineID)
+				s.logger.Debug("Start world link extraction", "trace_id", traceID, "source", source, "phase", constants.ScrapPhase, "world", world.Name, "routine_id", goroutineID)
 
 				if err := linkParser.Scrap(world.Name, auctionLinkSet, storedAuctionLinkSet); err != nil {
 					return eris.Wrapf(err, "Failed to collect link in L-routine%d", goroutineNum)
 				}
 
-				s.logger.Info("Finish world link extraction", "trace_id", traceID, "source", source, "phase", constants.ScrapPhase, "world", world.Name, "routine_id", goroutineID, "duration", time.Since(start))
+				s.logger.Debug("Finish world link extraction", "trace_id", traceID, "source", source, "phase", constants.ScrapPhase, "world", world.Name, "routine_id", goroutineID, "duration", time.Since(start))
 
 				return nil
 			})
@@ -548,7 +548,7 @@ func (s *Service) scrapAuctionDetail(ctx context.Context, g *errgroup.Group, fai
 
 						s.notifyStatus(ctx, totalWorkload, &workDoneCounter)
 
-						s.logger.Info("Auction deactivated", "trace_id", traceID, "source", source, "phase", phase, "routine_id", goroutineID, "auction_id", auctionId, "duration", time.Since(start))
+						s.logger.Debug("Auction deactivated", "trace_id", traceID, "source", source, "phase", phase, "routine_id", goroutineID, "auction_id", auctionId, "duration", time.Since(start))
 
 						return nil
 					}
@@ -565,7 +565,7 @@ func (s *Service) scrapAuctionDetail(ctx context.Context, g *errgroup.Group, fai
 
 					s.notifyStatus(ctx, totalWorkload, &workDoneCounter)
 
-					s.logger.Info("Skipping auction save, no significant difference detected", "trace_id", traceID, "source", source, "phase", phase, "routine_id", goroutineID, "auction_id", auctionId, "duration", time.Since(start))
+					s.logger.Debug("Skipping auction save, no significant difference detected", "trace_id", traceID, "source", source, "phase", phase, "routine_id", goroutineID, "auction_id", auctionId, "duration", time.Since(start))
 
 					return nil
 				}
@@ -610,7 +610,7 @@ func (s *Service) scrapAuctionDetail(ctx context.Context, g *errgroup.Group, fai
 
 				s.notifyStatus(ctx, totalWorkload, &workDoneCounter)
 
-				s.logger.Info("Finish auction detail scrapping", "trace_id", traceID, "source", source, "phase", phase, "routine_id", goroutineID, "auction_id", auctionId, "duration", time.Since(start))
+				s.logger.Debug("Finish auction detail scrapping", "trace_id", traceID, "source", source, "phase", phase, "routine_id", goroutineID, "auction_id", auctionId, "duration", time.Since(start))
 
 				return nil
 			})
@@ -626,7 +626,7 @@ func (s *Service) notifyStatus(ctx context.Context, totalWork int, workDoneCount
 
 	phase := ctx.Value(constants.Phase)
 
-	s.logger.Info(fmt.Sprintf("%d/%d", newValue, totalWork), "trace_id", traceID, "source", source, "phase", phase)
+	s.logger.Debug(fmt.Sprintf("%d/%d", newValue, totalWork), "trace_id", traceID, "source", source, "phase", phase)
 }
 
 /*

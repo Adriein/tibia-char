@@ -42,6 +42,7 @@ func NewApp() *App {
 	checker := helper.NewEnvVarChecker(
 		constants.DatabaseUrl,
 		constants.ServerPort,
+		constants.PosthogSdkApiKey,
 		constants.Env,
 	)
 
