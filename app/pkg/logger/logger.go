@@ -78,6 +78,8 @@ func Create() (*slog.Logger, func(context.Context) error) {
 		resource.NewWithAttributes(
 			semconv.SchemaURL,
 			semconv.ServiceNameKey.String("tibia-char"),
+			semconv.ServiceVersionKey.String(os.Getenv(constants.ImgVersion)),
+			semconv.DeploymentEnvironmentNameKey.String(os.Getenv(constants.Env)),
 		),
 	)
 

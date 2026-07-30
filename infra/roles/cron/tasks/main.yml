@@ -23,6 +23,7 @@
       -e POSTHOG_SDK_API_KEY={{ posthog_sdk_api_key }}
       -e SERVER_PORT={{ server_port }}
       -e ENV={{ env }}
+      -e IMG_VERSION={{ artifact_version }}
       {{ shared.tibia_char_artifact }}:{{ artifact_version }}
       ./tibia-char scrapper"
     user: "{{ shared.remote_admin_user }}"
@@ -44,6 +45,7 @@
       -e POSTHOG_SDK_API_KEY={{ posthog_sdk_api_key }}
       -e SERVER_PORT={{ server_port }}
       -e ENV={{ env }}
+      -e IMG_VERSION={{ artifact_version }}
       {{ shared.tibia_char_artifact }}:{{ artifact_version }}
       ./tibia-char ingestion"
     user: "{{ shared.remote_admin_user }}"
@@ -63,6 +65,7 @@
       -e POSTHOG_SDK_API_KEY={{ posthog_sdk_api_key }}
       -e SERVER_PORT={{ server_port }}
       -e ENV={{ env }}
+      -e IMG_VERSION={{ artifact_version }}
       {{ shared.tibia_char_artifact }}:{{ artifact_version }}
       ./tibia-char currency
     user: "{{ shared.remote_admin_user }}"
@@ -82,6 +85,7 @@
       -e POSTHOG_SDK_API_KEY={{ posthog_sdk_api_key }}
       -e SERVER_PORT={{ server_port }}
       -e ENV={{ env }}
+      -e IMG_VERSION={{ artifact_version }}
       {{ shared.tibia_char_artifact }}:{{ artifact_version }}
       ./tibia-char stats
     user: "{{ shared.remote_admin_user }}"

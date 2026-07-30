@@ -44,6 +44,7 @@ func NewApp() *App {
 		constants.ServerPort,
 		constants.PosthogSdkApiKey,
 		constants.Env,
+		constants.ImgVersion,
 	)
 
 	if envCheckerErr := checker.Check(); envCheckerErr != nil {

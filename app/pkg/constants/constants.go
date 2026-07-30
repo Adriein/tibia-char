@@ -7,6 +7,7 @@ const (
 	ServerPort       = "SERVER_PORT"
 	Env              = "ENV"
 	PosthogSdkApiKey = "POSTHOG_SDK_API_KEY"
+	ImgVersion       = "IMG_VERSION"
 )
 
 const (

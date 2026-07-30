@@ -28,6 +28,7 @@ services:
       SERVER_PORT: "${SERVER_PORT}"
       ENV: "${ENV}"
       POSTHOG_SDK_API_KEY: "${POSTHOG_SDK_API_KEY}"
+      IMG_VERSION: "${IMAGE_VERSION}"
     depends_on:
       tibia_char_database:
         condition: service_healthy
