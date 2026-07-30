@@ -11,6 +11,7 @@ import (
 	"github.com/adriein/tibia-char/internal"
 	"github.com/adriein/tibia-char/internal/health"
 	"github.com/adriein/tibia-char/internal/web"
+	"github.com/adriein/tibia-char/pkg/constants"
 	"github.com/adriein/tibia-char/pkg/middleware"
 	"github.com/adriein/tibia-char/pkg/vendor"
 )
@@ -28,6 +29,10 @@ func New(port string, app *internal.App) *TibiaChar {
 	ginHtmlRenderer := engine.HTMLRender
 
 	engine.HTMLRender = &vendor.HTMLTemplRenderer{FallbackHtmlRenderer: ginHtmlRenderer}
+
+	if os.Getenv(constants.Env) == constants.Prod {
+		gin.SetMode(gin.ReleaseMode)
+	}
 
 	// Disable trusted proxy warning.
 	engine.SetTrustedProxies(nil)
