@@ -10,7 +10,9 @@
     minute: "*/5"
     hour: "0-10,12-23"
     job: >-
-      flock -n /var/run/tibia_scrapper.lock -c "docker run --rm --network tibia_network
+      flock -n /tmp/tibia_scrapper.lock -c "docker run
+      --rm
+      --network tibia_network
       -e DATABASE_URL={{ database_url }}
       -e POSTHOG_SDK_API_KEY={{ posthog_sdk_api_key }}
       -e SERVER_PORT={{ server_port }}
@@ -29,7 +31,9 @@
     minute: "0"
     hour: "11"
     job: >-
-      flock -n /var/run/tibia_scrapper.lock -c "docker run --rm --network tibia_network
+      flock -n /tmp/tibia_ingestion.lock -c "docker run
+      --rm
+      --network tibia_network
       -e DATABASE_URL={{ database_url }}
       -e POSTHOG_SDK_API_KEY={{ posthog_sdk_api_key }}
       -e SERVER_PORT={{ server_port }}
