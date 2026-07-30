@@ -4,6 +4,12 @@
     file: "{{ playbook_dir }}/shared/main.yml"
     name: shared
 
+- name: Creates an entry like "CRON_TZ=Europe/Berlin" on top of crontab
+  ansible.builtin.cron:
+    name: CRON_TZ
+    env: yes
+    value: Europe/Berlin
+
 - name: Cron - Scrap stored links every 5 min
   ansible.builtin.cron:
     name: "tibia-char scrapper"
