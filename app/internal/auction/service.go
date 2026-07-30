@@ -226,7 +226,7 @@ func (s *Service) ScrapBazaar(ctx context.Context) error {
 	source := ctx.Value(constants.SourceKey)
 	traceID := ctx.Value(middleware.TraceIDKey)
 
-	s.logger.Info("Start", "trace_id", traceID, "source", source, "phase", constants.ScrapPhase)
+	s.logger.Info("Start ingestion phase execution", "trace_id", traceID, "source", source, "phase", constants.ScrapPhase)
 
 	ctx = context.WithValue(ctx, constants.Phase, constants.ScrapPhase)
 
@@ -237,7 +237,7 @@ func (s *Service) ScrapBazaar(ctx context.Context) error {
 
 	currentAuctions, err := auctionNumberParser.Scrap()
 
-	s.logger.Info("Obtained active auctions", "trace_id", traceID, "source", source, "phase", constants.ScrapPhase, "auctions", currentAuctions)
+	s.logger.Info(fmt.Sprintf("Obtained active auctions: %d", currentAuctions), "trace_id", traceID, "source", source, "phase", constants.ScrapPhase, "auctions", currentAuctions)
 
 	if err != nil {
 		return eris.Wrap(err, "Error obtaining auctions")
@@ -246,7 +246,7 @@ func (s *Service) ScrapBazaar(ctx context.Context) error {
 	worldDTO, err := s.tibiaAPI.GetWorlds()
 
 	if err != nil {
-		s.logger.Error("Finish with error", "trace_id", traceID, "source", source, "phase", constants.ScrapPhase, "duration", time.Since(start))
+		s.logger.Error("Finish ingestion phase with error", "trace_id", traceID, "source", source, "phase", constants.ScrapPhase, "duration", time.Since(start))
 
 		return eris.Wrap(err, "Failed to fetch worlds from Tibia API")
 	}
@@ -277,7 +277,7 @@ func (s *Service) ScrapBazaar(ctx context.Context) error {
 		_, err := s.worldRepository.GetOrCreate(world)
 
 		if err != nil {
-			s.logger.Error("Finish with error", "trace_id", traceID, "source", source, "phase", constants.ScrapPhase, "duration", time.Since(start))
+			s.logger.Error("Finish ingestion phase with error", "trace_id", traceID, "source", source, "phase", constants.ScrapPhase, "duration", time.Since(start))
 
 			return eris.Wrap(err, "Error saving or getting world")
 		}
@@ -295,7 +295,7 @@ func (s *Service) ScrapBazaar(ctx context.Context) error {
 
 			select {
 			case <-ctx.Done():
-				s.logger.Error("Finish with error", "trace_id", traceID, "source", source, "phase", constants.ScrapPhase, "duration", time.Since(start))
+				s.logger.Error("Finish ingestion phase with error", "trace_id", traceID, "source", source, "phase", constants.ScrapPhase, "duration", time.Since(start))
 
 				return eris.Wrap(ctx.Err(), "Context canceled on retry")
 			case <-time.After(backoff):
@@ -311,7 +311,7 @@ func (s *Service) ScrapBazaar(ctx context.Context) error {
 				continue
 			}
 
-			s.logger.Error("Finish with error", "trace_id", traceID, "source", source, "phase", constants.ScrapPhase, "duration", time.Since(start))
+			s.logger.Error("Finish ingestion phase with error", "trace_id", traceID, "source", source, "phase", constants.ScrapPhase, "duration", time.Since(start))
 
 			return eris.Wrap(err, "Error scrapping auction link")
 		}
@@ -323,7 +323,7 @@ func (s *Service) ScrapBazaar(ctx context.Context) error {
 				continue
 			}
 
-			s.logger.Error("Finish with error", "trace_id", traceID, "source", source, "phase", constants.ScrapPhase, "duration", time.Since(start))
+			s.logger.Error("Finish ingestion phase with error", "trace_id", traceID, "source", source, "phase", constants.ScrapPhase, "duration", time.Since(start))
 
 			return eris.Wrap(err, "Error scrapping auction details")
 		}
@@ -333,7 +333,7 @@ func (s *Service) ScrapBazaar(ctx context.Context) error {
 		return nil
 	}
 
-	s.logger.Error("Finish with error", "trace_id", traceID, "source", source, "phase", constants.ScrapPhase, "duration", time.Since(start))
+	s.logger.Error("Finish ingestion phase with error", "trace_id", traceID, "source", source, "phase", constants.ScrapPhase, "duration", time.Since(start))
 
 	return eris.New("Failed to scrap auctions: rate limit retries exhausted")
 }
@@ -635,31 +635,49 @@ Refresh Auctions Phase
 ================================================================================
 */
 
+const (
+	FiveMin   = 5 * time.Minute
+	TenMin    = 10 * time.Minute
+	TwentyMin = 20 * time.Minute
+	OneHour   = 60 * time.Minute
+	FourHours = 4 * time.Hour
+	SixHours  = 6 * time.Hour
+	OneDay    = 24 * time.Hour
+	OneMonth  = 30 * 24 * time.Hour
+)
+
+var DurationLabels = map[time.Duration]string{
+	FiveMin:   "FiveMin",
+	TenMin:    "TenMin",
+	TwentyMin: "TwentyMin",
+	OneHour:   "OneHour",
+	FourHours: "FourHours",
+	SixHours:  "SixHours",
+	OneDay:    "OneDay",
+	OneMonth:  "OneMonth",
+}
+
+type refreshPolicy struct {
+	finishingIn    time.Duration
+	updateInterval time.Duration
+}
+
+func (rp *refreshPolicy) String() string {
+	if label, ok := DurationLabels[rp.finishingIn]; ok {
+		return label
+	}
+	return rp.finishingIn.String()
+}
+
 func (s *Service) WatchActiveAuctions(ctx context.Context) error {
 	source := ctx.Value(constants.SourceKey)
 	traceID := ctx.Value(middleware.TraceIDKey)
-
-	const (
-		FiveMin   = 5 * time.Minute
-		TenMin    = 10 * time.Minute
-		TwentyMin = 20 * time.Minute
-		OneHour   = 60 * time.Minute
-		FourHours = 4 * time.Hour
-		SixHours  = 6 * time.Hour
-		OneDay    = 24 * time.Hour
-		OneMonth  = 30 * 24 * time.Hour
-	)
 
 	ctx = context.WithValue(ctx, constants.Phase, constants.WatchPhase)
 
 	start := time.Now()
 
-	s.logger.Info("Start", "trace_id", traceID, "source", source, "phase", constants.WatchPhase)
-
-	type refreshPolicy struct {
-		finishingIn    time.Duration
-		updateInterval time.Duration
-	}
+	s.logger.Info("Start watching active auctions phase", "trace_id", traceID, "source", source, "phase", constants.WatchPhase)
 
 	policies := []refreshPolicy{
 		{finishingIn: TenMin, updateInterval: FiveMin},
@@ -692,7 +710,7 @@ func (s *Service) WatchActiveAuctions(ctx context.Context) error {
 			auctionAddedCounter++
 		}
 
-		s.logger.Info("Added active auctions for policy", "trace_id", traceID, "source", source, "phase", constants.WatchPhase, "policy", policy.finishingIn.String(), "total", auctionAddedCounter)
+		s.logger.Info(fmt.Sprintf("Added %d auctions for policy %s", auctionAddedCounter, policy.String()), "trace_id", traceID, "source", source, "phase", constants.WatchPhase, "policy", policy.String(), "total", auctionAddedCounter)
 	}
 
 	if auctionsToUpdate.AllowLongTail() {
@@ -728,22 +746,22 @@ func (s *Service) WatchActiveAuctions(ctx context.Context) error {
 			}
 		}
 
-		s.logger.Info("Added active auctions for long tail", "trace_id", traceID, "source", source, "phase", constants.WatchPhase, "total", auctionAddedCounter)
+		s.logger.Info(fmt.Sprintf("Added %d auctions for long tail", auctionAddedCounter), "trace_id", traceID, "source", source, "phase", constants.WatchPhase, "total", auctionAddedCounter)
 	}
 
 	if auctionsToUpdate.IsEmpty() {
-		s.logger.Info("Finish phase", "trace_id", traceID, "source", source, "phase", constants.WatchPhase, "duration", time.Since(start))
+		s.logger.Info("Finish watching active auctions phase", "trace_id", traceID, "source", source, "phase", constants.WatchPhase, "duration", time.Since(start))
 
 		return nil
 	}
 
 	if err := s.scrapAuctionDetails(ctx, auctionsToUpdate); err != nil {
-		s.logger.Info("Finish phase", "trace_id", traceID, "source", source, "phase", constants.WatchPhase, "duration", time.Since(start))
+		s.logger.Info("Finish watching active auctions phase", "trace_id", traceID, "source", source, "phase", constants.WatchPhase, "duration", time.Since(start))
 
 		return eris.Wrap(err, "Failed to refresh auctions")
 	}
 
-	s.logger.Info("Finish phase", "trace_id", traceID, "source", source, "phase", constants.WatchPhase, "duration", time.Since(start))
+	s.logger.Info("Finish watching active auctions phase", "trace_id", traceID, "source", source, "phase", constants.WatchPhase, "duration", time.Since(start))
 
 	return nil
 }
@@ -760,7 +778,7 @@ func (s *Service) ConsolidateAuctions(ctx context.Context) error {
 
 	ctx = context.WithValue(ctx, constants.Phase, constants.ConsolidatePhase)
 
-	s.logger.Info("Start", "trace_id", traceID, "source", source, "phase", constants.ConsolidatePhase)
+	s.logger.Info("Start consolidate auctions phase", "trace_id", traceID, "source", source, "phase", constants.ConsolidatePhase)
 
 	start := time.Now()
 
@@ -781,18 +799,18 @@ func (s *Service) ConsolidateAuctions(ctx context.Context) error {
 	}
 
 	if auctionsToUpdate.IsEmpty() {
-		s.logger.Info("Finish phase", "trace_id", traceID, "source", source, "phase", constants.ConsolidatePhase, "duration", time.Since(start))
+		s.logger.Info("Finish consolidate auctions phase", "trace_id", traceID, "source", source, "phase", constants.ConsolidatePhase, "duration", time.Since(start))
 
 		return nil
 	}
 
 	if err := s.scrapAuctionDetails(ctx, auctionsToUpdate); err != nil {
-		s.logger.Info("Finish phase", "trace_id", traceID, "source", source, "phase", constants.ConsolidatePhase, "duration", time.Since(start))
+		s.logger.Info("Finish consolidate auctions phase", "trace_id", traceID, "source", source, "phase", constants.ConsolidatePhase, "duration", time.Since(start))
 
 		return eris.Wrap(err, "Failed to consolidate auctions")
 	}
 
-	s.logger.Info("Finish phase", "trace_id", traceID, "source", source, "phase", constants.ConsolidatePhase, "duration", time.Since(start))
+	s.logger.Info("Finish consolidate auctions phase", "trace_id", traceID, "source", source, "phase", constants.ConsolidatePhase, "duration", time.Since(start))
 
 	return nil
 }
