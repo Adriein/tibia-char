@@ -3,6 +3,7 @@ services:
     container_name: tibia_char_database
     image: postgres:15-alpine
     user: ${DATABASE_USER}
+    restart: unless-stopped
     environment:
       POSTGRES_USER: ${DATABASE_USER}
       POSTGRES_DB: ${DATABASE_NAME}
@@ -21,6 +22,7 @@ services:
 
   tibia_char_server:
     image: "${IMAGE_NAME}:${IMAGE_VERSION}"
+    restart: unless-stopped
     environment:
       DATABASE_URL: "${DATABASE_URL}"
       SERVER_PORT: "${SERVER_PORT}"
