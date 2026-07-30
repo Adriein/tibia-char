@@ -12,6 +12,22 @@
     - deploy
     - cleanup
 
+- name: Ensure deploy_path is safe before deleting
+  ansible.builtin.assert:
+    that:
+      - shared.deploy_path is defined
+      - shared.deploy_path | length > 1
+      - shared.deploy_path != '/'
+    fail_msg: "shared.deploy_path is undefined or set to root! Aborting to prevent destructive delete."
+
+- name: Remove deploy directory
+  ansible.builtin.file:
+    path: "{{ shared.deploy_path }}"
+    state: absent
+  tags:
+    - deploy
+    - cleanup
+
 - name: Report cleanup completed
   ansible.builtin.debug:
     msg: "Cleanup finished - temporary files removed"
