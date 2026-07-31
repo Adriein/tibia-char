@@ -9,6 +9,7 @@
     name: CRON_TZ
     env: yes
     value: Europe/Berlin
+    user: "{{ shared.remote_admin_user }}"
 
 - name: Cron - Scrap stored links every 5 min
   ansible.builtin.cron:
