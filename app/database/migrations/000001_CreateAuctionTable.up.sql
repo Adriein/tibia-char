@@ -235,6 +235,8 @@ CREATE INDEX idx_ta_fk_world ON tc_auction (ta_char_world);
 CREATE INDEX idx_tar_auction_id_time ON tc_auction_recording (tar_auction_id, tar_date_add DESC);
 CREATE INDEX idx_tai_imbuement_id ON tc_auction_imbuements (tai_imbuement_id);
 CREATE INDEX idx_taq_quest_id ON tc_auction_quests (taq_quest_id);
+CREATE INDEX idx_tc_auction_end ON tc_auction (ta_auction_end);
+CREATE INDEX idx_tar_recordable_id_status ON tc_auction_recording (tar_recordable_id) WHERE tar_status = 'active';
 
 /*
 ================================================================================
